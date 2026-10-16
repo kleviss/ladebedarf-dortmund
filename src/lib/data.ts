@@ -108,7 +108,7 @@ export interface AppData {
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(path);
-  if (!res.ok) throw new Error(`${path} konnte nicht geladen werden (${res.status}).`);
+  if (!res.ok) throw new Error(`Could not load ${path} (${res.status}).`);
   return res.json() as Promise<T>;
 }
 

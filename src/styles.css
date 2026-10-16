@@ -346,7 +346,8 @@ a {
   color: var(--muted);
 }
 
-.legend select {
+.legend select,
+.current-filters select {
   width: 100%;
   min-width: 0;
   font: inherit;
@@ -1029,6 +1030,97 @@ a {
 
 .key-figures .accent dd {
   color: var(--accent);
+}
+
+.current-app {
+  height: 100%;
+}
+
+.current-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.current-layout.has-selection {
+  grid-template-columns: 260px minmax(0, 1fr) 340px;
+}
+
+.current-filters {
+  min-width: 0;
+  padding: 16px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.current-filters h2 {
+  margin-bottom: 16px;
+}
+
+.current-filters label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 550;
+}
+
+.current-filters label.toggle {
+  display: flex;
+  margin-top: 16px;
+}
+
+.current-layout .map-area {
+  height: auto;
+  min-width: 0;
+}
+
+.current-district {
+  padding: 16px;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.current-figures {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 1000px) {
+  .current-layout,
+  .current-layout.has-selection {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(240px, 1fr);
+    overflow-y: auto;
+  }
+
+  .current-layout.has-selection {
+    grid-template-rows: auto minmax(240px, 1fr) auto;
+  }
+
+  .current-layout .map-area {
+    order: 0;
+  }
+
+  .current-filters {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    overflow-y: visible;
+  }
+
+  .current-district {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    overflow-y: visible;
+  }
+
+  .current-figures {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .current-figures div {
+    padding: 8px;
+  }
 }
 
 .show-calc {

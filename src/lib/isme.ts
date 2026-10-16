@@ -250,6 +250,29 @@ export interface DistrictResult extends District {
   steps: Step[];
 }
 
+/** Stock-only estimate; no projected growth or additional visitor demand. */
+export function computeCurrentDemand(d: District): DistrictResult {
+  const needed = Math.ceil(pointsFor(d.totalEvs, defaultScenario).total);
+  const existing = d.chargers;
+  const gap = Math.max(0, needed - existing);
+  const cars = d.privateCars + d.commercialCars;
+  return {
+    ...d,
+    cars,
+    evShareToday: cars > 0 ? d.totalEvs / cars : 0,
+    bevResidents: d.privateEvs,
+    bevCommuters: 0,
+    bevTourists: 0,
+    bev: d.totalEvs,
+    needed,
+    existing,
+    gap,
+    gapPer1000Cars: cars > 0 ? gap / cars * 1000 : 0,
+    coverage: needed > 0 ? Math.min(existing / needed, 1) : 1,
+    steps: [],
+  };
+}
+
 export interface Totals {
   privateCars: number;
   privateEvs: number;
