@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-10-16T10:27:19.963Z",
+  "fetchedAt": "2026-10-16T12:35:52.298Z",
   "source": {
     "name": "Stadt Dortmund via Sciebo (Team 07)",
     "url": "https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge",
@@ -25,5 +25,32 @@
   },
   "fixes": [
     "\"Kirchhörde-West/ Schanze\": ID 697 → 698 (duplicate ID in shapefile; statistics use 698)"
-  ]
+  ],
+  "parking": {
+    "fetchedAt": "2026-10-16T12:43:02.004Z",
+    "sources": [
+      "OpenStreetMap amenity=parking (© OpenStreetMap contributors, ODbL)",
+      "Open Data Dortmund: parkhauser, park-and-ride"
+    ],
+    "publicSpots": 3446,
+    "uncovered": 2207,
+    "coveredMetres": 225
+  },
+  "enrichment": {
+    "fetchedAt": "2026-10-16T12:43:02.587Z",
+    "sources": [
+      "OpenStreetMap shops, gastronomy, culture, sport and accommodation (© OpenStreetMap contributors, ODbL)",
+      "Stadt Dortmund / RVR Flächennutzungskartierung 2021 (Gewerbe in Dortmund.kml, Sciebo)",
+      "Open Data Dortmund: fb62-gebaeude, b-plan"
+    ],
+    "poisShopping": 3191,
+    "poisLeisure": 1357,
+    "commercialHa": 2664,
+    "commercialPolygons": 6162,
+    "buildings": 109654,
+    "buildingsCovered": 33479,
+    "bplans": 2677,
+    "bplansRecent": 529,
+    "coveredMetres": 225
+  }
 }

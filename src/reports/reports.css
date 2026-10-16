@@ -1,0 +1,276 @@
+/* Reports: one reading column, each report a printable page. */
+#root {
+  height: auto;
+}
+
+.reports {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px;
+  display: grid;
+  gap: 40px;
+}
+
+.reports-top {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.reports-top h1 {
+  font-size: 2rem;
+}
+
+.reports-top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.report {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  scroll-margin-top: 16px;
+  min-width: 0;
+}
+
+.report h2 {
+  font-size: 1.7rem;
+}
+
+.report h3 {
+  margin: 8px 0 0;
+  font-size: 1.05rem;
+}
+
+.report .lede {
+  font-size: 1.1rem;
+  color: var(--ink-2);
+  max-width: 70ch;
+  margin: 0;
+}
+
+.small {
+  font-size: 0.82rem;
+}
+
+/* before / after */
+.ba {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ba-col {
+  padding: 18px;
+  border-radius: 10px;
+}
+
+.ba-col h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.ba-col ul,
+.value {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 8px;
+}
+
+.ba-col.before {
+  background: var(--surface-2);
+}
+
+.ba-col.after {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+@media (max-width: 720px) {
+  .ba {
+    grid-template-columns: 1fr;
+  }
+  .report {
+    padding: 18px;
+  }
+}
+
+/* KPIs */
+.rkpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 36px;
+  margin: 0;
+}
+
+.rkpis div {
+  display: grid;
+  gap: 2px;
+}
+
+.rkpis dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.rkpis dd {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.rkpis .accent dd {
+  color: var(--accent);
+}
+
+.rkpis .note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* bars */
+.rbars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.rbars li {
+  display: grid;
+  grid-template-columns: minmax(140px, 16rem) 1fr 6.5rem;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.92rem;
+}
+
+.rbars-label small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.rbars-track {
+  height: 14px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rbars-bar {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+}
+
+.rbars-value {
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .rbars li {
+    grid-template-columns: 1fr 5rem;
+  }
+  .rbars-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* tables */
+.rtable-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.rtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.rtable th,
+.rtable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rtable th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.rtable .num {
+  text-align: right;
+}
+
+.rtable small {
+  display: block;
+  color: var(--muted);
+}
+
+.status {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-ok {
+  background: var(--chip-result);
+}
+
+.status-part {
+  background: var(--chip-assumption);
+}
+
+.status-open {
+  background: var(--surface-2);
+}
+
+.chain {
+  margin: 0;
+  padding-left: 1.4em;
+  display: grid;
+  gap: 6px;
+}
+
+.reports-foot {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+@media print {
+  .reports-top nav,
+  .reports-top .muted a {
+    display: none;
+  }
+  .report {
+    break-before: page;
+    border: 0;
+    padding: 0;
+  }
+  body {
+    background: #fff;
+  }
+}

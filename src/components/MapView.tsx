@@ -27,6 +27,7 @@ interface Props {
   selected: string | null;
   showChargers: boolean;
   showPriority: boolean;
+  showParking: boolean;
   onSelect: (ubz: string | null) => void;
 }
 
@@ -36,7 +37,7 @@ interface Hover {
   ubz: string;
 }
 
-export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, onSelect }: Props) {
+export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -67,6 +68,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
       map.addSource('ubz', { type: 'geojson', data: data.districts });
       map.addSource('chargers', { type: 'geojson', data: data.chargers });
       map.addSource('priority', { type: 'geojson', data: data.priority });
+      map.addSource('parking', { type: 'geojson', data: data.parking });
 
       map.addLayer(
         {
@@ -122,6 +124,23 @@ export function MapView({ data, results, metric, classes, selected, showChargers
         paint: {
           'line-color': '#0b0b0b',
           'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 0],
+        },
+      });
+      map.addLayer({
+        id: 'parking',
+        type: 'circle',
+        source: 'parking',
+        layout: { visibility: 'none' },
+        paint: {
+          // status colours: green = charger within 100 m, amber = within 225 m, red = none
+          'circle-color': ['match', ['get', 'cover'], 0, '#0ca30c', 1, '#fab219', '#d03b3b'],
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            10, ['match', ['get', 'kind'], 'garage', 3.5, 'park-ride', 3.5, 2],
+            15, ['match', ['get', 'kind'], 'garage', 8, 'park-ride', 8, 5],
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': ['match', ['get', 'kind'], 'garage', 1.5, 'park-ride', 1.5, 0.5],
         },
       });
       map.addLayer({
@@ -200,6 +219,12 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     if (!map || !ready) return;
     for (const id of ['priority-fill', 'priority-line']) map.setLayoutProperty(id, 'visibility', showPriority ? 'visible' : 'none');
   }, [ready, showPriority]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    map.setLayoutProperty('parking', 'visibility', showParking ? 'visible' : 'none');
+  }, [ready, showParking]);
 
   const hovered = hover ? results.get(hover.ubz) : undefined;
 

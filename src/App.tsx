@@ -39,6 +39,7 @@ function Dashboard({ data }: { data: AppData }) {
   const [selected, setSelected] = useState<string | null>(initial.ubz ?? null);
   const [showChargers, setShowChargers] = useState(true);
   const [showPriority, setShowPriority] = useState(false);
+  const [showParking, setShowParking] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
@@ -95,6 +96,9 @@ function Dashboard({ data }: { data: AppData }) {
             <dd className="num strong">{fmt(sum.gap)} LP</dd>
           </div>
         </dl>
+        <a className="link-button header-link" href={`/berichte.html${window.location.search}`}>
+          Berichte
+        </a>
         <button type="button" className="button" onClick={copyLink}>
           {copied ? 'Link kopiert' : 'Szenario-Link kopieren'}
         </button>
@@ -107,6 +111,8 @@ function Dashboard({ data }: { data: AppData }) {
             classes={classes}
             showChargers={showChargers}
             showPriority={showPriority}
+            showParking={showParking}
+            onToggleParking={setShowParking}
             onMetric={setMetricKey}
             onToggleChargers={setShowChargers}
             onTogglePriority={setShowPriority}
@@ -151,6 +157,7 @@ function Dashboard({ data }: { data: AppData }) {
             selected={selected}
             showChargers={showChargers}
             showPriority={showPriority}
+            showParking={showParking}
             onSelect={setSelected}
           />
           {selectedResult && (

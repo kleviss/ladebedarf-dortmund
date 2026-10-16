@@ -5,12 +5,14 @@ interface Props {
   classes: Classes;
   showChargers: boolean;
   showPriority: boolean;
+  showParking: boolean;
+  onToggleParking: (v: boolean) => void;
   onMetric: (k: MetricKey) => void;
   onToggleChargers: (v: boolean) => void;
   onTogglePriority: (v: boolean) => void;
 }
 
-export function Legend({ metric, classes, showChargers, showPriority, onMetric, onToggleChargers, onTogglePriority }: Props) {
+export function Legend({ metric, classes, showChargers, showPriority, showParking, onMetric, onToggleChargers, onTogglePriority, onToggleParking }: Props) {
   const lower = (i: number) => (i === 0 ? 0 : classes.breaks[i - 1]);
   return (
     <div className="legend">
@@ -50,6 +52,19 @@ export function Legend({ metric, classes, showChargers, showPriority, onMetric, 
         <span className="square" aria-hidden="true" />
         Prioritätsflächen LIS-Ausbau (225-m-Raster)
       </label>
+      <label className="toggle">
+        <input id="show-parking" type="checkbox" checked={showParking} onChange={(e) => onToggleParking(e.target.checked)} />
+        <span className="dot dot-parking" aria-hidden="true" />
+        Öffentliche Parkflächen (OSM, Parkhäuser, P+R)
+      </label>
+      {showParking && (
+        <ul className="legend-status">
+          <li><span className="sdot" style={{ background: '#0ca30c' }} />Ladestandort ≤ 100 m</li>
+          <li><span className="sdot" style={{ background: '#fab219' }} />Ladestandort ≤ 225 m</li>
+          <li><span className="sdot" style={{ background: '#d03b3b' }} />Kein Ladestandort in 225 m</li>
+          <li className="muted">Große Punkte: Parkhaus, Tiefgarage, P+R</li>
+        </ul>
+      )}
     </div>
   );
 }

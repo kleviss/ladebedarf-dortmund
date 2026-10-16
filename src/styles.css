@@ -613,3 +613,66 @@ a {
     animation: none !important;
   }
 }
+
+/* parking */
+.toggle .dot-parking {
+  background: #d03b3b;
+}
+
+.legend-status {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 0 26px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+
+.legend-status li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.district-parking {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+
+.district-parking h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.district-parking dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.district-parking dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.district-parking dd {
+  margin: 0;
+  font-size: 1.05rem;
+  text-align: left;
+}
+
+.district-parking small {
+  font-weight: 400;
+  color: var(--muted);
+}

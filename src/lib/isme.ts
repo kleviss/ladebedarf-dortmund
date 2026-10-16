@@ -12,8 +12,9 @@
 //
 // Per Unterbezirk (our addition, following the report's chapter 6.1):
 //   residents' BEV are spread by private cars (or by today's private EVs),
-//   commuters' and tourists' BEV by commercial cars, a stand-in for workplaces
-//   and destinations until we have employee and POI counts per Unterbezirk.
+//   commuters' BEV by commercial land (RVR land-use mapping, workplaces stand-in),
+//   tourists' BEV by shopping and leisure points of interest (OSM), as in the report.
+//   Commercial cars remain available as the earlier fallback for both.
 
 export interface District {
   ubz: string;
@@ -28,12 +29,34 @@ export interface District {
   commercialNewEvs: number;
   totalEvs: number;
   chargers: number;
+  /** Public parking areas (OSM + Open Data) in the district */
+  parkingPublic?: number;
+  /** … of which no charging location within 225 m */
+  parkingUncovered?: number;
+  /** Known spaces (OSM capacity is often missing) */
+  parkingCapacity?: number;
+  /** Multi-storey, underground and Park+Ride */
+  parkingGarages?: number;
+  /** OSM shops ("Einkaufen") */
+  poisShopping?: number;
+  /** OSM gastronomy, culture, sport, accommodation ("Freizeit") */
+  poisLeisure?: number;
+  /** Commercial/industrial land in hectares */
+  commercialHa?: number;
+  buildings?: number;
+  /** Buildings within 225 m of a charging location */
+  buildingsCovered?: number;
+  /** Development plans, all / in force since 2015 */
+  bplans?: number;
+  bplansRecent?: number;
 }
 
 export type Year = 2030 | 2036;
 export type Method = 'usecase' | 'ratio';
 export type Scope = 'street' | 'public';
 export type ResidentKey = 'cars' | 'evs';
+export type CommuterKey = 'commercialArea' | 'commercialCars';
+export type TouristKey = 'pois' | 'commercialCars';
 
 export interface Scenario {
   year: Year;
@@ -50,6 +73,10 @@ export interface Scenario {
   customerShare: number;
   /** How residents' BEV are spread to Unterbezirke */
   residentKey: ResidentKey;
+  /** How commuters' BEV are spread */
+  commuterKey: CommuterKey;
+  /** How tourists' BEV are spread */
+  touristKey: TouristKey;
   /** Charging points per location in the city's charger file */
   pointsPerSite: number;
 }
@@ -88,6 +115,8 @@ export const defaultScenario: Scenario = {
   streetFactor: 2.8,
   customerShare: 0.103,
   residentKey: 'cars',
+  commuterKey: 'commercialArea',
+  touristKey: 'pois',
   pointsPerSite: 1,
 };
 
@@ -162,6 +191,8 @@ export interface Totals {
   commercialCars: number;
   totalEvs: number;
   chargers: number;
+  commercialHa: number;
+  pois: number;
 }
 
 export function totalsOf(districts: District[]): Totals {
@@ -172,20 +203,29 @@ export function totalsOf(districts: District[]): Totals {
       commercialCars: t.commercialCars + d.commercialCars,
       totalEvs: t.totalEvs + d.totalEvs,
       chargers: t.chargers + d.chargers,
+      commercialHa: t.commercialHa + (d.commercialHa ?? 0),
+      pois: t.pois + poisOf(d),
     }),
-    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0 },
+    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0, commercialHa: 0, pois: 0 },
   );
 }
+
+const poisOf = (d: District) => (d.poisShopping ?? 0) + (d.poisLeisure ?? 0);
 
 export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Totals): DistrictResult {
   const residentBase = s.residentKey === 'evs' ? d.privateEvs : d.privateCars;
   const residentTotal = s.residentKey === 'evs' ? t.privateEvs : t.privateCars;
   const residentShare = residentTotal > 0 ? residentBase / residentTotal : 0;
   const commercialShare = t.commercialCars > 0 ? d.commercialCars / t.commercialCars : 0;
+  // fall back to commercial cars when the enrichment data is missing
+  const useArea = s.commuterKey === 'commercialArea' && t.commercialHa > 0;
+  const usePois = s.touristKey === 'pois' && t.pois > 0;
+  const commuterShare = useArea ? (d.commercialHa ?? 0) / t.commercialHa : commercialShare;
+  const touristShare = usePois ? poisOf(d) / t.pois : commercialShare;
 
   const bevResidents = city.residents * residentShare;
-  const bevCommuters = city.commuters * commercialShare;
-  const bevTourists = city.tourists * commercialShare;
+  const bevCommuters = city.commuters * commuterShare;
+  const bevTourists = city.tourists * touristShare;
   const bev = bevResidents + bevCommuters + bevTourists;
 
   const { total: needed, byUseCase } = pointsFor(bev, s);
@@ -215,16 +255,20 @@ export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Tota
       label: 'BEV Einpendelnde',
       value: bevCommuters,
       unit: 'BEV',
-      formula: `${fmt(city.commuters)} BEV stadtweit × ${pct(commercialShare, 2)} Anteil gewerbliche Pkw`,
-      source: 'assumption',
+      formula: useArea
+        ? `${fmt(city.commuters)} BEV stadtweit × ${pct(commuterShare, 2)} Anteil Gewerbeflächen (${fmt(d.commercialHa ?? 0, 1)} ha)`
+        : `${fmt(city.commuters)} BEV stadtweit × ${pct(commuterShare, 2)} Anteil gewerbliche Pkw`,
+      source: useArea ? 'isme' : 'assumption',
     },
     {
       key: 'bevTourists',
       label: 'BEV Tourismus (Tagesmittel)',
       value: bevTourists,
       unit: 'BEV',
-      formula: `${fmt(city.tourists)} BEV stadtweit × ${pct(commercialShare, 2)} Anteil gewerbliche Pkw`,
-      source: 'assumption',
+      formula: usePois
+        ? `${fmt(city.tourists)} BEV stadtweit × ${pct(touristShare, 2)} Anteil POIs (${fmt(d.poisShopping ?? 0)} Einkauf, ${fmt(d.poisLeisure ?? 0)} Freizeit)`
+        : `${fmt(city.tourists)} BEV stadtweit × ${pct(touristShare, 2)} Anteil gewerbliche Pkw`,
+      source: usePois ? 'isme' : 'assumption',
     },
     {
       key: 'bev',

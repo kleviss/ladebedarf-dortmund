@@ -67,11 +67,22 @@ describe('computeAll per Unterbezirk', () => {
     expect(results.reduce((a, r) => a + r.needed, 0)).toBeCloseTo(cityPoints, 6);
   });
 
-  it('spreads residents by private cars and visitors by commercial cars', () => {
+  it('falls back to commercial cars when land and POI data are missing', () => {
     const { results, city } = computeAll(districts, defaultScenario);
     expect(results[0].bevResidents).toBeCloseTo(city.residents * 0.75, 6);
     expect(results[0].bevCommuters).toBeCloseTo(city.commuters * 0.9, 6);
     expect(results[0].bevTourists).toBeCloseTo(city.tourists * 0.9, 6);
+  });
+
+  it('spreads commuters by commercial land and tourists by POIs, as in the report', () => {
+    const enriched = [
+      { ...districts[0], commercialHa: 10, poisShopping: 1, poisLeisure: 0 },
+      { ...districts[1], commercialHa: 30, poisShopping: 2, poisLeisure: 1 },
+    ];
+    const { results, city } = computeAll(enriched, defaultScenario);
+    expect(results[0].bevCommuters).toBeCloseTo(city.commuters * 0.25, 6);
+    expect(results[0].bevTourists).toBeCloseTo(city.tourists * 0.25, 6);
+    expect(results.reduce((a, r) => a + r.bev, 0)).toBeCloseTo(city.total, 6);
   });
 
   it('subtracts existing points and never returns a negative gap', () => {

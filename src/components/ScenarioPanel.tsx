@@ -202,7 +202,30 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onC
           { value: 'evs', label: 'Private E-Pkw heute' },
         ]}
         onChange={(residentKey) => set({ residentKey })}
-        hint="Pendelnde und Tourismus: nach gewerblichen Pkw (Näherung für Arbeitsplätze und Ziele)"
+      />
+
+      <Segmented<Scenario['commuterKey']>
+        name="commuter-key"
+        label="Pendelnde verteilen nach"
+        value={s.commuterKey}
+        options={[
+          { value: 'commercialArea', label: 'Gewerbeflächen' },
+          { value: 'commercialCars', label: 'Gewerbliche Pkw' },
+        ]}
+        onChange={(commuterKey) => set({ commuterKey })}
+        hint="Gewerbeflächen: RVR-Flächennutzung 2021 (Stadt), Näherung für Arbeitsplätze"
+      />
+
+      <Segmented<Scenario['touristKey']>
+        name="tourist-key"
+        label="Tourismus verteilen nach"
+        value={s.touristKey}
+        options={[
+          { value: 'pois', label: 'Einkauf + Freizeit (POIs)' },
+          { value: 'commercialCars', label: 'Gewerbliche Pkw' },
+        ]}
+        onChange={(touristKey) => set({ touristKey })}
+        hint="POIs aus OpenStreetMap, wie im ISME-Gutachten"
       />
 
       <Slider

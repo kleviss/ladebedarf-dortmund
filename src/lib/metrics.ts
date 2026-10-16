@@ -1,6 +1,6 @@
 import { fmt, pct, type DistrictResult } from './isme';
 
-export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage';
+export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage' | 'parkingUncovered' | 'carDensity' | 'buildingsCoveredShare' | 'bplansRecent' | 'pois' | 'commercialHa';
 
 export interface Metric {
   key: MetricKey;
@@ -31,6 +31,24 @@ export const METRICS: Metric[] = [
     value: (r) => (r.cars > 0 ? ((r.privateNewEvs + r.commercialNewEvs) / r.cars) * 1000 : 0),
     format: (n) => fmt(n, 1),
   },
+  {
+    key: 'parkingUncovered',
+    label: 'Öffentliche Parkflächen ohne Ladestandort (225 m)',
+    short: 'Parkflächen ohne LP',
+    value: (r) => r.parkingUncovered ?? 0,
+    format: (n) => fmt(n),
+  },
+  {
+    key: 'buildingsCoveredShare',
+    label: 'Gebäude ≤ 225 m zum Ladestandort (ISME-Gehweite Wohnen)',
+    short: 'Gebäude abgedeckt',
+    value: (r) => (r.buildings ? (r.buildingsCovered ?? 0) / r.buildings : 0),
+    format: (n) => pct(n),
+  },
+  { key: 'carDensity', label: 'Pkw je km² (Fahrzeugdichte)', short: 'Pkw/km²', value: (r) => (r.areaKm2 > 0 ? r.cars / r.areaKm2 : 0), format: (n) => fmt(n) },
+  { key: 'pois', label: 'Einkaufs- und Freizeitziele (POIs)', short: 'POIs', value: (r) => (r.poisShopping ?? 0) + (r.poisLeisure ?? 0), format: (n) => fmt(n) },
+  { key: 'commercialHa', label: 'Gewerbeflächen (ha)', short: 'Gewerbe', value: (r) => r.commercialHa ?? 0, format: (n) => `${fmt(n)} ha` },
+  { key: 'bplansRecent', label: 'Bebauungspläne seit 2015 (Neubau-Indikator)', short: 'B-Pläne seit 2015', value: (r) => r.bplansRecent ?? 0, format: (n) => fmt(n) },
   { key: 'evShareToday', label: 'E-Anteil am Pkw-Bestand heute', short: 'E-Anteil', value: (r) => r.evShareToday, format: (n) => pct(n, 1) },
 ];
 

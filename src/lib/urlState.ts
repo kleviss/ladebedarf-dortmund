@@ -28,6 +28,8 @@ export function readUrlState(search = window.location.search): UrlState {
   const cs = num(p.get('cs'));
   if (cs != null) s.customerShare = cs / 1000;
   if (p.get('rk') === 'evs' || p.get('rk') === 'cars') s.residentKey = p.get('rk') as Scenario['residentKey'];
+  if (p.get('ck') === 'commercialArea' || p.get('ck') === 'commercialCars') s.commuterKey = p.get('ck') as Scenario['commuterKey'];
+  if (p.get('tk') === 'pois' || p.get('tk') === 'commercialCars') s.touristKey = p.get('tk') as Scenario['touristKey'];
   const lp = num(p.get('lp'));
   if (lp != null) s.pointsPerSite = lp;
   const metric = p.get('k');
@@ -48,6 +50,8 @@ export function writeUrlState(s: Scenario, metric: MetricKey, ubz: string | null
   p.set('sf', String(s.streetFactor));
   p.set('cs', String(Math.round(s.customerShare * 1000)));
   p.set('rk', s.residentKey);
+  p.set('ck', s.commuterKey);
+  p.set('tk', s.touristKey);
   p.set('lp', String(s.pointsPerSite));
   p.set('k', metric);
   if (ubz) p.set('ubz', ubz);

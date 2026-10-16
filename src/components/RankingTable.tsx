@@ -8,7 +8,7 @@ interface Props {
   onSelect: (ubz: string) => void;
 }
 
-type SortKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'bev' | 'name';
+type SortKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'bev' | 'name' | 'parkingUncovered';
 
 const COLUMNS: { key: SortKey; label: string; numeric: boolean }[] = [
   { key: 'name', label: 'Unterbezirk', numeric: false },
@@ -17,6 +17,7 @@ const COLUMNS: { key: SortKey; label: string; numeric: boolean }[] = [
   { key: 'existing', label: 'Bestand', numeric: true },
   { key: 'gap', label: 'Lücke', numeric: true },
   { key: 'gapPer1000Cars', label: 'je 1.000 Pkw', numeric: true },
+  { key: 'parkingUncovered', label: 'Parken o. LP', numeric: true },
 ];
 
 function toCsv(rows: DistrictResult[], s: Scenario) {
@@ -32,6 +33,8 @@ function toCsv(rows: DistrictResult[], s: Scenario) {
     'Bestand_LP',
     'Luecke_LP',
     'Luecke_je_1000_Pkw',
+    'Parkflaechen_oeffentlich',
+    'Parkflaechen_ohne_LP_225m',
   ];
   const lines = rows.map((r) =>
     [
@@ -46,6 +49,8 @@ function toCsv(rows: DistrictResult[], s: Scenario) {
       r.existing,
       r.gap.toFixed(1),
       r.gapPer1000Cars.toFixed(2),
+      r.parkingPublic ?? 0,
+      r.parkingUncovered ?? 0,
     ].join(';'),
   );
   return [header.join(';'), ...lines].join('\n');
@@ -58,8 +63,8 @@ export function RankingTable({ results, scenario, selected, onSelect }: Props) {
   const rows = useMemo(
     () =>
       [...results].sort((a, b) => {
-        const av = a[sortKey];
-        const bv = b[sortKey];
+        const av = a[sortKey] ?? 0;
+        const bv = b[sortKey] ?? 0;
         const cmp = typeof av === 'string' ? av.localeCompare(bv as string, 'de') : (av as number) - (bv as number);
         return asc ? cmp : -cmp;
       }),
@@ -129,6 +134,7 @@ export function RankingTable({ results, scenario, selected, onSelect }: Props) {
                 <td className="num">{fmt(r.existing)}</td>
                 <td className="num strong">{fmt(r.gap, 1)}</td>
                 <td className="num">{fmt(r.gapPer1000Cars, 1)}</td>
+                <td className="num">{fmt(r.parkingUncovered ?? 0)}</td>
               </tr>
             ))}
           </tbody>

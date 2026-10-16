@@ -72,7 +72,9 @@ A static web app (no backend) that runs the city's ISME method in the browser fo
 - **District detail.** Click a district for the full ISME chain: cars today → BEV of residents, commuters and tourists → charging points per use case → needed − existing = gap. Each step is tagged *Daten Stadt*, *ISME*, *Annahme* (assumption) or *Ergebnis* (result), with its formula.
 - **ISME scenario controls.** Target year (2030 / 2036), BEV share (5–50 %), use-case or ratio method, street-space-only or all publicly accessible points, and the open questions in the Excel as switches.
 - **Priority ranking.** Sortable table of all 145 districts with CSV export.
-- **Map layers.** 912 current charging locations and the city's 225 m priority grid.
+- **Map layers.** 912 current charging locations, the city's 225 m priority grid, and 3,446 public parking areas (OSM, multi-storey car parks, P+R) coloured by distance to the nearest charger: green ≤ 100 m, amber ≤ 225 m, red further.
+- **More factors per district.** Public parking and how much of it has no charger nearby; buildings within 225 m of a charger (ISME walking distance for housing); car density; shopping and leisure destinations; commercial land; development plans since 2015.
+- **Reports page** (`/berichte`): before/after, priorities, parking, walking-distance coverage, method and criteria, data quality. Printable, for building the presentation.
 - **Shareable scenarios.** All settings and the selected district live in the URL. The "Szenario-Link kopieren" button copies it.
 
 **Why it fits the judging criteria**
@@ -120,7 +122,7 @@ existing_u = charging locations in u × points per location
 gap_u      = max(0, needed_u − existing_u)
 ```
 
-The report spreads commuters by employees and tourists by points of interest per Unterbezirk. We don't have those yet, so commercial cars stand in for workplaces and destinations; this is tagged *Annahme* in the app. Per-district results always add up to the city total.
+As in the report, commuters are spread by workplaces and tourists by points of interest: we use commercial/industrial land from the city's RVR land-use file for workplaces, and OpenStreetMap shops plus gastronomy, culture, sport and accommodation for destinations. Commercial cars remain switchable as a fallback. Per-district results always add up to the city total.
 
 **Defaults:** 2030, 15 % BEV, use-case method, all publicly accessible points, 2.8 BEV per street point, 10.3 % customer parking, 1 charging point per location. At these settings the city needs 7,465 points; 912 locations exist.
 
@@ -146,7 +148,7 @@ The report spreads commuters by employees and tourists by points of interest per
 | `aktueller Bestand an Ladesäulen/Ladesaeulen_Punkte.dbf` | 912 charging locations (lat/lon) | Existing points per Unterbezirk |
 | `Fläche mit Priorität für LIS-Ausbau/…dbf` | 225 m grid, 6,422 cells, point count per cell | Map layer (293 cells with points) |
 | `Berechnungsmethode/Berechnungsmethode ISME.xlsx`, `Gutachten ISME.pdf` | The ISME method | Constants and formulas in `src/lib/isme.ts` |
-| `Gewerbegebiete/Gewerbe in Dortmund.kml` | Commercial areas (17 MB) | Not used yet |
+| `Gewerbegebiete/Gewerbe in Dortmund.kml` | Commercial/industrial land, RVR land-use mapping 2021 (6,162 areas) | Spreading commuters (workplace stand-in) |
 
 ### Open Data Dortmund (enrichment)
 
@@ -213,7 +215,8 @@ curl "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets/fb62-gebae
 
 | Gap | Current handling | Better fix |
 |---|---|---|
-| No employees or points of interest per Unterbezirk | Commuters and tourists spread by commercial cars (*Annahme*) | Employee counts from the city; POIs from OSM or Open Data |
+| No employee counts per Unterbezirk | Commuters spread by commercial land area | Employee counts from the city |
+| No power-grid data | Not modelled (out of scope per the brief) | Ask the city / DEW21 |
 | No residents in the city's statistics | Residents' BEV spread by private cars | Open Data population (62 districts) or Zensus 2022 grid |
 | Unclear whether the 912 entries are locations or charging points | Setting "Ladepunkte je Bestandsstandort", default 1 | Ask the city |
 | ISME coverage step (walking distances 225 / 500 / 100 / 375 m) not built yet | Not shown | Buffers around the 912 locations per Unterbezirk |
@@ -236,7 +239,7 @@ Then open <http://localhost:5173>.
 | Command | What it does |
 |---|---|
 | `npm run dev` | Starts the dev server |
-| `npm run data` | Builds `public/data/city/` from the Sciebo files (cached in `data/raw/`) |
+| `npm run data` | Builds `public/data/city/`: Sciebo city files, then public parking (OSM + Open Data), then extra factors (POIs, commercial land, buildings, development plans). Downloads are cached in `data/raw/` |
 | `npm run data:refresh` | Same, but downloads the Sciebo files again |
 | `npm run data:opendata` | Fetches Open Data Dortmund into `public/data/opendata/` (not used by the app yet) |
 | `npm test` | Runs the model tests (Vitest) |
@@ -297,8 +300,9 @@ Pick a task, open an issue or a branch with its name, and update this list in yo
 - [x] Plug in the city's ISME method and the Sciebo data (`src/lib/isme.ts`, `scripts/build-city-data.mjs`)
 - [ ] ISME coverage step: walking-distance buffers (225 / 500 / 100 / 375 m) per Unterbezirk
 - [ ] ISME ranking: coverage score × sum indicator (Jenks classes)
-- [ ] Spread commuters by employees and tourists by points of interest instead of commercial cars
-- [ ] Use the commercial areas (KML) for the employer use case
+- [x] Spread commuters by commercial land and tourists by points of interest
+- [x] Public parking layer with distance to the nearest charger
+- [x] Reports page for the presentation
 - [ ] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister
 - [ ] Use Zensus 2022 grid for population and building type per Unterbezirk
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district
