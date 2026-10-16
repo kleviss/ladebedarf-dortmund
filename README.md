@@ -138,6 +138,7 @@ As in the report, commuters are spread by workplaces and tourists by points of i
 | Private cars only | Commercial cars × BEV share, 30 % of them charge publicly | City statistics per Unterbezirk |
 | −20 % cars shown as a city-wide scenario | Reduction scaled by rail access: full in the best-served district, ~0 at the edge (off by default) | Open Data Stadtbahn stops + OSM rail/bus stops |
 | Visitors split like residents (Excel) | Tourists charge only in public, commuters ~88 % at the employer | ISME report, Sankey (chapter 5.6) |
+| Tourists spread by OSM shops/leisure only | Day tourists 50 % by the city's 99 attractions (sights, museums, venues, stadium) + 50 % by shops/leisure; overnight guests by 77 hotels/guest houses, with 1.58 M overnight stays (2024) | Open Data `sehenswurdigkeiten`, `museum`, `veranstaltungsorte`, Fremdenverkehr; OSM hotels |
 
 With calibration on (default), home shares and sharing factors are scaled so the city averages stay 52 % and 2.8: local data redistributes the demand rather than inventing a new total. At 2030 / 15 % BEV the bottom-up model needs 8,552 public points (ISME spread: 7,465) and moves about 1,460 points between districts; street points at 18 % BEV come to ~6,600 (ISME report: 5,567, Excel: 5,969). Datasets suggested elsewhere, such as branches by sector, employees at place of work, households or social indicators, exist only city-wide or per Stadtbezirk, so they cannot differentiate Unterbezirke.
 

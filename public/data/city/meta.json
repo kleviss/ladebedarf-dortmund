@@ -148,5 +148,18 @@
     "railMetres": 600,
     "busMetres": 300,
     "hpcKw": 100
+  },
+  "tourism": {
+    "fetchedAt": "2026-10-16T14:56:49.461Z",
+    "sources": [
+      "Open Data Dortmund: sehenswurdigkeiten, museum, veranstaltungsorte, fussballstadion (nur SIGNAL IDUNA PARK)",
+      "OpenStreetMap: Hotels, Pensionen, Hostels",
+      "Open Data Dortmund: Betriebe, Betten, Ankünfte und Übernachtungen im Fremdenverkehr"
+    ],
+    "attractions": 99,
+    "hotels": 77,
+    "overnightStays": 1583100,
+    "overnightYear": 2024,
+    "accommodationBusinesses": 75
   }
 }

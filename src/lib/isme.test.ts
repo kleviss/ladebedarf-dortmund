@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cityBev, computeAll, defaultScenario, pointsFor, type District, type Scenario } from './isme';
+import { cityBev, computeAll, defaultScenario, pointsFor, type District, type Scenario, totalsOf, touristShares } from './isme';
 
 // Expected values are cells from "Berechnungsmethode ISME.xlsx", sheet Tabelle1.
 
@@ -92,5 +92,47 @@ describe('computeAll per Unterbezirk (city-wide ISME spread)', () => {
     expect(results[0].existing).toBe(200000);
     expect(results[0].gap).toBe(0);
     expect(results[1].gap).toBeCloseTo(results[1].needed, 6);
+  });
+});
+
+describe('touristShares', () => {
+  const d = (ubz: string, over: Partial<District>): District => ({
+    ubz,
+    name: ubz,
+    stadtbezirk: '',
+    areaKm2: 1,
+    privateCars: 100,
+    privateEvs: 0,
+    privateNewEvs: 0,
+    commercialCars: 10,
+    commercialEvs: 0,
+    commercialNewEvs: 0,
+    totalEvs: 0,
+    chargers: 0,
+    ...over,
+  });
+  const a = d('001', { attractions: 3, poisShopping: 10, poisLeisure: 0, hotels: 1 });
+  const b = d('002', { attractions: 1, poisShopping: 30, poisLeisure: 0, hotels: 3 });
+  const t = totalsOf([a, b]);
+
+  it('spreads day tourists half by attractions, half by POIs, and overnight guests by hotels', () => {
+    const sh = touristShares(a, { touristKey: 'mixed' }, t);
+    expect(sh.day).toBeCloseTo(0.5 * 0.75 + 0.5 * 0.25, 9);
+    expect(sh.overnight).toBeCloseTo(0.25, 9);
+    expect(sh.dayBasis).toBe('mixed');
+  });
+
+  it('falls back to POIs when attractions and hotels are missing', () => {
+    const plain = [d('001', { poisShopping: 1 }), d('002', { poisShopping: 3 })];
+    const sh = touristShares(plain[0], { touristKey: 'mixed' }, totalsOf(plain));
+    expect(sh.day).toBeCloseTo(0.25, 9);
+    expect(sh.overnight).toBeCloseTo(0.25, 9);
+  });
+
+  it('keeps the Excel overnight stays in the ISME model and uses 2024 in bottom-up', () => {
+    const isme = cityBev({ year: 2030, bevShare: 0.15, model: 'isme', overnightStays: 1583100 });
+    const bu = cityBev({ year: 2030, bevShare: 0.15, model: 'bottomup', overnightStays: 1583100 });
+    expect(isme.overnightTourists).toBeCloseTo(379.6438, 3);
+    expect(bu.overnightTourists).toBeCloseTo((1583100 * 0.62 * 0.15) / 365, 6);
   });
 });

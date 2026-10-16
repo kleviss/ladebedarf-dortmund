@@ -1,6 +1,6 @@
 import { fmt, pct, type DistrictResult } from './isme';
 
-export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage' | 'parkingUncovered' | 'carDensity' | 'buildingsCoveredShare' | 'bplansRecent' | 'pois' | 'commercialHa' | 'homeShare' | 'efhShare' | 'streetFactorLocal' | 'transit' | 'fleetBev' | 'hpcRelief';
+export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage' | 'parkingUncovered' | 'carDensity' | 'buildingsCoveredShare' | 'bplansRecent' | 'pois' | 'commercialHa' | 'homeShare' | 'efhShare' | 'streetFactorLocal' | 'transit' | 'fleetBev' | 'hpcRelief' | 'attractions' | 'bevTourists';
 
 export interface Metric {
   key: MetricKey;
@@ -72,6 +72,14 @@ export const METRICS: Metric[] = [
   { key: 'transit', label: 'ÖPNV-Anbindung (Wohngebäude ≤ 600 m Schiene)', short: 'ÖPNV', value: (r) => r.transitRail ?? 0, format: (n) => pct(n) },
   { key: 'fleetBev', label: 'BEV Gewerbeflotten (Bottom-up)', short: 'Flotten-BEV', value: (r) => num(r, 'fleetBev'), format: (n) => fmt(n) },
   { key: 'hpcRelief', label: 'Entlastung durch HPC (BEV, Bottom-up)', short: 'HPC-Entlastung', value: (r) => num(r, 'hpcRelief'), format: (n) => fmt(n) },
+  {
+    key: 'attractions',
+    label: 'Touristische Ziele (Sehenswürdigkeiten, Museen, Veranstaltungsorte)',
+    short: 'Touristische Ziele',
+    value: (r) => r.attractions ?? 0,
+    format: (n) => fmt(n),
+  },
+  { key: 'bevTourists', label: 'BEV Tourismus (Tagesmittel)', short: 'Tourismus-BEV', value: (r) => r.bevTourists, format: (n) => fmt(n) },
   { key: 'evShareToday', label: 'E-Anteil am Pkw-Bestand heute', short: 'E-Anteil', value: (r) => r.evShareToday, format: (n) => pct(n, 1) },
 ];
 
@@ -88,8 +96,8 @@ export const SIMPLE_METRICS: MetricKey[] = ['gap', 'needed', 'homeShare', 'parki
 export const METRIC_GROUPS: { label: string; keys: MetricKey[] }[] = [
   { label: 'Bedarf', keys: ['gap', 'gapPer1000Cars', 'needed', 'coverage'] },
   { label: 'Bestand', keys: ['existing', 'parkingUncovered', 'buildingsCoveredShare', 'hpcRelief'] },
-  { label: 'Lokale Faktoren (Bottom-up)', keys: ['homeShare', 'efhShare', 'streetFactorLocal', 'fleetBev', 'transit'] },
-  { label: 'Kontext', keys: ['evShareToday', 'newEvsPer1000Cars', 'carDensity', 'pois', 'commercialHa', 'bplansRecent'] },
+  { label: 'Lokale Faktoren (Bottom-up)', keys: ['homeShare', 'efhShare', 'streetFactorLocal', 'fleetBev', 'transit', 'bevTourists'] },
+  { label: 'Kontext', keys: ['attractions', 'pois', 'evShareToday', 'newEvsPer1000Cars', 'carDensity', 'commercialHa', 'bplansRecent'] },
 ];
 
 export const metricByKey = (key: MetricKey) => METRICS.find((m) => m.key === key) ?? METRICS[0];
@@ -99,10 +107,13 @@ export const RAMP = ['#b7d3f6', '#6da7ec', '#3987e5', '#256abf', '#104281'];
 export const ZERO_COLOR = '#e6e5df';
 
 export interface Classes {
-  /** Upper bounds of each class, ascending; length = RAMP.length */
+  /** Distinct upper bounds of the classes, ascending (up to RAMP.length) */
   breaks: number[];
+  /** Colour of each class, spread over the ramp when there are fewer than five */
+  colours: string[];
   hasZero: boolean;
-  classOf: (v: number) => number; // -1 = zero class
+  /** RAMP index of the class for a value; -1 = zero class */
+  classOf: (v: number) => number;
 }
 
 const niceRound = (v: number) => {
@@ -121,13 +132,14 @@ export function quantileClasses(values: number[]): Classes {
     const idx = Math.min(positive.length - 1, Math.ceil((i / k) * positive.length) - 1);
     breaks.push(positive.length ? niceRound(positive[Math.max(0, idx)]) : 0);
   }
-  for (let i = 1; i < breaks.length; i++) {
-    if (breaks[i] <= breaks[i - 1]) breaks[i] = breaks[i - 1] + Number.EPSILON;
-  }
+  // small counts (e.g. 0–24 attractions) give repeated quantiles: keep each bound once
+  const unique = breaks.filter((b, i) => i === 0 || b > breaks[i - 1]);
+  const n = Math.max(1, unique.length);
+  const rampIndex = (i: number) => (n === 1 ? k - 1 : Math.round((i * (k - 1)) / (n - 1)));
   const classOf = (v: number) => {
     if (v <= 0) return -1;
-    const i = breaks.findIndex((b) => v <= b);
-    return i === -1 ? k - 1 : i;
+    const i = unique.findIndex((b) => v <= b);
+    return rampIndex(i === -1 ? n - 1 : i);
   };
-  return { breaks, hasZero, classOf };
+  return { breaks: unique, colours: unique.map((_, i) => RAMP[rampIndex(i)]), hasZero, classOf };
 }

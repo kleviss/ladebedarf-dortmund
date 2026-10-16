@@ -1,4 +1,4 @@
-import { METRIC_GROUPS, RAMP, SIMPLE_METRICS, ZERO_COLOR, metricByKey, type Classes, type Metric, type MetricKey } from '../lib/metrics';
+import { METRIC_GROUPS, SIMPLE_METRICS, ZERO_COLOR, metricByKey, type Classes, type Metric, type MetricKey } from '../lib/metrics';
 
 interface Props {
   /** expert: all metrics grouped + priority grid; simple: four metrics */
@@ -45,7 +45,7 @@ export function Legend({ expert, metric, classes, showChargers, showPriority, sh
             <span className="num">0</span>
           </li>
         )}
-        {RAMP.map((c, i) => (
+        {classes.colours.map((c, i) => (
           <li key={c}>
             <span className="swatch" style={{ background: c }} />
             <span className="num">

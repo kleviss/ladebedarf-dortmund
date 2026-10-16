@@ -29,7 +29,7 @@ export function readUrlState(search = window.location.search): UrlState {
   if (cs != null) s.customerShare = cs / 1000;
   if (p.get('rk') === 'evs' || p.get('rk') === 'cars') s.residentKey = p.get('rk') as Scenario['residentKey'];
   if (p.get('ck') === 'commercialArea' || p.get('ck') === 'commercialCars') s.commuterKey = p.get('ck') as Scenario['commuterKey'];
-  if (p.get('tk') === 'pois' || p.get('tk') === 'commercialCars') s.touristKey = p.get('tk') as Scenario['touristKey'];
+  if (p.get('tk') === 'mixed' || p.get('tk') === 'pois' || p.get('tk') === 'commercialCars') s.touristKey = p.get('tk') as Scenario['touristKey'];
   if (p.get('mo') === 'isme' || p.get('mo') === 'bottomup') s.model = p.get('mo') as Scenario['model'];
   const pct = (k: string) => (num(p.get(k)) != null ? num(p.get(k))! / 100 : undefined);
   s.homeEfh = pct('he') ?? s.homeEfh;

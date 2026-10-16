@@ -28,6 +28,14 @@ export interface CityMeta {
       byKind: Record<ParkingSpot['kind'], DistanceBand>;
     };
   };
+  tourism?: {
+    sources: string[];
+    attractions: number;
+    hotels: number;
+    overnightStays: number;
+    overnightYear: number;
+    accommodationBusinesses: number;
+  };
   bottomup?: {
     sources: string[];
     efhBuildings: number;

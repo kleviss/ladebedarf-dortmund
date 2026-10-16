@@ -70,6 +70,12 @@ export interface District {
   transitShare?: number;
   hpcSites?: number;
   hpcPoints?: number;
+  // tourism (scripts/build-tourism.mjs)
+  /** Sights, museums, event venues and the stadium (city lists) */
+  attractions?: number;
+  attractionNames?: string[];
+  /** Hotels, guest houses, hostels (OSM) */
+  hotels?: number;
 }
 
 export type Year = 2030 | 2036;
@@ -77,7 +83,7 @@ export type Method = 'usecase' | 'ratio';
 export type Scope = 'street' | 'public';
 export type ResidentKey = 'cars' | 'evs';
 export type CommuterKey = 'commercialArea' | 'commercialCars';
-export type TouristKey = 'pois' | 'commercialCars';
+export type TouristKey = 'mixed' | 'pois' | 'commercialCars';
 export type Model = 'bottomup' | 'isme';
 
 export interface Scenario {
@@ -99,8 +105,10 @@ export interface Scenario {
   residentKey: ResidentKey;
   /** How commuters' BEV are spread */
   commuterKey: CommuterKey;
-  /** How tourists' BEV are spread */
+  /** How tourists' BEV are spread: mixed = day 50 % attractions + 50 % POIs, overnight by hotels */
   touristKey: TouristKey;
+  /** Overnight stays per year for the bottom-up model (ISME Excel: 1,490,000 in 2023) */
+  overnightStays: number;
   /** Charging points per location in the city's charger file */
   pointsPerSite: number;
   // --- bottom-up model ---
@@ -129,6 +137,9 @@ export interface UseCase {
   access: 'private' | 'public';
 }
 
+/** Excel B9/B10: share of tourists arriving by car (modal split, short holidays). */
+export const TOURISM_CAR_SHARE = 0.62;
+
 /** Constants from the ISME Excel. */
 export const ISME = {
   cars: { 2030: 291451, 2036: 302435 } as Record<Year, number>, // C5, B15
@@ -156,7 +167,8 @@ export const defaultScenario: Scenario = {
   customerShare: 0.103,
   residentKey: 'cars',
   commuterKey: 'commercialArea',
-  touristKey: 'pois',
+  touristKey: 'mixed',
+  overnightStays: 1583100, // Open Data, Fremdenverkehr 2024
   pointsPerSite: 1,
   model: 'bottomup',
   homeEfh: 0.9,
@@ -179,11 +191,13 @@ export interface CityBev {
 }
 
 /** City-wide BEV per user group, Excel rows 5–11 / 15–22. */
-export function cityBev(s: Pick<Scenario, 'year' | 'bevShare'>): CityBev {
+export function cityBev(s: Pick<Scenario, 'year' | 'bevShare'> & Partial<Pick<Scenario, 'model' | 'overnightStays'>>): CityBev {
   const residents = ISME.cars[s.year] * s.bevShare;
   const commuters = ISME.commuterCars * s.bevShare;
   const dayTourists = (ISME.dayTouristCars * s.bevShare) / 365;
-  const overnightTourists = (ISME.overnightTouristCars * s.bevShare) / 365;
+  // bottom-up uses the latest overnight stays; the ISME model keeps the Excel's 2023 figure
+  const overnightCars = s.model === 'bottomup' && s.overnightStays ? s.overnightStays * TOURISM_CAR_SHARE : ISME.overnightTouristCars;
+  const overnightTourists = (overnightCars * s.bevShare) / 365;
   const tourists = dayTourists + overnightTourists;
   return { residents, commuters, dayTourists, overnightTourists, tourists, total: residents + commuters + tourists };
 }
@@ -242,6 +256,8 @@ export interface Totals {
   chargers: number;
   commercialHa: number;
   pois: number;
+  attractions: number;
+  hotels: number;
 }
 
 export function totalsOf(districts: District[]): Totals {
@@ -254,12 +270,62 @@ export function totalsOf(districts: District[]): Totals {
       chargers: t.chargers + d.chargers,
       commercialHa: t.commercialHa + (d.commercialHa ?? 0),
       pois: t.pois + poisOf(d),
+      attractions: t.attractions + (d.attractions ?? 0),
+      hotels: t.hotels + (d.hotels ?? 0),
     }),
-    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0, commercialHa: 0, pois: 0 },
+    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0, commercialHa: 0, pois: 0, attractions: 0, hotels: 0 },
   );
 }
 
 const poisOf = (d: District) => (d.poisShopping ?? 0) + (d.poisLeisure ?? 0);
+
+export interface TouristShares {
+  day: number;
+  overnight: number;
+  /** what the day share is based on, for the calculation steps */
+  dayBasis: 'mixed' | 'attractions' | 'pois' | 'commercialCars';
+  overnightBasis: 'hotels' | 'day';
+}
+
+/**
+ * Share of the city's tourist BEV that a district receives.
+ * mixed: day tourists 50 % by attractions + 50 % by shops/leisure (POIs), overnight guests
+ * by hotels. Missing data falls back step by step to POIs, then commercial cars.
+ */
+export function touristShares(d: District, s: Pick<Scenario, 'touristKey'>, t: Totals): TouristShares {
+  const commercial = t.commercialCars > 0 ? d.commercialCars / t.commercialCars : 0;
+  const poi = t.pois > 0 ? poisOf(d) / t.pois : null;
+  const attr = t.attractions > 0 ? (d.attractions ?? 0) / t.attractions : null;
+  if (s.touristKey === 'commercialCars') return { day: commercial, overnight: commercial, dayBasis: 'commercialCars', overnightBasis: 'day' };
+  if (s.touristKey === 'pois') {
+    return poi != null ? { day: poi, overnight: poi, dayBasis: 'pois', overnightBasis: 'day' } : { day: commercial, overnight: commercial, dayBasis: 'commercialCars', overnightBasis: 'day' };
+  }
+  let day: number;
+  let dayBasis: TouristShares['dayBasis'];
+  if (attr != null && poi != null) [day, dayBasis] = [0.5 * attr + 0.5 * poi, 'mixed'];
+  else if (attr != null) [day, dayBasis] = [attr, 'attractions'];
+  else if (poi != null) [day, dayBasis] = [poi, 'pois'];
+  else [day, dayBasis] = [commercial, 'commercialCars'];
+  const hotels = t.hotels > 0 ? (d.hotels ?? 0) / t.hotels : null;
+  return hotels != null ? { day, overnight: hotels, dayBasis, overnightBasis: 'hotels' } : { day, overnight: day, dayBasis, overnightBasis: 'day' };
+}
+
+const BASIS_LABEL: Record<TouristShares['dayBasis'], string> = {
+  mixed: 'je ½ touristische Ziele und Einkauf/Freizeit',
+  attractions: 'touristische Ziele',
+  pois: 'Einkauf/Freizeit (POIs)',
+  commercialCars: 'gewerbliche Pkw',
+};
+
+/** Calculation-step text for the tourist BEV of a district. */
+export function touristFormula(d: District, city: CityBev, sh: TouristShares): string {
+  const day = `Tagesgäste ${fmt(city.dayTourists)} × ${pct(sh.day, 2)} (${BASIS_LABEL[sh.dayBasis]}: ${fmt(d.attractions ?? 0)} Ziele, ${fmt(poisOf(d))} POIs)`;
+  const night =
+    sh.overnightBasis === 'hotels'
+      ? `Übernachtungsgäste ${fmt(city.overnightTourists)} × ${pct(sh.overnight, 2)} (${fmt(d.hotels ?? 0)} Unterkünfte)`
+      : `Übernachtungsgäste ${fmt(city.overnightTourists)} × ${pct(sh.overnight, 2)}`;
+  return `${day} + ${night}`;
+}
 
 export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Totals): DistrictResult {
   const residentBase = s.residentKey === 'evs' ? d.privateEvs : d.privateCars;
@@ -268,13 +334,12 @@ export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Tota
   const commercialShare = t.commercialCars > 0 ? d.commercialCars / t.commercialCars : 0;
   // fall back to commercial cars when the enrichment data is missing
   const useArea = s.commuterKey === 'commercialArea' && t.commercialHa > 0;
-  const usePois = s.touristKey === 'pois' && t.pois > 0;
   const commuterShare = useArea ? (d.commercialHa ?? 0) / t.commercialHa : commercialShare;
-  const touristShare = usePois ? poisOf(d) / t.pois : commercialShare;
+  const tourist = touristShares(d, s, t);
 
   const bevResidents = city.residents * residentShare;
   const bevCommuters = city.commuters * commuterShare;
-  const bevTourists = city.tourists * touristShare;
+  const bevTourists = city.dayTourists * tourist.day + city.overnightTourists * tourist.overnight;
   const bev = bevResidents + bevCommuters + bevTourists;
 
   const { total: needed, byUseCase } = pointsFor(bev, s);
@@ -314,10 +379,8 @@ export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Tota
       label: 'BEV Tourismus (Tagesmittel)',
       value: bevTourists,
       unit: 'BEV',
-      formula: usePois
-        ? `${fmt(city.tourists)} BEV stadtweit × ${pct(touristShare, 2)} Anteil POIs (${fmt(d.poisShopping ?? 0)} Einkauf, ${fmt(d.poisLeisure ?? 0)} Freizeit)`
-        : `${fmt(city.tourists)} BEV stadtweit × ${pct(touristShare, 2)} Anteil gewerbliche Pkw`,
-      source: usePois ? 'isme' : 'assumption',
+      formula: touristFormula(d, city, tourist),
+      source: tourist.dayBasis === 'commercialCars' ? 'assumption' : 'isme',
     },
     {
       key: 'bev',

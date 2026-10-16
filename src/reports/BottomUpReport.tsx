@@ -124,6 +124,8 @@ export function BottomUpReport({ data, scenario }: Props) {
         </table>
       </div>
 
+      <TourismCheck data={data} scenario={base} />
+
       <div className="ba">
         <div className="ba-col after">
           <h3>Mehr Bedarf als ISME stadtweit</h3>
@@ -140,6 +142,82 @@ export function BottomUpReport({ data, scenario }: Props) {
       </p>
     </section>
   );
+}
+
+/** Cross-check: how tourists are spread with city attractions vs OSM shops/leisure only. */
+function TourismCheck({ data, scenario }: { data: AppData; scenario: Scenario }) {
+  const districts = data.districts.features.map((f) => f.properties);
+  const poiOf = (d: (typeof districts)[number]) => (d.poisShopping ?? 0) + (d.poisLeisure ?? 0);
+  const totalPoi = sum(districts, poiOf);
+  const totalAttr = sum(districts, (d) => d.attractions ?? 0);
+  if (!totalAttr || !totalPoi) return null;
+  const a = districts.map((d) => (d.attractions ?? 0) / totalAttr);
+  const p = districts.map((d) => poiOf(d) / totalPoi);
+  const r = correlation(a, p);
+  const now = new Map(computeAll(districts, { ...scenario, touristKey: 'mixed' }).results.map((x) => [x.ubz, x.bevTourists]));
+  const before = new Map(computeAll(districts, { ...scenario, touristKey: 'pois' }).results.map((x) => [x.ubz, x.bevTourists]));
+  const rows = districts
+    .map((d, i) => ({ d, attr: a[i], poi: p[i], now: now.get(d.ubz) ?? 0, before: before.get(d.ubz) ?? 0 }))
+    .sort((x, y) => Math.abs(y.now - y.before) - Math.abs(x.now - x.before))
+    .slice(0, 10);
+  const t = data.meta.tourism;
+  return (
+    <>
+      <h3>Tourismus: Ziele der Stadt gegen Einkauf/Freizeit</h3>
+      <p className="muted small">
+        Tagesgäste werden je zur Hälfte nach den {fmt(totalAttr)} touristischen Zielen der Stadt (Sehenswürdigkeiten, Museen, Veranstaltungsorte,
+        Stadion) und nach {fmt(totalPoi)} Einkaufs- und Freizeitorten aus OpenStreetMap verteilt, Übernachtungsgäste nach {fmt(t?.hotels ?? 0)}{' '}
+        Unterkünften ({fmt(t?.overnightStays ?? 0)} Übernachtungen {t?.overnightYear}). Beide Verteilungen hängen eng zusammen (Korrelation{' '}
+        {fmt(r, 2)}); die größten Unterschiede:
+      </p>
+      <div className="rtable-wrap">
+        <table className="rtable">
+          <thead>
+            <tr>
+              <th>Unterbezirk</th>
+              <th className="num">Ziele</th>
+              <th className="num">Anteil Ziele</th>
+              <th className="num">Anteil POIs</th>
+              <th className="num">Tourismus-BEV nur POIs</th>
+              <th className="num">mit Zielen + Hotels</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ d, attr, poi, now: n, before: b }) => (
+              <tr key={d.ubz}>
+                <td>
+                  {d.name}
+                  {d.attractionNames && d.attractionNames.length > 0 && <small>{d.attractionNames.slice(0, 3).join(', ')}</small>}
+                </td>
+                <td className="num">{fmt(d.attractions ?? 0)}</td>
+                <td className="num">{pct(attr, 1)}</td>
+                <td className="num">{pct(poi, 1)}</td>
+                <td className="num">{fmt(b)}</td>
+                <td className="num strong">
+                  {fmt(n)} <small>({fmtDelta(n - b)})</small>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function correlation(x: number[], y: number[]) {
+  const n = x.length;
+  const mx = x.reduce((s, v) => s + v, 0) / n;
+  const my = y.reduce((s, v) => s + v, 0) / n;
+  let sxy = 0;
+  let sxx = 0;
+  let syy = 0;
+  for (let i = 0; i < n; i++) {
+    sxy += (x[i] - mx) * (y[i] - my);
+    sxx += (x[i] - mx) ** 2;
+    syy += (y[i] - my) ** 2;
+  }
+  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0;
 }
 
 function ChangeList({ rows }: { rows: { r: BottomUpResult; isme: number; delta: number }[] }) {

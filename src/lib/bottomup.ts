@@ -29,6 +29,8 @@ import {
   fmt,
   pct,
   totalsOf,
+  touristFormula,
+  touristShares,
   useCasesFor,
   type CityBev,
   type District,
@@ -99,8 +101,6 @@ const commerceMixOf = (d: District) => {
   return c + r > 0 ? c / (c + r) : 0;
 };
 
-const poisOf = (d: District) => (d.poisShopping ?? 0) + (d.poisLeisure ?? 0);
-
 export function computeBottomUp(
   districts: District[],
   s: Scenario,
@@ -132,12 +132,11 @@ export function computeBottomUp(
         : t.commercialCars > 0
           ? d.commercialCars / t.commercialCars
           : 0;
-    const touristShare =
-      s.touristKey === 'pois' && t.pois > 0 ? poisOf(d) / t.pois : t.commercialCars > 0 ? d.commercialCars / t.commercialCars : 0;
+    const tourist = touristShares(d, s, t);
     const bevCommuters = city.commuters * commuterShare;
-    const bevTourists = city.tourists * touristShare;
+    const bevTourists = city.dayTourists * tourist.day + city.overnightTourists * tourist.overnight;
     const fleetBev = d.commercialCars * growth * s.bevShare;
-    return { d, carReduction, bevResidents, efhShare, commuterShare, touristShare, bevCommuters, bevTourists, fleetBev, transit: transit[i], commerce: commerce[i] };
+    return { d, carReduction, bevResidents, efhShare, commuterShare, tourist, bevCommuters, bevTourists, fleetBev, transit: transit[i], commerce: commerce[i] };
   });
 
   // --- calibration 1: home share in apartment blocks ---
@@ -251,7 +250,7 @@ export function computeBottomUp(
         label: 'Tourismus, öffentlich ladend',
         value: m.touristsPublic,
         unit: 'BEV',
-        formula: `${fmt(m.bevTourists, 1)} BEV (${pct(m.touristShare, 2)} der Ziele, POIs); Gäste laden nicht zu Hause`,
+        formula: `${touristFormula(d, city, m.tourist)}; Gäste laden nicht zu Hause`,
         source: 'isme',
         indent: true,
       },

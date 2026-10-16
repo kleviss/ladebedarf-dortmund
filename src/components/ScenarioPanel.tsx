@@ -352,11 +352,16 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, cal
         label="Tourismus verteilen nach"
         value={s.touristKey}
         options={[
-          { value: 'pois', label: 'Einkauf + Freizeit (POIs)' },
+          { value: 'mixed', label: 'Ziele + POIs, Hotels' },
+          { value: 'pois', label: 'Nur POIs' },
           { value: 'commercialCars', label: 'Gewerbliche Pkw' },
         ]}
         onChange={(touristKey) => set({ touristKey })}
-        hint="POIs aus OpenStreetMap, wie im ISME-Gutachten"
+        hint={
+          s.touristKey === 'mixed'
+            ? 'Tagesgäste je ½ nach touristischen Zielen (Stadt) und Einkauf/Freizeit (OSM), Übernachtungsgäste nach Unterkünften'
+            : 'POIs aus OpenStreetMap, wie im ISME-Gutachten'
+        }
       />
 
       <Slider
