@@ -37,30 +37,36 @@ function ReportBody({ data }: { data: AppData }) {
   const appLink = `/${window.location.search}`;
 
   return (
-    <div className="reports">
-      <header className="reports-top">
-        <div>
+    <>
+      {/* same top bar as the map page, so switching tabs doesn't move anything */}
+      <header className="topbar">
+        <div className="brand">
           <div className="title-row">
             <h1>Ladebedarf Dortmund</h1>
             <PageTabs current="berichte" />
           </div>
           <p className="muted">
-            Szenario: {scenario.year}, {pct(scenario.bevShare)} BEV, {scenario.method === 'usecase' ? 'Lade-Use-Cases' : `Verhältnis ${scenario.ratio}:1`},{' '}
-            {scenario.scope === 'street' ? 'nur Straßenraum' : 'öffentlich zugängliche LP'}. Unter{' '}
-            <a href={appLink}>Karte</a> ändern; die Berichte übernehmen das Szenario.
+            Berichte · {scenario.year}, {pct(scenario.bevShare)} BEV · {scenario.method === 'usecase' ? 'Lade-Use-Cases' : `Verhältnis ${scenario.ratio}:1`} ·{' '}
+            {scenario.scope === 'street' ? 'nur Straßenraum' : 'öffentlich zugängliche LP'}
           </p>
         </div>
-        <nav aria-label="Berichte">
-          {REPORTS.map((r) => (
-            <a key={r.id} href={`#${r.id}`}>
-              {r.title}
-            </a>
-          ))}
-          <button type="button" className="button" onClick={() => window.print()}>
-            Drucken / PDF
-          </button>
-        </nav>
+        <button type="button" className="button" onClick={() => window.print()}>
+          Drucken / PDF
+        </button>
       </header>
+
+    <div className="reports">
+      <nav className="reports-nav" aria-label="Berichte">
+        <span className="muted">Im Bericht springen:</span>
+        {REPORTS.map((r) => (
+          <a key={r.id} href={`#${r.id}`}>
+            {r.title}
+          </a>
+        ))}
+        <a className="muted" href={appLink}>
+          Szenario in der Karte ändern
+        </a>
+      </nav>
 
       <BeforeAfter results={results} cityPoints={cityPoints} scenario={scenario} totalBev={city.total} data={data} />
       <Priorities results={results} />
@@ -75,6 +81,7 @@ function ReportBody({ data }: { data: AppData }) {
         Stand {new Date(data.meta.fetchedAt).toLocaleDateString('de-DE')}.
       </footer>
     </div>
+    </>
   );
 }
 

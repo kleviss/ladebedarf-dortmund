@@ -12,22 +12,12 @@
   gap: 40px;
 }
 
-.reports-top {
-  display: grid;
-  gap: 14px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
-}
-
-.reports-top h1 {
-  font-size: 2rem;
-}
-
-.reports-top nav {
+.reports-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 6px 16px;
   align-items: center;
+  font-size: 0.92rem;
 }
 
 .report {
@@ -266,8 +256,8 @@
 }
 
 @media print {
-  .reports-top nav,
-  .reports-top .muted a {
+  .topbar,
+  .reports-nav {
     display: none;
   }
   .report {
