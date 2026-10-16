@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadData, type AppData, type ParkingSpot } from '../lib/data';
+import { loadData, type AppData, type DistanceBand, type ParkingSpot } from '../lib/data';
 import { computeAll, fmt, pct, ISME, useCasesFor, type DistrictResult, type Scenario } from '../lib/isme';
 import { readUrlState } from '../lib/urlState';
 
@@ -255,6 +255,7 @@ function Parking({ results, spots, data }: { results: DistrictResult[]; spots: P
           { label: 'Große Flächen ohne Ladestandort', value: fmt(bigFar.length), note: 'Parkhaus, P+R oder ≥ 50 Plätze' },
         ]}
       />
+      <DistanceTable data={data} />
       <h3>Anteil ohne Ladestandort in 225 m, nach Art</h3>
       <Bars
         rows={kinds.map((x) => ({ label: KIND_LABEL[x.k], sub: `${fmt(x.uncovered)} von ${fmt(x.n)}`, value: x.n ? x.uncovered / x.n : 0 }))}
@@ -292,6 +293,64 @@ function Parking({ results, spots, data }: { results: DistrictResult[]; spots: P
         Quelle Parken: {data.meta.parking?.sources.join('; ')}. Kapazität ist in OSM oft nicht erfasst.
       </p>
     </Report>
+  );
+}
+
+function DistanceTable({ data }: { data: AppData }) {
+  const d = data.meta.parking?.distance;
+  if (!d) return null;
+  const rows: { label: string; b: DistanceBand; strong?: boolean }[] = [
+    { label: 'Öffentliche Parkflächen, gesamt', b: d.public, strong: true },
+    { label: 'davon Parkhaus / Tiefgarage', b: d.byKind.garage },
+    { label: 'davon Park+Ride', b: d.byKind['park-ride'] },
+    { label: 'davon Parkplatz', b: d.byKind.lot },
+    { label: 'davon Straßenrand', b: d.byKind.street },
+    { label: 'Kundenparkplätze (Handel, zum Vergleich)', b: d.customers, strong: true },
+  ];
+  const share = (b: DistanceBand, m: number) => (b.n ? (b.within[String(m)] ?? 0) / b.n : 0);
+  return (
+    <>
+      <h3>Abstand zum nächsten Ladestandort</h3>
+      <p className="muted small">
+        Anteil der Parkflächen, die höchstens so weit vom nächsten der {fmt(data.meta.totals.chargers)} Ladestandorte entfernt sind. 225 m ist die
+        ISME-Gehweite für Wohnen.
+      </p>
+      <div className="rtable-wrap">
+        <table className="rtable">
+          <thead>
+            <tr>
+              <th>Parkflächen</th>
+              <th className="num">Anzahl</th>
+              {d.bands.map((m) => (
+                <th key={m} className="num">
+                  ≤ {fmt(m)} m
+                </th>
+              ))}
+              <th className="num">Median</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ label, b, strong }) => (
+              <tr key={label} className={strong ? 'row-strong' : undefined}>
+                <td>{label}</td>
+                <td className="num">{fmt(b.n)}</td>
+                {d.bands.map((m) => (
+                  <td key={m} className={`num${m === 225 ? ' strong' : ''}`}>
+                    {pct(share(b, m))}
+                  </td>
+                ))}
+                <td className="num">{fmt(b.median)} m</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="small">
+        <b>Lesart:</b> Nur {pct(share(d.public, 225))} der öffentlichen Parkflächen liegen in Gehweite (225 m) eines Ladestandorts, bei
+        Kundenparkplätzen sind es {pct(share(d.customers, 225))}. Die Hälfte der öffentlichen Parkflächen ist mehr als {fmt(d.public.median)} m vom
+        nächsten Ladestandort entfernt.
+      </p>
+    </>
   );
 }
 

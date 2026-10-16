@@ -223,6 +223,11 @@
   text-align: right;
 }
 
+.rtable .row-strong td {
+  font-weight: 600;
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+
 .rtable small {
   display: block;
   color: var(--muted);

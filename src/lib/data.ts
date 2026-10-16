@@ -16,7 +16,18 @@ export interface CityMeta {
     priorityCells: number;
   };
   fixes: string[];
-  parking?: { publicSpots: number; uncovered: number; coveredMetres: number; sources: string[] };
+  parking?: {
+    publicSpots: number;
+    uncovered: number;
+    coveredMetres: number;
+    sources: string[];
+    distance?: {
+      bands: number[];
+      public: DistanceBand;
+      customers: DistanceBand;
+      byKind: Record<ParkingSpot['kind'], DistanceBand>;
+    };
+  };
   enrichment?: {
     sources: string[];
     poisShopping: number;
@@ -28,6 +39,13 @@ export interface CityMeta {
     bplansRecent: number;
     coveredMetres: number;
   };
+}
+
+/** Parking areas within each distance band (metres) to the nearest charging location. */
+export interface DistanceBand {
+  n: number;
+  within: Record<string, number>;
+  median: number;
 }
 
 export interface ParkingSpot {

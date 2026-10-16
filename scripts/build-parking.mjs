@@ -91,8 +91,16 @@ async function main() {
   ]);
 
   const spots = [];
+  // Customer-only parking (supermarkets etc.) is not a site for public charging,
+  // but we report how close it is to chargers for comparison.
+  const customerPts = [];
   for (const e of osm.elements) {
     const t = e.tags ?? {};
+    if (t.access === 'customers') {
+      const c = [e.center?.lon ?? e.lon, e.center?.lat ?? e.lat];
+      if (c[0] != null) customerPts.push(c);
+      continue;
+    }
     if (!PUBLIC_ACCESS.has(t.access)) continue;
     const lon = e.center?.lon ?? e.lon;
     const lat = e.center?.lat ?? e.lat;
@@ -122,7 +130,13 @@ async function main() {
     if (!s.name) return true;
     const key = s.name.toLowerCase().replace(/\s+/g, ' ').trim();
     const others = seen.get(key) ?? [];
-    if (others.some((o) => metres(o.pt, s.pt) < 150)) return false;
+    const twin = others.find((o) => metres(o.pt, s.pt) < 150);
+    if (twin) {
+      // keep the more specific type (Open Data's Parkhaus / P+R) and any known capacity
+      if (s.kind === 'garage' || s.kind === 'park-ride') twin.kind = s.kind;
+      twin.capacity ??= s.capacity;
+      return false;
+    }
     seen.set(key, [...others, s]);
     return true;
   });
@@ -160,6 +174,25 @@ async function main() {
   await writeFile(join(CITY, 'unterbezirke.geojson'), JSON.stringify(districts));
   await writeFile(join(CITY, 'parkplaetze.geojson'), JSON.stringify({ type: 'FeatureCollection', features }));
 
+  // Distance bands to the nearest charger, for the reports
+  const BANDS = [50, 100, 225, 500];
+  const band = (distances) => ({
+    n: distances.length,
+    within: Object.fromEntries(BANDS.map((m) => [m, distances.filter((d) => d <= m).length])),
+    median: distances.length ? [...distances].sort((a, b) => a - b)[Math.floor(distances.length / 2)] : 0,
+  });
+  const customerDistances = customerPts
+    .filter((pt) => districts.features.some((f) => inMultiPolygon(pt, f.geometry)))
+    .map((pt) => Math.round(Math.min(...chargers.map((c) => metres(pt, c)))));
+  const distanceBands = {
+    bands: BANDS,
+    public: band(features.map((f) => f.properties.distance)),
+    customers: band(customerDistances),
+    byKind: Object.fromEntries(
+      ['garage', 'park-ride', 'lot', 'street'].map((k) => [k, band(features.filter((f) => f.properties.kind === k).map((f) => f.properties.distance))]),
+    ),
+  };
+
   const metaPath = join(CITY, 'meta.json');
   const meta = JSON.parse(await readFile(metaPath, 'utf8'));
   const uncovered = features.filter((f) => f.properties.cover === 2).length;
@@ -169,6 +202,7 @@ async function main() {
     publicSpots: features.length,
     uncovered,
     coveredMetres: COVERED_M,
+    distance: distanceBands,
   };
   await writeFile(metaPath, JSON.stringify(meta, null, 2));
 
