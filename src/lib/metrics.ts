@@ -1,6 +1,6 @@
 import { fmt, pct, type DistrictResult } from './isme';
 
-export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'coverage';
+export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage';
 
 export interface Metric {
   key: MetricKey;
@@ -24,6 +24,13 @@ export const METRICS: Metric[] = [
   { key: 'needed', label: 'Benötigte Ladepunkte', short: 'Bedarf', value: (r) => r.needed, format: points },
   { key: 'existing', label: 'Vorhandene Ladepunkte', short: 'Bestand', value: (r) => r.existing, format: points },
   { key: 'coverage', label: 'Deckungsgrad (Bestand ÷ Bedarf)', short: 'Deckung', value: (r) => r.coverage, format: (n) => pct(n) },
+  {
+    key: 'newEvsPer1000Cars',
+    label: 'E-Neuzulassungen je 1.000 Pkw',
+    short: 'E-Neuzulassungen',
+    value: (r) => (r.cars > 0 ? ((r.privateNewEvs + r.commercialNewEvs) / r.cars) * 1000 : 0),
+    format: (n) => fmt(n, 1),
+  },
   { key: 'evShareToday', label: 'E-Anteil am Pkw-Bestand heute', short: 'E-Anteil', value: (r) => r.evShareToday, format: (n) => pct(n, 1) },
 ];
 
