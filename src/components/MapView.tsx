@@ -290,22 +290,37 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
   return (
     <div className="map">
       <div ref={container} className="map-canvas" aria-label="Map of statistical subdistricts" role="region" />
-      <div className="map-legend" aria-label="Legend: missing charging points">
-        <span className="map-legend-title">Missing charging points</span>
-        <div className="map-legend-bar">
-          {[
-            ...(classes.hasZero ? [{ colour: ZERO_COLOR, label: '0' }] : []),
-            ...classes.breaks.map((b, i) => {
-              const from = i === 0 ? 1 : classes.breaks[i - 1] + 1;
-              return { colour: classes.colours[i], label: from === b ? String(b) : `${from}–${b}` };
-            }),
-          ].map((c) => (
-            <span key={c.label} className="map-legend-step">
-              <span className="map-legend-swatch" style={{ background: c.colour }} aria-hidden="true" />
-              {c.label}
-            </span>
-          ))}
+      <div className="map-legend" aria-label="Map legend">
+        <div className="map-legend-block">
+          <span className="map-legend-title">Missing charging points</span>
+          <div className="map-legend-bar">
+            {[
+              ...(classes.hasZero ? [{ colour: ZERO_COLOR, label: '0' }] : []),
+              ...classes.breaks.map((b, i) => {
+                const from = i === 0 ? 1 : classes.breaks[i - 1] + 1;
+                return { colour: classes.colours[i], label: from === b ? String(b) : `${from}–${b}` };
+              }),
+            ].map((c) => (
+              <span key={c.label} className="map-legend-step">
+                <span className="map-legend-swatch" style={{ background: c.colour }} aria-hidden="true" />
+                {c.label}
+              </span>
+            ))}
+          </div>
         </div>
+        {showChargers && (
+          <div className="map-legend-block">
+            <span className="map-legend-title">Charging stations</span>
+            <ul className="station-key">
+              <li><span className="dot" aria-hidden="true" />Public AC</li>
+              <li><span className="dot dot-dc" aria-hidden="true" />Fast charger (DC)</li>
+              <li><span className="dot dot-offstreet" aria-hidden="true" />Car park, customers</li>
+              <li className="station-key-note">
+                <span className="dot dot-big" aria-hidden="true">2</span>Size and number = charging points
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
       {stationHover && (
         <div className="map-tooltip" style={{ left: stationHover.x + 14, top: stationHover.y + 14 }} role="status">
