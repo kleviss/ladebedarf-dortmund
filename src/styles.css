@@ -293,6 +293,7 @@ a {
 }
 
 .segmented-options label {
+  position: relative; /* anchors the visually hidden radio inside the label */
   flex: 1 1 auto;
   text-align: center;
   padding: 6px 10px;
@@ -311,6 +312,8 @@ a {
 
 .segmented-options input {
   position: absolute;
+  inset: 0;
+  margin: 0;
   opacity: 0;
   pointer-events: none;
 }
