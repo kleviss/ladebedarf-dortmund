@@ -16,6 +16,7 @@ setWorkerUrl(workerUrl);
 import type { AppData } from '../lib/data';
 import type { DistrictResult } from '../lib/isme';
 import { cityBoundary } from '../lib/cityBoundary';
+import { RAMP, ZERO_COLOR, type Classes } from '../lib/metrics';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
 const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json';
@@ -23,6 +24,8 @@ const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_w
 interface Props {
   data: AppData;
   results: Map<string, DistrictResult>;
+  /** Colour classes of the missing charging points */
+  classes: Classes;
   selected: string | null;
   showChargers: boolean;
   onSelect: (ubz: string | null) => void;
@@ -34,7 +37,7 @@ interface Hover {
   ubz: string;
 }
 
-export function MapView({ data, results, selected, showChargers, onSelect }: Props) {
+export function MapView({ data, results, classes, selected, showChargers, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -74,8 +77,18 @@ export function MapView({ data, results, selected, showChargers, onSelect }: Pro
           type: 'fill',
           source: 'ubz',
           paint: {
-            'fill-color': '#50647b',
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.12, 0],
+            // colour class per district from feature state 'cls' (-1 = no missing points)
+            'fill-color': [
+              'match',
+              ['coalesce', ['feature-state', 'cls'], -1],
+              0, RAMP[0],
+              1, RAMP[1],
+              2, RAMP[2],
+              3, RAMP[3],
+              4, RAMP[4],
+              ZERO_COLOR,
+            ],
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.6],
           },
         },
         firstSymbol,
@@ -187,6 +200,17 @@ export function MapView({ data, results, selected, showChargers, onSelect }: Pro
     }
   }, [ready, selected, data]);
 
+  // Shade every district by its missing charging points.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const f of data.districts.features) {
+      if (f.id == null) continue;
+      const r = results.get(f.properties.ubz);
+      map.setFeatureState({ source: 'ubz', id: f.id }, { cls: r ? classes.classOf(r.gap) : -1 });
+    }
+  }, [ready, results, classes, data]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
@@ -202,7 +226,8 @@ export function MapView({ data, results, selected, showChargers, onSelect }: Pro
         <div className="map-tooltip" style={{ left: hover.x + 14, top: hover.y + 14 }} role="status">
           <strong>{hovered.name}</strong>
           <span className="muted">{hovered.stadtbezirk}</span>
-          <span>Subdistrict {hovered.ubz}</span>
+          <span>Missing charging points: <b className="num">{hovered.gap.toLocaleString('en-GB')}</b></span>
+          <span>Existing: {hovered.existing.toLocaleString('en-GB')} · Required: {hovered.needed.toLocaleString('en-GB')}</span>
         </div>
       )}
     </div>

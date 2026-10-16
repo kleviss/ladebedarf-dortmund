@@ -72,8 +72,8 @@ stock, and missing points. Close the details or choose "All subdistricts" to cle
 the selection and zoom back out to the entire city. Map clicks and the dropdown
 stay in sync. On smaller screens, the filter pane sits above the map.
 The checked "Show current charging points" checkbox toggles the recorded-location
-markers. Districts currently have neutral outlines only, with a light hover
-highlight; no demand-based colouring is applied pending a new shading rule.
+markers. Districts are shaded by missing charging points (blue ramp, quantile
+classes, grey = demand covered); hovering shows missing, existing and required points.
 In city view, a blue outline with a white halo highlights the outer city limits,
 merged from the district polygons without internal borders. Selecting a district
 hides the city outline; closing its details restores it.

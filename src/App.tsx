@@ -6,6 +6,7 @@ import { loadData, type AppData } from './lib/data';
 import { computeCurrentDemand } from './lib/isme';
 import { computeFactors, currentStreetDemand } from './lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts } from './lib/factorData';
+import { quantileClasses } from './lib/metrics';
 
 export default function App() {
   const [data, setData] = useState<AppData | null>(null);
@@ -47,6 +48,7 @@ function Dashboard({ data }: { data: AppData }) {
     [data, factors],
   );
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
+  const classes = useMemo(() => quantileClasses(results.map((r) => r.gap)), [results]);
   const district = selected ? byUbz.get(selected) : undefined;
 
   return (
@@ -55,12 +57,13 @@ function Dashboard({ data }: { data: AppData }) {
         <div className="brand">
           <h1>Dortmund Charging Demand</h1>
           <p className="muted">Click a subdistrict to see existing charging points, estimated current demand and missing points.</p>
-          <p className="hint">District boundaries · Orange = recorded charging locations.</p>
+          <p className="hint">Shading = missing charging points · Orange = recorded charging locations.</p>
         </div>
       </header>
       <main className={`current-layout${district ? ' has-selection' : ''}`}>
         <Legend
           districts={results}
+          classes={classes}
           selected={selected}
           showChargers={showChargers}
           onSelect={setSelected}
@@ -70,6 +73,7 @@ function Dashboard({ data }: { data: AppData }) {
           <MapView
             data={data}
             results={byUbz}
+            classes={classes}
             selected={selected}
             showChargers={showChargers}
             onSelect={setSelected}
