@@ -1,0 +1,100 @@
+name,kind,type,ubz,event,visitors,visitorsSource,lon,lat
+Harenberg City-Center,Veranstaltungsort,Tagungshaus,003,True,,,7.45582,51.51622
+Deutsches Kochbuchmuseum,Museum,MuseumSonstiges,004,False,,,7.4702,51.51008
+Karnevalsmuseum,Museum,MuseumKulturHistorisch,004,False,,,7.47019,51.51006
+Adlerturm,Sehenswürdigkeit,Turm,009,False,,,7.46938,51.51027
+Altes Stadthaus,Sehenswürdigkeit,Denkmal,009,False,,,7.46705,51.5111
+Ausbüttels Apothekenmuseum,Sehenswürdigkeit,MuseumSonstiges,009,False,,,7.46414,51.51187
+Baukunstarchiv NRW,Sehenswürdigkeit,Archiv,009,False,,,7.47207,51.51319
+Berswordthalle,Veranstaltungsort,Veranstaltungshalle,009,True,,,7.46795,51.51115
+DOC - Dortmunder Centrum für Medizin & Gesundheit,Sehenswürdigkeit,ArztpraxisPraxiszentrum,009,False,,,7.45944,51.51516
+Deutsches Fußballmuseum,Sehenswürdigkeit,Sportmuseum,009,False,,,7.45857,51.51632
+Europa-Brunnen,Sehenswürdigkeit,Brunnen,009,False,,,7.46831,51.51417
+Ev. Stadtkirche St. Marien,Sehenswürdigkeit,Kirche,009,False,,,7.46756,51.51412
+Friedensplatz,Veranstaltungsort,Festplatz,009,True,,,7.46633,51.51121
+Kindermuseum Adlerturm,Museum,MuseumSonstiges,009,False,14252.0,"Open Data museen-besuche, 2023 (Museum Adlerturm)",7.46929,51.51037
+Konzerthaus Dortmund,Sehenswürdigkeit,KonzertsaalHalle,009,False,168000.0,"Open Data Konzerthaus und Theater, season 2022/23",7.46635,51.51611
+Museum für Kunst und Kulturgeschichte,Sehenswürdigkeit,Kunstmuseum,009,False,40589.0,"Open Data museen-besuche, 2023",7.46327,51.51664
+Platz von Hiroshima,Sehenswürdigkeit,Platz,009,False,,,7.46352,51.51362
+Propsteikirche St.Johannes Baptist (Mitte),Sehenswürdigkeit,Kirche,009,False,,,7.4629,51.5132
+Reinoldinum,Veranstaltungsort,Veranstaltungshalle,009,True,,,7.47125,51.51616
+Stadt- und Landesbibliothek Dortmund,Sehenswürdigkeit,Bibliothek,009,False,,,7.46087,51.51653
+Stadtkirche St.Petri-Kirche,Sehenswürdigkeit,Kirche,009,False,,,7.46005,51.51463
+Stadtkirche St.Reinoldi-Kirche,Sehenswürdigkeit,Kirche,009,False,,,7.46758,51.51464
+Theater Dortmund,Sehenswürdigkeit,Schauspielhaus,009,False,194373.0,"Open Data Konzerthaus und Theater, season 2022/23",7.46183,51.51168
+Weihnachtstadt Dortmund,Sehenswürdigkeit,VeranstaltungSonstige,009,False,,,7.46449,51.51302
+Wochenmarkt Innenstadt-West,Sehenswürdigkeit,Wochenmarkt,009,False,,,7.46449,51.51302
+ehem. Gesundheitshaus-/amt,Sehenswürdigkeit,Denkmal,009,False,,,7.4607,51.51239
+schauraum: comic + cartoon,Museum,Kunstmuseum,009,False,9494.0,"Open Data museen-besuche, 2023",7.46008,51.5163
+Borusseum,Sehenswürdigkeit,MuseumSonstiges,011,False,,,7.45294,51.49391
+SIGNAL IDUNA PARK,Sehenswürdigkeit,Fussball,011,True,1382134.0,"17 Bundesliga home games × 81,302 average, 2023/24 (Statista)",7.4518,51.4926
+St.Nicolai-Kirche,Sehenswürdigkeit,Kirche,011,False,,,7.45279,51.50141
+Stadion Rote Erde,Sehenswürdigkeit,StadionArena,011,True,,,7.45398,51.49332
+Westfalenhallen,Sehenswürdigkeit,Veranstaltungshalle,011,True,,,7.45671,51.49689
+Westfalenhallen Dortmund Verwaltungsgebäude,Veranstaltungsort,Veranstaltungshalle,011,True,,,7.45431,51.49498
+Tremoniapark,Sehenswürdigkeit,Park,013,False,,,7.43689,51.50365
+Dortmunder U - Zentrum für Kunst und Kreativität,Sehenswürdigkeit,Galerie,021,False,,,7.45357,51.51496
+Hardware MedienKunstVerein (HMKV),Museum,Kunstmuseum,021,False,0.0,counted in Dortmunder U,7.45357,51.51496
+Museum Ostwall im Dortmunder U,Sehenswürdigkeit,Kunstmuseum,021,False,131623.0,"Open Data Besuche Dortmunder U, 2019 (last year before Covid), whole building",7.45357,51.51496
+Deutsche Arbeitsschutzausstellung (DASA),Sehenswürdigkeit,Technikmuseum,032,False,,,7.41679,51.49831
+Werkssiedlung Oberdorstfeld,Sehenswürdigkeit,Denkmal,033,False,,,7.41382,51.50186
+Altes Hafenamt,Sehenswürdigkeit,Denkmal,041,False,,,7.44269,51.52588
+Deutsches Industrielack-Museum,Museum,Technikmuseum,041,False,,,7.44266,51.52857
+Festwiese Fredenbaumpark,Veranstaltungsort,Festplatz,041,True,,,7.44352,51.5374
+Fredenbaumpark,Sehenswürdigkeit,Park,041,False,,,7.4533,51.53795
+Theater im Depot,Sehenswürdigkeit,FreieTheaterGruppe,041,False,,,7.45313,51.53272
+Künstlerhaus Dortmund,Sehenswürdigkeit,AtelierKuenstlerhaus,042,False,,,7.44626,51.51741
+Mahn- und Gedenkstätte Steinwache,Sehenswürdigkeit,Geschichtsmuseum,051,False,,,7.46073,51.51966
+Naturmuseum Dortmund,Sehenswürdigkeit,Naturkundemuseum,053,False,127784.0,"Open Data museen-besuche, 2023",7.45751,51.53576
+Brauerei-Museum,Sehenswürdigkeit,Technikmuseum,054,False,14668.0,"Open Data museen-besuche, 2023",7.46772,51.52937
+Historisches Sudhaus,Museum,Technikmuseum,054,False,,,7.46759,51.52964
+Nordmarkt,Sehenswürdigkeit,Platz,054,False,,,7.4657,51.5257
+Borsigplatz,Sehenswürdigkeit,Denkmal,061,False,,,7.48165,51.52343
+Hoesch-Museum,Sehenswürdigkeit,Industriemuseum,062,False,5749.0,"Open Data museen-besuche, 2023",7.48145,51.52963
+Ostfriedhof,Sehenswürdigkeit,Friedhof,072,False,,,7.49194,51.51001
+PACE Automobil Museum,Sehenswürdigkeit,Technikmuseum,081,False,,,7.4961,51.50375
+Alte Gartenstadt,Sehenswürdigkeit,InnenstadtOrtskern,084,False,,,7.51471,51.50178
+eins eins null - Polizeiausstellung Dortmund,Sehenswürdigkeit,Geschichtsmuseum,091,False,,,7.46023,51.49959
+Festwiese/Ballwurftrainer,Veranstaltungsort,Festplatz,092,True,,,7.47371,51.49339
+Florianturm,Sehenswürdigkeit,Turm,092,False,,,7.47657,51.49663
+Westfalenpark,Sehenswürdigkeit,Park,092,False,,,7.47619,51.49501
+mondo mio!,Sehenswürdigkeit,MuseumSonstiges,092,False,,,7.47571,51.49743
+Hammerkopfturm,Sehenswürdigkeit,Denkmal,122,False,,,7.46389,51.54691
+Haus Wenge,Sehenswürdigkeit,Herrenhaus,251,False,,,7.56553,51.57605
+Landschaftspark Gneisenau,Sehenswürdigkeit,Landschaftspark,291,False,,,7.51754,51.56626
+Lanstroper Ei,Sehenswürdigkeit,Wasserturm,292,False,,,7.55952,51.56864
+Galopprennbahn Dortmund,Sehenswürdigkeit,Pferderennbahn,333,False,,,7.52799,51.51512
+Haus Rodenberg,Sehenswürdigkeit,Herrenhaus,413,False,,,7.55433,51.49311
+Tridelta Magnetmuseum,Museum,Technikmuseum,415,False,,,7.55092,51.48926
+Viadukt Hympendahlbrücke,Sehenswürdigkeit,Viadukt,531,False,,,7.48886,51.49079
+Heimatmuseum Hörde,Sehenswürdigkeit,Heimatkundemuseum,532,False,,,7.50342,51.49098
+Hörder Burg,Sehenswürdigkeit,Burg,532,False,,,7.50425,51.49091
+PHOENIX See,Sehenswürdigkeit,See,532,False,,,7.51261,51.49026
+Schlanke Mathilde,Sehenswürdigkeit,Denkmal,532,False,,,7.5007,51.48886
+Bergmann Brauerei,Sehenswürdigkeit,Technikmuseum,533,False,,,7.4877,51.48914
+Phoenix des Lumières,Sehenswürdigkeit,Ausstellungshaus,533,False,,,7.48853,51.48837
+Phoenix-West,Sehenswürdigkeit,Gewerbegebiet,533,False,,,7.48222,51.48752
+Skywalk Hochofenerlebnis,Sehenswürdigkeit,IndustrieLehrpfad,533,False,,,7.48916,51.48861
+Warsteiner Music Hall,Veranstaltungsort,Veranstaltungshalle,533,True,,,7.48872,51.48836
+Besucherbergwerk Graf Wittekind,Sehenswürdigkeit,Besucherbergwerk,593,False,,,7.48009,51.42134
+Burgruine Hohensyburg,Sehenswürdigkeit,Burg,593,False,,,7.48705,51.42005
+Kaiser-Wilhelm-Denkmal,Sehenswürdigkeit,Denkmal,593,False,,,7.4826,51.41963
+St.Peter zu Syburg,Sehenswürdigkeit,Kirche,593,False,,,7.48916,51.42226
+Waldgebiet Bittermark,Sehenswürdigkeit,Wald,620,False,,,7.47448,51.45204
+Do-Universität S,Sehenswürdigkeit,SchwebebahnHSt,642,False,,,7.41761,51.49236
+TOP Tagungs- und Officecenter,Veranstaltungsort,Tagungshaus,642,True,,,7.424,51.49541
+Halde Gotthelf,Sehenswürdigkeit,Halde,653,False,,,7.45081,51.47083
+Botanischer Garten Rombergpark,Sehenswürdigkeit,Park,693,False,,,7.46726,51.47956
+Zoo Dortmund,Sehenswürdigkeit,Zoo,693,False,438875.0,"Open Data zoo-besuche, 2024",7.46818,51.47418
+LWL-Museum Zeche Zollern,Sehenswürdigkeit,Technikmuseum,710,False,,,7.33335,51.5186
+Westfälisches Schulmuseum,Sehenswürdigkeit,MuseumKulturHistorisch,742,False,,,7.38349,51.51051
+Haus Dellwig,Sehenswürdigkeit,Herrenhaus,760,False,,,7.3494,51.50926
+Heimatmuseum Lütgendortmund 1988 e.V.,Museum,Heimatkundemuseum,760,False,,,7.3494,51.50926
+Binarium,Sehenswürdigkeit,Technikmuseum,821,False,,,7.41571,51.53641
+Kokerei Hansa,Sehenswürdigkeit,Industriemuseum,821,False,,,7.41249,51.54071
+Festwiese Revierpark Wischlingen,Veranstaltungsort,Festplatz,823,True,,,7.40161,51.51965
+Revierpark Wischlingen,Sehenswürdigkeit,Park,823,False,,,7.40227,51.52113
+Schloß Bodelschwingh,Sehenswürdigkeit,Schloss,910,False,,,7.3624,51.55072
+Bergbaumuseum BUV-Kleinzeche,Sehenswürdigkeit,Besucherbergwerk,940,False,,,7.37589,51.56863
+Nahverkehrsmuseum Dortmund,Sehenswürdigkeit,Technikmuseum,981,False,,,7.40666,51.54903
+Obstbaummuseum Mengede,Sehenswürdigkeit,Naturkundemuseum,982,False,,,7.4045,51.57507

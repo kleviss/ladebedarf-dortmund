@@ -144,6 +144,10 @@ With calibration on (default), home shares and sharing factors are scaled so the
 
 Data: [`scripts/build-bottomup.mjs`](scripts/build-bottomup.mjs) (part of `npm run data`). Tests: [`src/lib/bottomup.test.ts`](src/lib/bottomup.test.ts).
 
+### Street-space factor model (data ready, not in the UI yet)
+
+[`docs/factor-model.md`](docs/factor-model.md) computes street-space points per Unterbezirk for residents, commuters and tourists from Zensus 2022 dwellings, ALKIS garages and workplaces, OSM parking and visitor numbers. Each factor's formula, parameters, defaults and sources are documented there and in [`public/data/model/parameters.json`](public/data/model/parameters.json). The model was validated against real per-district data, and the doc includes a plausibility check of the ISME report. Inputs and reference results: `public/data/model/*.csv` (built by `scripts/model/build_factors.py`); implementation: [`src/lib/factors.ts`](src/lib/factors.ts).
+
 **Open points in the city's material** (switchable in the app):
 
 - The Excel labels customer parking 10.3 % but its formula uses 1.3 % (`=C22*0.013`).
@@ -322,7 +326,8 @@ Pick a task, open an issue or a branch with its name, and update this list in yo
 - [x] Public parking layer with distance to the nearest charger
 - [x] Reports page for the presentation
 - [ ] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister
-- [ ] Use Zensus 2022 grid for population and building type per Unterbezirk
+- [x] Use Zensus 2022 grid for population and building type per Unterbezirk (`public/data/model/factors.csv`)
+- [ ] Wire the street-space factor model (`src/lib/factors.ts`) into the UI
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district
 - [ ] Add points of interest (schools, hospitals, supermarkets via OSM) as destination-charging factor
 
