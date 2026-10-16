@@ -26,6 +26,8 @@ Challenge material shared via Sciebo (TU Dortmund):
 | [Daten für Verwaltungschallenge (Team 07)](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge) | Data provided for the City of Dortmund challenge |
 | [Challenges](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Challenges&editing=false&openfile=true) | Challenge briefs, including this one (*Stadtverwaltung Challenge 1*) |
 
+Team brief (problem, method, data, open tasks on one page): [docs/team-brief.md](docs/team-brief.md).
+
 ---
 
 ## The challenge
@@ -213,19 +215,13 @@ Or from the terminal:
 npx vercel
 ```
 
-### Share the repository with the team
+### Repository
 
-Create an empty repository on GitHub (no README), then:
-
-```bash
-git remote add origin https://github.com/<you>/ladebedarf-dortmund.git
-```
+<https://github.com/kleviss/ladebedarf-dortmund>
 
 ```bash
-git push -u origin main
+git clone https://github.com/kleviss/ladebedarf-dortmund.git
 ```
-
-Invite teammates under *Settings → Collaborators* on GitHub.
 
 ---
 

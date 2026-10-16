@@ -186,6 +186,11 @@ td .mono { color: var(--ink-2); word-break: break-all; }
 .copy:hover { border-color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+.resources { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.resources li { display: grid; gap: 4px; align-content: start; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.resources a { font: 600 1.1rem/1.2 var(--display); }
+.resources span { font-size: 0.9rem; color: var(--ink-2); }
+
 footer { font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -223,6 +228,25 @@ footer { font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--li
     <div><dt>Not required</dt><dd>Exact site plan, grid-connection check, market-ready product</dd></div>
     <div><dt>City provides</dt><dd>A basic demand method, selected datasets, expert support</dd></div>
   </dl>
+</section>
+
+<section aria-labelledby="resources">
+  <h2 id="resources">Team resources</h2>
+  <p>Challenge material on Sciebo (TU Dortmund), the code on GitHub.</p>
+  <ul class="resources">
+    <li>
+      <a href="https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge" target="_blank" rel="noreferrer">Daten für Verwaltungschallenge</a>
+      <span>Team 07 data folder: datasets provided by the City of Dortmund</span>
+    </li>
+    <li>
+      <a href="https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Challenges&amp;editing=false&amp;openfile=true" target="_blank" rel="noreferrer">Challenges</a>
+      <span>All challenge briefs, including Stadtverwaltung Challenge 1</span>
+    </li>
+    <li>
+      <a href="https://github.com/kleviss/ladebedarf-dortmund" target="_blank" rel="noreferrer">GitHub: ladebedarf-dortmund</a>
+      <span>Code, README and this brief as <code>docs/team-brief.md</code></span>
+    </li>
+  </ul>
 </section>
 
 <section aria-labelledby="method">
