@@ -10,14 +10,20 @@ const clamp = (w: number) => Math.min(maxWidth(), Math.max(MIN, Math.round(w)));
 interface Saved {
   width: number;
   collapsed: boolean;
+  /** true: sidebar floats over the map; false: it takes its own column */
+  floating: boolean;
 }
 
 function load(): Saved {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? '{}');
-    return { width: typeof s.width === 'number' ? s.width : DEFAULT, collapsed: s.collapsed === true };
+    return {
+      width: typeof s.width === 'number' ? s.width : DEFAULT,
+      collapsed: s.collapsed === true,
+      floating: s.floating === true,
+    };
   } catch {
-    return { width: DEFAULT, collapsed: false };
+    return { width: DEFAULT, collapsed: false, floating: false };
   }
 }
 
@@ -37,21 +43,24 @@ export function useSidebar() {
 
   const setWidth = useCallback((w: number) => setState((s) => ({ ...s, width: clamp(w), collapsed: false })), []);
   const toggle = useCallback(() => setState((s) => ({ ...s, collapsed: !s.collapsed })), []);
-  const reset = useCallback(() => setState({ width: DEFAULT, collapsed: false }), []);
+  const toggleFloating = useCallback(() => setState((s) => ({ ...s, floating: !s.floating })), []);
+  const reset = useCallback(() => setState((s) => ({ ...s, width: DEFAULT, collapsed: false })), []);
   const style = { '--sidebar-w': `${state.width}px` } as CSSProperties;
-  return { ...state, setWidth, toggle, reset, style };
+  return { ...state, setWidth, toggle, toggleFloating, reset, style };
 }
 
 interface Props {
   width: number;
   collapsed: boolean;
+  floating: boolean;
   onWidth: (w: number) => void;
   onToggle: () => void;
+  onToggleFloating: () => void;
   onReset: () => void;
 }
 
 /** Drag handle between sidebar and map, with a collapse button. */
-export function SidebarResizer({ width, collapsed, onWidth, onToggle, onReset }: Props) {
+export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, onToggleFloating, onReset }: Props) {
   const drag = useRef<{ x: number; w: number } | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -88,6 +97,16 @@ export function SidebarResizer({ width, collapsed, onWidth, onToggle, onReset }:
         title={collapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'}
       >
         {collapsed ? '›' : '‹'}
+      </button>
+      <button
+        type="button"
+        className="sidebar-toggle sidebar-mode"
+        onClick={onToggleFloating}
+        aria-pressed={floating}
+        aria-label={floating ? 'Seitenleiste fest neben die Karte setzen' : 'Seitenleiste über der Karte schweben lassen'}
+        title={floating ? 'Fest neben der Karte anzeigen' : 'Über der Karte schweben lassen'}
+      >
+        {floating ? '▣' : '▢'}
       </button>
       {!collapsed && (
         <div

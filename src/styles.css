@@ -888,3 +888,48 @@ a {
   color: var(--ink);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
 }
+
+/* floating sidebar: overlays the map, which keeps the full width */
+.sidebar-mode {
+  top: 52px;
+}
+
+.layout.is-floating {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.layout.is-floating .sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  width: var(--sidebar-w, 420px);
+  background: var(--bg);
+  box-shadow: 4px 0 18px rgb(0 0 0 / 0.16);
+}
+
+.layout.is-floating .sidebar-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-w, 420px);
+  z-index: 6;
+}
+
+.layout.is-floating.is-collapsed .sidebar-resizer {
+  left: 0;
+}
+
+@media (max-width: 860px) {
+  .layout.is-floating {
+    grid-template-columns: 1fr;
+  }
+  .layout.is-floating .sidebar {
+    position: static;
+    width: auto;
+    box-shadow: none;
+    background: transparent;
+  }
+}

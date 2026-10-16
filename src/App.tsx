@@ -113,7 +113,10 @@ function Dashboard({ data }: { data: AppData }) {
         </button>
       </header>
 
-      <main className={`layout${sidebar.collapsed ? ' is-collapsed' : ''}`} style={sidebar.style}>
+      <main
+        className={`layout${sidebar.collapsed ? ' is-collapsed' : ''}${sidebar.floating ? ' is-floating' : ''}`}
+        style={sidebar.style}
+      >
         <div className="sidebar" hidden={sidebar.collapsed}>
           <Legend
             metric={metric}
@@ -170,8 +173,10 @@ function Dashboard({ data }: { data: AppData }) {
         <SidebarResizer
           width={sidebar.width}
           collapsed={sidebar.collapsed}
+          floating={sidebar.floating}
           onWidth={sidebar.setWidth}
           onToggle={sidebar.toggle}
+          onToggleFloating={sidebar.toggleFloating}
           onReset={sidebar.reset}
         />
 
