@@ -13,7 +13,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
 setWorkerUrl(workerUrl);
-import type { AppData } from '../lib/data';
+import type { AppData, Station } from '../lib/data';
 import type { DistrictResult } from '../lib/isme';
 import { cityBoundary } from '../lib/cityBoundary';
 import { RAMP, ZERO_COLOR, type Classes } from '../lib/metrics';
@@ -37,11 +37,21 @@ interface Hover {
   ubz: string;
 }
 
+interface StationHover {
+  x: number;
+  y: number;
+  station: Station;
+}
+
+const STATION_KIND = (s: Station) =>
+  s.type === 'DC' ? 'Fast charger (DC)' : s.streetAc ? 'Public AC' : s.access === 'customers' ? 'Customers only' : 'Car park / private site';
+
 export function MapView({ data, results, classes, selected, showChargers, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<Hover | null>(null);
+  const [stationHover, setStationHover] = useState<StationHover | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -68,7 +78,8 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
       const firstSymbol = map.getStyle().layers.find((l) => l.type === 'symbol')?.id;
 
       map.addSource('ubz', { type: 'geojson', data: data.districts });
-      map.addSource('chargers', { type: 'geojson', data: data.chargers });
+      // register stations with charging points per station; fall back to the city's locations
+      map.addSource('chargers', { type: 'geojson', data: data.stations.features.length ? data.stations : data.chargers });
       map.addSource('city-boundary', { type: 'geojson', data: cityBoundary(data.districts) });
 
       map.addLayer(
@@ -128,12 +139,67 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
         type: 'circle',
         source: 'chargers',
         paint: {
-          'circle-color': '#eb6834',
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 15, 6],
+          // orange = public AC, dark = fast charger, light = car park or customer parking
+          'circle-color': [
+            'case',
+            ['==', ['get', 'type'], 'DC'],
+            '#9a3412',
+            ['==', ['get', 'streetAc'], false],
+            '#f5b48f',
+            '#eb6834',
+          ],
+          // grows with the number of charging points at the station
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10,
+            ['+', 1.5, ['*', 0.7, ['coalesce', ['get', 'points'], 1]]],
+            13.5,
+            ['+', 3, ['*', 1.2, ['coalesce', ['get', 'points'], 1]]],
+            15,
+            ['+', 6, ['*', 1.5, ['coalesce', ['get', 'points'], 1]]],
+          ],
           'circle-stroke-color': '#ffffff',
           'circle-stroke-width': 1,
         },
       });
+      map.addLayer({
+        id: 'charger-count',
+        type: 'symbol',
+        source: 'chargers',
+        minzoom: 13.5,
+        filter: ['has', 'points'],
+        layout: {
+          'text-field': ['to-string', ['get', 'points']],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 10,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: { 'text-color': '#ffffff' },
+      });
+      map.on('mousemove', 'chargers', (e: MapLayerMouseEvent) => {
+        const p = e.features?.[0]?.properties as Record<string, unknown> | undefined;
+        if (!p || p.points == null) return;
+        setStationHover({
+          x: e.point.x,
+          y: e.point.y,
+          station: {
+            ubz: (p.ubz as string) ?? null,
+            points: Number(p.points),
+            kw: p.kw == null ? null : Number(p.kw),
+            type: p.type === 'DC' ? 'DC' : 'AC',
+            streetAc: p.streetAc === true || p.streetAc === 'true',
+            access: p.access === 'customers' ? 'customers' : 'public',
+            operator: String(p.operator ?? ''),
+            name: (p.name as string) || null,
+            address: String(p.address ?? ''),
+            since: (p.since as string) || null,
+          },
+        });
+      });
+      map.on('mouseleave', 'chargers', () => setStationHover(null));
 
       let hoveredId: number | string | undefined;
       map.on('mousemove', 'ubz-fill', (e: MapLayerMouseEvent) => {
@@ -214,7 +280,9 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    map.setLayoutProperty('chargers', 'visibility', showChargers ? 'visible' : 'none');
+    for (const layer of ['chargers', 'charger-count']) {
+      map.setLayoutProperty(layer, 'visibility', showChargers ? 'visible' : 'none');
+    }
   }, [ready, showChargers]);
 
   const hovered = hover ? results.get(hover.ubz) : undefined;
@@ -239,7 +307,21 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
           ))}
         </div>
       </div>
-      {hover && hovered && (
+      {stationHover && (
+        <div className="map-tooltip" style={{ left: stationHover.x + 14, top: stationHover.y + 14 }} role="status">
+          <strong>
+            {stationHover.station.points} charging point{stationHover.station.points === 1 ? '' : 's'}
+            {stationHover.station.kw != null ? ` · ${stationHover.station.kw.toLocaleString('en-GB')} kW` : ''}
+          </strong>
+          <span>{STATION_KIND(stationHover.station)}</span>
+          <span className="muted">{stationHover.station.name ?? stationHover.station.address}</span>
+          <span className="muted">
+            {stationHover.station.operator}
+            {stationHover.station.since ? ` · since ${stationHover.station.since.slice(0, 4)}` : ''}
+          </span>
+        </div>
+      )}
+      {!stationHover && hover && hovered && (
         <div className="map-tooltip" style={{ left: hover.x + 14, top: hover.y + 14 }} role="status">
           <strong>{hovered.name}</strong>
           <span className="muted">{hovered.stadtbezirk}</span>

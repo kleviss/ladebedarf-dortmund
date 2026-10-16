@@ -1565,3 +1565,45 @@ a {
   background: #fcefdf;
   color: #8a4a0b;
 }
+
+/* --- charging station key (filter pane) --------------------------------------- */
+
+.station-key {
+  list-style: none;
+  margin: 4px 0 0 26px;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  font-size: 0.78rem;
+}
+
+.station-key li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.station-key .dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--charger);
+  box-shadow: 0 0 0 1.5px #fff;
+}
+
+.station-key .dot-dc {
+  background: #9a3412;
+}
+
+.station-key .dot-offstreet {
+  background: #f5b48f;
+}
+
+.station-summary {
+  margin: 8px 0 0;
+}
+
+.segmented {
+  flex-wrap: wrap;
+}

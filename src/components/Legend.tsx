@@ -33,8 +33,14 @@ export function Legend({ districts, selected, showChargers, onSelect, onToggleCh
       <label className="toggle">
         <input type="checkbox" checked={showChargers} onChange={(event) => onToggleChargers(event.target.checked)} />
         <span className="dot" aria-hidden="true" />
-        Show current charging points
+        Show charging stations
       </label>
+      <ul className="station-key" aria-label="Charging station markers">
+        <li><span className="dot" aria-hidden="true" />Public AC</li>
+        <li><span className="dot dot-dc" aria-hidden="true" />Fast charger (DC)</li>
+        <li><span className="dot dot-offstreet" aria-hidden="true" />Car park, customers</li>
+        <li className="muted">Size and number = charging points per station</li>
+      </ul>
       <FactorControls {...factorSettings} />
     </aside>
   );

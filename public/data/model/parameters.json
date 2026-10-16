@@ -21,7 +21,11 @@
         "scenario"
       ],
       "kind": "assumption",
-      "note": "today: registered EVs per Unterbezirk (no forecast). scenario: private cars × bevShareScenario."
+      "note": "today: registered EVs per Unterbezirk (no forecast). scenario: private cars × bevShareScenario.",
+      "optionLabels": {
+        "today": "Today",
+        "scenario": "Scenario"
+      }
     },
     {
       "key": "bevShareToday",
@@ -297,17 +301,25 @@
       "note": "Match days and fairs are peaks, not everyday demand. Overnight guests of events are still counted via hotels."
     },
     {
-      "key": "pointsPerSite",
+      "key": "existingSupply",
       "factor": "existing",
-      "label": "Ladepunkte je Bestandsstandort",
-      "labelEn": "Charging points per existing location",
-      "default": 1,
-      "min": 1,
-      "max": 4,
-      "step": 1,
-      "unit": "LP",
-      "kind": "assumption",
-      "source": "The ISME report counts 498 public points in 2023; 912 locations in 2026 fit 1 point each better than 2 (1,824)."
+      "label": "Bestand, der gegen den Straßenraum-Bedarf zählt",
+      "labelEn": "Existing points counted",
+      "default": "streetAc",
+      "options": [
+        "streetAc",
+        "allPoints",
+        "sites"
+      ],
+      "optionLabels": {
+        "streetAc": "Public AC",
+        "allPoints": "All points",
+        "sites": "Stations"
+      },
+      "kind": "data",
+      "source": "Bundesnetzagentur (2026): Ladesäulenregister, Stand 01.09.2026, CC BY 4.0. 912 stations with 1,370 charging points in Dortmund.",
+      "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/start.html",
+      "note": "Public AC: normal chargers without customer-only access and not in car parks, hotels, dealerships or shopping centres (by station name). Street demand is AC charging, so fast chargers and customer parking are listed but not counted by default."
     }
   ]
 }

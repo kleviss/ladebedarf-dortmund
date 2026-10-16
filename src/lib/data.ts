@@ -96,8 +96,25 @@ export interface ParkingSpot {
   cover: 0 | 1 | 2;
 }
 
+/** Charging station from the Bundesnetzagentur register (public/data/model/chargers.json) */
+export interface Station {
+  ubz: string | null;
+  points: number;
+  kw: number | null;
+  type: 'AC' | 'DC';
+  /** public AC charging outside car parks and customer parking */
+  streetAc: boolean;
+  access: 'public' | 'customers';
+  operator: string;
+  name: string | null;
+  address: string;
+  since: string | null;
+}
+
 export interface AppData {
   districts: GeoJSON.FeatureCollection<GeoJSON.MultiPolygon, District>;
+  /** Register stations with charging points per station; empty if the file is missing */
+  stations: GeoJSON.FeatureCollection<GeoJSON.Point, Station>;
   chargers: GeoJSON.FeatureCollection<GeoJSON.Point, { ubz: string | null }>;
   priority: GeoJSON.FeatureCollection<GeoJSON.Polygon, { points: number }>;
   parking: GeoJSON.FeatureCollection<GeoJSON.Point, ParkingSpot>;
@@ -115,13 +132,15 @@ async function getJson<T>(path: string): Promise<T> {
 /** Loads the static files written by `npm run data` (city data from Sciebo). */
 export async function loadData(): Promise<AppData> {
   const base = `${import.meta.env.BASE_URL}data/city/`;
-  const [districts, chargers, priority, parking, ziele, meta] = await Promise.all([
+  const empty = { type: 'FeatureCollection' as const, features: [] };
+  const [districts, chargers, priority, parking, ziele, meta, stations] = await Promise.all([
     getJson<AppData['districts']>(`${base}unterbezirke.geojson`),
     getJson<AppData['chargers']>(`${base}ladepunkte.geojson`),
     getJson<AppData['priority']>(`${base}prioritaet.geojson`),
     getJson<AppData['parking']>(`${base}parkplaetze.geojson`),
     getJson<AppData['ziele']>(`${base}ziele.geojson`).catch(() => ({ type: 'FeatureCollection' as const, features: [] })),
     getJson<CityMeta>(`${base}meta.json`),
+    getJson<AppData['stations']>(`${import.meta.env.BASE_URL}data/model/chargers.json`).catch(() => empty),
   ]);
-  return { districts, chargers, priority, parking, ziele, meta };
+  return { districts, chargers, priority, parking, ziele, meta, stations };
 }

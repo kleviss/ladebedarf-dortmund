@@ -9,6 +9,7 @@ Status: data and a tested reference implementation are in the repo; the UI does 
 | [`public/data/model/parameters.json`](../public/data/model/parameters.json) | Every parameter with default, range, kind and source. Single source of truth for Python and TypeScript. |
 | [`public/data/model/factors.csv`](../public/data/model/factors.csv) | 145 Unterbezirke: inputs (city statistics, Zensus, ALKIS, OSM) and reference results |
 | [`public/data/model/destinations.csv`](../public/data/model/destinations.csv) | 99 tourist destinations with visitors per year where a public figure exists |
+| [`public/data/model/chargers.json`](../public/data/model/chargers.json) | 912 charging stations from the Bundesnetzagentur register: charging points, kW, AC/DC, access, operator, start date |
 | [`src/lib/factors.ts`](../src/lib/factors.ts) | Reference implementation with calculation steps for the UI; tests in [`factors.test.ts`](../src/lib/factors.test.ts) |
 | [`scripts/model/build_factors.py`](../scripts/model/build_factors.py) | Builds the two CSV files; `--validate` prints the tests below |
 
@@ -16,7 +17,7 @@ Status: data and a tested reference implementation are in the repo; the UI does 
 
 ```
 street points(UB) = residents(UB) + commuters(UB) + tourists(UB)
-gap(UB)           = max(0, street points(UB) − charging locations(UB) × pointsPerSite)
+gap(UB)           = max(0, street points(UB) − existing charging points(UB))
 ```
 
 **Two modes** (`bevMode`): `today` uses the electric cars registered today (no forecast); `scenario` replaces them with private cars × `bevShareScenario` (ISME: 18 % in 2030).
@@ -108,7 +109,15 @@ nightShare(UB)    = hotelWeight(UB) ÷ Σ hotelWeight                 (OSM hotel
 
 ## Existing points
 
-`pointsPerSite` = 1 (assumption). The ISME report counts 498 public points in 2023; the city's 912 locations in 2026 fit one point each better than two (1,824). Whether they are stations or points is still open.
+Existing charging points come from the [Bundesnetzagentur charging register](https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/start.html) (status 1 September 2026, CC BY 4.0). The city's 912 locations are exactly its 912 stations (906 at the same position), with **1,370 charging points**: 508 stations with 1 point, 372 with 2, 10 with 3, 22 with 4.
+
+| `existingSupply` | Counts | Dortmund |
+|---|---|---:|
+| `streetAc` (default) | AC points, not "customers only" and not in car parks, hotels, dealerships or shopping centres (matched on the station name) | 865 |
+| `allPoints` | every charging point | 1,368 |
+| `sites` | one point per station (earlier default) | 911 |
+
+Street-space demand is AC charging, so fast chargers (197 stations, 385 points) and customer parking are listed but not counted by default. With `streetAc` the gap today is 108 points; with `sites` it was 133.
 
 ---
 
@@ -163,7 +172,7 @@ Checked against Open Data Dortmund.
 | Commuter count | 99,400 cars (142,000 × 70 %) | 142,083 × 65.4 % | similar |
 | Commuter key | RVR commercial land | estimated jobs | switch `commuterKey` to jobs |
 | Tourists | every guest = one car, all charge publicly; key 50 % attractions + 50 % POIs | `personsPerCar`, `chargeAtDestinationShare`; key = visitor numbers | add both parameters |
-| Existing | `pointsPerSite` 1 | same | – |
+| Existing | `pointsPerSite` 1 (locations) | register: public AC points | switch the app to the register |
 
 To use it in the UI: load the three files from `public/data/model/`, build the parameters with `defaultFactorParams`, and call `computeFactors`; each result carries `steps` in the same format as `isme.ts`.
 
@@ -182,5 +191,5 @@ Downloads (Zensus ZIPs ≈ 70 MB, ALKIS and OSM exports) are cached in `data/raw
 
 - Private parking or registered wallboxes per area (the grid operator knows wallboxes > 3.7 kW): would replace the estimate of `homeCoverage`.
 - Utilisation of public charging points (DEW21) to check the tourist and city-centre demand.
-- Are the 912 locations stations or charging points? Which period do the new registrations cover?
+- Which period do the new registrations cover? (The 912 locations are stations with 1,370 points; see the register.)
 - Visitor numbers for Westfalenhallen, Westfalenpark and Deutsches Fußballmuseum.

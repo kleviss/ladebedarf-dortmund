@@ -40,6 +40,13 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <dd className="num">{fmt(district.gap)}</dd>
         </div>
       </dl>
+      {factors && (
+        <p className="hint station-summary">
+          {fmt(factors.stations.sites)} charging stations with {fmt(factors.stations.points)} points: {fmt(factors.stations.streetAc)} public
+          AC, {fmt(factors.stations.dc)} fast (DC), {fmt(factors.stations.points - factors.stations.streetAc - factors.stations.dc)} in car
+          parks or customer parking.
+        </p>
+      )}
       {factors ? (
         <>
           <dl className="factor-split" aria-label="Required points by group">
@@ -76,9 +83,10 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
         </p>
       )}
       <p className="hint">
-        * Existing stock assumes one charging point per recorded location. Connector counts
-        and live availability are not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')};
-        source observations may be older.
+        * {factors
+          ? 'Charging points from the Bundesnetzagentur charging register (status 1 September 2026); by default only public AC points count against street-space demand.'
+          : 'Existing stock assumes one charging point per recorded location.'}{' '}
+        Live availability is not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')}.
       </p>
     </aside>
   );
