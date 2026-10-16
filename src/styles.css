@@ -151,7 +151,7 @@ a {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(340px, 400px) 1fr;
+  grid-template-columns: clamp(380px, 32vw, 480px) minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -160,6 +160,8 @@ a {
   flex-direction: column;
   gap: 12px;
   padding: 12px;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   border-right: 1px solid var(--line);
 }
@@ -342,6 +344,8 @@ a {
 }
 
 .legend select {
+  width: 100%;
+  min-width: 0;
   font: inherit;
   padding: 6px 8px;
   border: 1px solid var(--line);
@@ -460,8 +464,10 @@ a {
 
 /* --- map ------------------------------------------------------------------ */
 
-.map,
-.map-canvas {
+/* Doubled class beats MapLibre's own .maplibregl-map { position: relative },
+   which loads after this file in the production build. */
+.map.map,
+.map-canvas.map-canvas {
   position: absolute;
   inset: 0;
 }
