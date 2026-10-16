@@ -915,6 +915,7 @@ a {
   top: 0;
   bottom: 0;
   left: var(--sidebar-w, 420px);
+  width: 10px; /* the handle is absolute too, so it needs its own width */
   z-index: 6;
 }
 
