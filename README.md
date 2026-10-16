@@ -26,7 +26,13 @@ Challenge material shared via Sciebo (TU Dortmund):
 | [Daten für Verwaltungschallenge (Team 07)](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge) | Data provided for the City of Dortmund challenge |
 | [Challenges](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Challenges&editing=false&openfile=true) | Challenge briefs, including this one (*Stadtverwaltung Challenge 1*) |
 
-Team brief (problem, method, data, open tasks on one page): [docs/team-brief.md](docs/team-brief.md).
+In the repo:
+
+- [Challenge brief (PDF)](docs/challenge/Stadtverwaltung_Challenge_1.pdf), *Stadtverwaltung Challenge 1*, from the Sciebo *Challenges* folder
+- [Team brief](docs/team-brief.md): problem, method, data and open tasks on one page
+- [Brainstorming strategy](docs/brainstorming.md): 90-minute kickoff for Philipp, Mehul and Klevis, the city's ISME method, mentor questions and the plan until the pitch
+
+The Sciebo data folder holds the city's **ISME calculation method** (Excel + report), **car and EV stock per Unterbezirk** (145 units), **912 current charging locations**, a 225 m priority grid and commercial areas. These close most of the [known data gaps](#known-data-gaps) below; the data files themselves stay on Sciebo and are not committed here.
 
 ---
 

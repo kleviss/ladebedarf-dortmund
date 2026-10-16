@@ -1,0 +1,495 @@
+<meta charset="utf-8">
+<title>Team 07 Kickoff</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; the agenda doubles as a live session clock. Same identity as the team brief. */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --ink: #10151c;
+  --ink-2: #444d5a;
+  --muted: #677180;
+  --line: #dde2e8;
+  --accent: #1c5cab;
+  --accent-soft: #e4eefb;
+  --charge: #c54a17;
+  --charge-soft: #fdebe2;
+  --good: #1d7a43;
+  --bar-private: #86b6ef;
+  --bar-public: #c54a17;
+  --display: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --body: 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --surface: #151b23; --ink: #e9edf2; --ink-2: #b9c2ce; --muted: #8b95a4;
+    --line: #273141; --accent: #6da7ec; --accent-soft: #172840; --charge: #f08a5d; --charge-soft: #3a2116;
+    --good: #4cc27c; --bar-private: #3987e5; --bar-public: #f08a5d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --surface: #151b23; --ink: #e9edf2; --ink-2: #b9c2ce; --muted: #8b95a4;
+  --line: #273141; --accent: #6da7ec; --accent-soft: #172840; --charge: #f08a5d; --charge-soft: #3a2116;
+  --good: #4cc27c; --bar-private: #3987e5; --bar-public: #f08a5d;
+  color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--body); }
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 72px;
+  display: grid;
+  gap: 56px;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.85rem; font-weight: 700; }
+h3 { font-size: 1.2rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font-family: var(--mono); font-size: 0.86em; }
+.eyebrow { font: 600 0.78rem/1 var(--body); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.muted { color: var(--muted); }
+section { display: grid; gap: 18px; min-width: 0; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.masthead { display: grid; gap: 16px; }
+.lede { font-size: 1.2rem; color: var(--ink-2); max-width: 60ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.92rem; color: var(--muted); }
+
+/* outputs checklist */
+.outputs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.outputs li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; }
+.outputs input { width: 18px; height: 18px; margin-top: 4px; accent-color: var(--good); }
+.outputs label { cursor: pointer; }
+.outputs strong { font-weight: 600; }
+
+/* roles */
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.role { display: grid; gap: 6px; align-content: start; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.role .name { font: 700 1.6rem/1 var(--display); }
+.role .stream { font: 600 0.78rem/1 var(--body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.role dl { margin: 6px 0 0; display: grid; gap: 6px; font-size: 0.93rem; }
+.role dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.role dd { margin: 0; color: var(--ink-2); }
+
+/* clock + agenda */
+.clock {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 14px 16px;
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+.clock .now { display: grid; gap: 2px; margin-right: auto; min-width: 0; }
+.clock .now strong { font: 700 1.5rem/1.1 var(--display); }
+.clock .now span { color: var(--ink-2); font-size: 0.92rem; }
+.clock .left { font: 700 2rem/1 var(--display); font-variant-numeric: tabular-nums; color: var(--accent); }
+.btn { font: 600 0.92rem/1 var(--body); padding: 10px 14px; border-radius: 8px; border: 0; background: var(--accent); color: var(--surface); cursor: pointer; }
+.btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.progress { flex-basis: 100%; height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.progress div { height: 100%; width: 0; background: var(--accent); transition: width 0.4s linear; }
+
+.agenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: block; border-top: 1px solid var(--line); }
+.agenda li {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 4px 16px;
+  padding: 14px 12px 14px 0;
+  border-bottom: 1px solid var(--line);
+  border-left: 4px solid transparent;
+  padding-left: 12px;
+}
+.agenda .time { font: 500 0.9rem/1.5 var(--mono); color: var(--muted); grid-row: span 3; }
+.agenda .title { font: 700 1.25rem/1.2 var(--display); }
+.agenda .how { color: var(--ink-2); font-size: 0.95rem; }
+.agenda .out { font-size: 0.88rem; color: var(--muted); }
+.agenda .out b { color: var(--ink-2); font-weight: 600; }
+.agenda li.is-now { border-left-color: var(--accent); background: var(--accent-soft); }
+.agenda li.is-done .title, .agenda li.is-done .how { color: var(--muted); }
+.rules { padding: 14px 16px; border: 1px dashed var(--line); border-radius: 10px; font-size: 0.95rem; color: var(--ink-2); }
+
+/* input pack */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 620px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font: 600 0.75rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); background: var(--bg); }
+td code { color: var(--ink-2); }
+
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.steps li::marker { font-family: var(--display); font-weight: 700; color: var(--accent); }
+
+/* use-case bars */
+.usecases { display: grid; gap: 8px; }
+.uc { display: grid; grid-template-columns: minmax(150px, 13rem) 1fr 4.5rem 5.5rem; gap: 12px; align-items: center; font-size: 0.92rem; }
+.uc .track { height: 14px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.uc .bar { height: 100%; border-radius: 0 4px 4px 0; background: var(--bar-private); }
+.uc.public .bar { background: var(--bar-public); }
+.uc .pct { font-weight: 600; text-align: right; }
+.uc .fac { color: var(--muted); text-align: right; font-size: 0.85rem; }
+.uc-head { font: 600 0.72rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.88rem; color: var(--ink-2); }
+.legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--bar-private); }
+.legend span.public::before { background: var(--bar-public); }
+@media (max-width: 600px) {
+  .uc { grid-template-columns: 1fr 3.5rem; }
+  .uc .track { grid-column: 1 / -1; grid-row: 2; }
+  .uc .fac { display: none; }
+  .uc-head { display: none; }
+}
+
+/* HMW */
+.hmw { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.hmw h3 { padding-bottom: 8px; border-bottom: 2px solid var(--ink); margin-bottom: 10px; }
+.hmw ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.hmw li { font-size: 0.97rem; }
+.hmw li::before { content: 'HMW '; font: 600 0.72rem/1 var(--mono); color: var(--accent); letter-spacing: 0.04em; }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+details summary { cursor: pointer; font-weight: 600; }
+details ul { margin: 10px 0 0; padding-left: 1.2em; display: grid; gap: 6px; color: var(--ink-2); }
+
+/* converge */
+.pitchline { padding: 16px; background: var(--surface); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 1.1rem; }
+.pitchline em { color: var(--muted); }
+.pri { display: inline-block; font: 600 0.72rem/1 var(--body); padding: 4px 7px; border-radius: 999px; }
+.pri.must { background: var(--charge-soft); color: var(--charge); }
+.pri.should { background: var(--accent-soft); color: var(--accent); }
+.pri.could { background: var(--bg); color: var(--ink-2); border: 1px solid var(--line); }
+
+.questions { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.questions li::marker { font-family: var(--display); font-weight: 700; color: var(--charge); }
+
+pre.contract { margin: 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font: 400 0.84rem/1.7 var(--mono); overflow-x: auto; white-space: pre; }
+
+footer { font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">DO-DATA-Hackathon 2026 · Stadt Dortmund Challenge 1 · Team 07</p>
+  <h1>Team 07 Kickoff</h1>
+  <p class="lede">A 90-minute brainstorm for Philipp, Mehul and Klevis that ends with one product concept, an agreed scope and a clear split of work, followed by short check-ins until the pitch.</p>
+  <div class="meta">
+    <span>16–17 October 2026</span>
+    <span>90 minutes</span>
+    <span>3 people, 3 workstreams</span>
+  </div>
+</header>
+
+<section aria-labelledby="outputs">
+  <h2 id="outputs">What we leave the room with</h2>
+  <ul class="outputs">
+    <li><input type="checkbox" id="o1"><label for="o1"><strong>One-sentence pitch:</strong> who uses it, what they decide with it, why it beats a spreadsheet.</label></li>
+    <li><input type="checkbox" id="o2"><label for="o2"><strong>Demo story:</strong> the 3-minute path through the app we show the jury.</label></li>
+    <li><input type="checkbox" id="o3"><label for="o3"><strong>MVP list:</strong> must, should, could. Must-haves done by tomorrow morning.</label></li>
+    <li><input type="checkbox" id="o4"><label for="o4"><strong>Owners and data contract:</strong> who builds what, and the file the data side hands to the app.</label></li>
+    <li><input type="checkbox" id="o5"><label for="o5"><strong>Mentor questions:</strong> asked in the first hour, not the last.</label></li>
+  </ul>
+</section>
+
+<section aria-labelledby="roles">
+  <h2 id="roles">Roles</h2>
+  <p>A starting proposal. Swap in the first five minutes if strengths differ.</p>
+  <div class="roles">
+    <article class="role">
+      <span class="stream">App and map</span>
+      <span class="name">Klevis</span>
+      <dl>
+        <div><dt>Owns</dt><dd>Frontend, map, UX, Vercel deployment</dd></div>
+        <div><dt>In the session</dt><dd>Timekeeper; runs the clock below</dd></div>
+        <div><dt>Challenges</dt><dd>The data workstream</dd></div>
+      </dl>
+    </article>
+    <article class="role">
+      <span class="stream">Data and GIS</span>
+      <span class="name">Philipp</span>
+      <dl>
+        <div><dt>Owns</dt><dd>Shapefiles to GeoJSON, 145 vs 170 district join, coverage buffers</dd></div>
+        <div><dt>In the session</dt><dd>Note-taker in <code>docs/brainstorming.md</code></dd></div>
+        <div><dt>Challenges</dt><dd>The method workstream</dd></div>
+      </dl>
+    </article>
+    <article class="role">
+      <span class="stream">Method and story</span>
+      <span class="name">Mehul</span>
+      <dl>
+        <div><dt>Owns</dt><dd>ISME model in code, checked against the Excel; assumptions; pitch</dd></div>
+        <div><dt>In the session</dt><dd>Facilitator</dd></div>
+        <div><dt>Challenges</dt><dd>The app workstream</dd></div>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="agenda">
+  <h2 id="agenda">Agenda</h2>
+  <div class="clock" role="status" aria-live="polite">
+    <div class="now"><strong id="clock-block">Not started</strong><span id="clock-sub">Press Start when everyone is in the room.</span></div>
+    <span class="left" id="clock-left">90:00</span>
+    <button type="button" class="btn" id="clock-start">Start</button>
+    <button type="button" class="btn secondary" id="clock-reset">Reset</button>
+    <div class="progress" aria-hidden="true"><div id="clock-bar"></div></div>
+  </div>
+  <ol class="agenda" id="agenda-list">
+    <li data-start="0" data-end="10"><span class="time">0–10</span><span class="title">Align</span><span class="how">Everyone says in one sentence what the jury wants. Agree that the three judging criteria are our yardstick.</span><span class="out"><b>Output:</b> shared goal</span></li>
+    <li data-start="10" data-end="25"><span class="time">10–25</span><span class="title">Data walk</span><span class="how">Philipp opens the Sciebo files in QGIS on the shared screen; Mehul walks through the ISME Excel. Note every surprise.</span><span class="out"><b>Output:</b> what exists, at which level</span></li>
+    <li data-start="25" data-end="35"><span class="time">25–35</span><span class="title">Questions</span><span class="how">Sticky notes with open questions; pick the five that block us.</span><span class="out"><b>Output:</b> mentor questions</span></li>
+    <li data-start="35" data-end="55"><span class="time">35–55</span><span class="title">Diverge</span><span class="how">For each chosen "How might we": 4 minutes silent sketching, at least 2 ideas each, then 1 minute each to show. No criticism yet.</span><span class="out"><b>Output:</b> 20–30 ideas</span></li>
+    <li data-start="55" data-end="65"><span class="time">55–65</span><span class="title">Cluster and vote</span><span class="how">Group similar ideas. Each person gets 3 votes for jury impact and 3 for doable by tomorrow.</span><span class="out"><b>Output:</b> top 5 ideas</span></li>
+    <li data-start="65" data-end="80"><span class="time">65–80</span><span class="title">Converge</span><span class="how">Fill the MVP table, write the pitch sentence and the demo story.</span><span class="out"><b>Output:</b> scope</span></li>
+    <li data-start="80" data-end="90"><span class="time">80–90</span><span class="title">Split and contract</span><span class="how">Fix the data contract, owners and check-in times.</span><span class="out"><b>Output:</b> plan</span></li>
+  </ol>
+  <p class="rules">Phones away during Diverge. Good ideas that are out of scope go to a parking lot. If a decision stalls for more than 3 minutes, the workstream owner decides.</p>
+</section>
+
+<section aria-labelledby="input">
+  <h2 id="input">Input pack</h2>
+  <p>Read before the session. Calculate and show the demand for publicly accessible EV charging <strong>per statistical Unterbezirk</strong>, and <strong>transparently prioritise</strong> where to build. Judged on quick analysis per subdistrict, transparent criteria and value for municipal planning. No exact site plans, grid checks or market-ready product.</p>
+
+  <h3>What the city gave us</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Folder</th><th>What it is</th><th>Key facts</th></tr></thead>
+      <tbody>
+        <tr><td><code>Berechnungsmethode/</code></td><td><strong>ISME method</strong>: Excel model and 29-page report (Dec 2023)</td><td>The city's official calculation, summarised below</td></tr>
+        <tr><td><code>Statistik/</code></td><td>Car and EV stock per Unterbezirk</td><td class="num">145 units · 269,430 private cars · 12,715 EVs (6,895 private, 5,820 commercial) · 2,885 new EV registrations</td></tr>
+        <tr><td><code>Unterbezirke/</code></td><td>Shapefile matching the statistics</td><td>145 polygons, some Unterbezirke merged; Web Mercator</td></tr>
+        <tr><td><code>aktueller Bestand an Ladesäulen/</code></td><td>Current charging locations</td><td class="num"><strong>912 points</strong>; Open Data only had 320</td></tr>
+        <tr><td><code>Fläche mit Priorität für LIS-Ausbau/</code></td><td>225 m grid with a point count per cell</td><td class="num">6,422 cells, 293 with points, max 8. Meaning to confirm</td></tr>
+        <tr><td><code>Gewerbegebiete/</code></td><td>Commercial areas (KML, 17 MB)</td><td>For the employer and commuter use case</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The ISME method in five steps</h3>
+  <ol class="steps">
+    <li><strong>City-wide forecast for 2030:</strong> 3,400–7,000 public charging points from the national NLL study; commuters add about 5.5 % and tourists about 14.9 %.</li>
+    <li><strong>Three user groups to BEVs:</strong> residents, commuters (142,000 × 70 % by car), tourists. The Excel runs BEV shares from 5 % to 50 % for 2030 and 2036.</li>
+    <li><strong>Seven charging use cases</strong> (the report's Sankey diagram), each with a factor of EVs per charging point. Result: about 5,500 AC and 2,100 DC/HPC points in 2030.</li>
+    <li><strong>Coverage per Unterbezirk</strong> by walking distance to existing chargers: living 225 m, work 500 m, shopping 100 m, leisure 375 m.</li>
+    <li><strong>Ranking:</strong> coverage score (1–3) × sum indicator (BEVs, residents, points of interest and one more variable, each classed 1–5). AC points are spread to Unterbezirke by residents, workplaces and points of interest, existing points subtracted: 0 to 111 points per Unterbezirk.</li>
+  </ol>
+
+  <h3>Where Dortmund's EVs charge, by ISME use case</h3>
+  <div class="legend"><span>Private or semi-private</span><span class="public">Publicly accessible</span></div>
+  <div class="usecases" role="table" aria-label="Share of BEVs per charging use case and EVs per charging point">
+    <div class="uc uc-head" role="row"><span role="columnheader">Use case</span><span role="columnheader">Share of BEVs</span><span role="columnheader" style="text-align:right">Share</span><span role="columnheader" style="text-align:right">EVs per point</span></div>
+    <div class="uc" role="row"><span role="cell">Apartment building with parking</span><span class="track" role="cell"><span class="bar" style="width:100%; display:block"></span></span><span class="pct num" role="cell">44 %</span><span class="fac num" role="cell">1.39</span></div>
+    <div class="uc public" role="row"><span role="cell">Street space</span><span class="track" role="cell"><span class="bar" style="width:45.9%; display:block"></span></span><span class="pct num" role="cell">20.2 %</span><span class="fac num" role="cell">2.80</span></div>
+    <div class="uc" role="row"><span role="cell">Employer</span><span class="track" role="cell"><span class="bar" style="width:25%; display:block"></span></span><span class="pct num" role="cell">11 %</span><span class="fac num" role="cell">1.17</span></div>
+    <div class="uc public" role="row"><span role="cell">Customer parking and destinations</span><span class="track" role="cell"><span class="bar" style="width:23.4%; display:block"></span></span><span class="pct num" role="cell">10.3 %</span><span class="fac num" role="cell">4.08</span></div>
+    <div class="uc" role="row"><span role="cell">Detached house with parking</span><span class="track" role="cell"><span class="bar" style="width:18.2%; display:block"></span></span><span class="pct num" role="cell">8 %</span><span class="fac num" role="cell">1.39</span></div>
+    <div class="uc public" role="row"><span role="cell">HPC hubs</span><span class="track" role="cell"><span class="bar" style="width:8.9%; display:block"></span></span><span class="pct num" role="cell">3.9 %</span><span class="fac num" role="cell">19.1</span></div>
+    <div class="uc public" role="row"><span role="cell">Public car parks</span><span class="track" role="cell"><span class="bar" style="width:5.9%; display:block"></span></span><span class="pct num" role="cell">2.6 %</span><span class="fac num" role="cell">2.94</span></div>
+  </div>
+  <p class="muted">Source: ISME Excel, Stadt Dortmund. Bars scaled to the largest share. Street space is the use case the city controls most directly.</p>
+
+  <h3>What we already have</h3>
+  <p>The prototype in the <a href="https://github.com/kleviss/ladebedarf-dortmund" target="_blank" rel="noreferrer">repo</a>: map of 170 Unterbezirke, district breakdown, scenario sliders, ranking, CSV export, shareable links. It uses a placeholder formula and Open Data only; the city's method and data replace most of its gaps.</p>
+</section>
+
+<section aria-labelledby="hmw">
+  <h2 id="hmw">"How might we" prompts</h2>
+  <p>Pick four for the Diverge block. Grouped by what the jury asked for.</p>
+  <div class="hmw">
+    <div>
+      <h3>Quick analysis per subdistrict</h3>
+      <ul>
+        <li>make one Unterbezirk's number understandable in 10 seconds?</li>
+        <li>let a planner compare two Unterbezirke, or one under two scenarios?</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Transparent criteria</h3>
+      <ul>
+        <li>show the 3,400–7,000 uncertainty without confusing anyone?</li>
+        <li>make the ISME Sankey explorable instead of a static picture?</li>
+        <li>show which numbers are city data, which are assumptions, and who can change them?</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Value for planning</h3>
+      <ul>
+        <li>show where 100 new street-side points would cover the most residents within 225 m?</li>
+        <li>bring in the competition for street space: cycle paths, pavements, greenery?</li>
+        <li>turn the ranking into something for a council paper or operator tender?</li>
+      </ul>
+    </div>
+  </div>
+  <details>
+    <summary>Idea seeds, only if the room goes quiet</summary>
+    <ul>
+      <li>BEV-share and year slider (2030 / 2036) that reruns ISME live, matching the Excel scenarios</li>
+      <li>Interactive Sankey with editable shares per use case</li>
+      <li>Coverage map: 225 m buffers around the 912 chargers, uncovered residential areas highlighted</li>
+      <li>Priority matrix: coverage score × sum indicator as a scatter, Unterbezirke as dots</li>
+      <li>District profile card per Unterbezirk, exportable as one PDF page</li>
+      <li>Placement simulator: drop new charging points, watch coverage and ranking update</li>
+      <li>Validation layer: occupancy of existing EV bays from the city's parking sensors</li>
+    </ul>
+  </details>
+</section>
+
+<section aria-labelledby="converge">
+  <h2 id="converge">Converge template</h2>
+  <p class="pitchline">Planners in Dortmund can <em>…</em> so that <em>…</em>, unlike today where <em>…</em></p>
+  <h3>Demo story, 3 minutes</h3>
+  <ol class="steps">
+    <li>The problem in one sentence and one number.</li>
+    <li>Open the map: where demand is highest.</li>
+    <li>Click one Unterbezirk: every step of the calculation and its source.</li>
+    <li>Change one assumption: map and ranking update.</li>
+    <li>Export or share: what the city does with it tomorrow.</li>
+  </ol>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Priority</th><th>Feature</th><th>Owner</th><th>Done when</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pri must">Must</span></td><td>ISME method in code, matching the Excel</td><td>Mehul</td><td>A test reproduces the Excel totals for 2030</td></tr>
+        <tr><td><span class="pri must">Must</span></td><td>City data per Unterbezirk on the map (145 units, 912 chargers)</td><td>Philipp, Klevis</td><td>Map and ranking use the city files</td></tr>
+        <tr><td><span class="pri must">Must</span></td><td>District breakdown shows every ISME step</td><td>Klevis</td><td>Click shows user groups, use cases, needed, existing, gap</td></tr>
+        <tr><td><span class="pri should">Should</span></td><td>Coverage by walking distance</td><td>Philipp</td><td>Share of each Unterbezirk within 225 m of a charger</td></tr>
+        <tr><td><span class="pri should">Should</span></td><td>Scenario controls for BEV share and year</td><td>Klevis</td><td>Slider reruns the model instantly</td></tr>
+        <tr><td><span class="pri could">Could</span></td><td class="muted">Decided in the session</td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="mentors">
+  <h2 id="mentors">Questions for the city mentors</h2>
+  <ol class="questions">
+    <li><strong>Priority grid:</strong> what does <code>NUMPOINTS</code> in <em>Fläche mit hoher Priorität für LIS-Ausbau</em> count?</li>
+    <li><strong>Districts:</strong> the statistics have 145 units, Open Data has 170 Unterbezirke. Is there an official mapping?</li>
+    <li><strong>Excel:</strong> customer parking is labelled 10.3 % but the formula uses 1.3 % (<code>=C22*0.013</code>). Which is right?</li>
+    <li><strong>Ranking:</strong> which four variables make up the sum indicator? The report names BEVs, POIs and residents; the second one is unreadable in our copy.</li>
+    <li><strong>Scope:</strong> 2030 (report) or 2036 (Excel)? AC only (report) or AC plus DC/HPC?</li>
+    <li><strong>Chargers:</strong> do the 912 points include lantern charging and private but publicly accessible sites?</li>
+    <li><strong>Users:</strong> who in the city would use this first, and for which decision?</li>
+  </ol>
+</section>
+
+<section aria-labelledby="after">
+  <h2 id="after">After the session</h2>
+  <h3>Data contract</h3>
+  <p>Philipp delivers <code>public/data/unterbezirke.geojson</code> with these properties per feature. Mehul's model reads only these; Klevis's UI reads the model output. New fields are announced in the team chat first.</p>
+  <pre class="contract">ubz, name, stadtbezirk, residents,
+privateCars, privateEvs, commercialCars, commercialEvs, newEvs,
+chargers, coverageLiving, coverageWork, coverageShopping, coverageLeisure,
+pois, workplaces</pre>
+  <h3>Check-ins, 10 minutes standing</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>When</th><th>Question</th></tr></thead>
+      <tbody>
+        <tr><td>+2 hours</td><td>Does the data contract hold? Is anyone blocked?</td></tr>
+        <tr><td>Evening</td><td>Does the app run end to end with city data? Cut scope if not.</td></tr>
+        <tr><td>Next morning</td><td>Freeze features. Only fixes and pitch from here.</td></tr>
+        <tr><td>1 hour before pitch</td><td>Full rehearsal on the deployed Vercel URL, with a backup video.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>One branch per feature, small pull requests into <code>main</code>; check each pull request's Vercel preview before merging.</p>
+</section>
+
+<section aria-labelledby="pitch">
+  <h2 id="pitch">Pitch outline</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Beat</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0:00</td><td>Street space is scarce, charging demand is uneven, and the city needs a defensible basis to decide.</td></tr>
+        <tr><td class="num">0:30</td><td>The city's own ISME method, made transparent per Unterbezirk.</td></tr>
+        <tr><td class="num">1:00</td><td>Live demo following the demo story.</td></tr>
+        <tr><td class="num">2:15</td><td>What planners get: ranking, explanation, export, scenarios.</td></tr>
+        <tr><td class="num">2:45</td><td>Next steps, and what we would need from the city to take it further.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <span>Also in the repo as <code>docs/brainstorming.md</code>. Data and method: Stadt Dortmund, Team 07 folder on <a href="https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge" target="_blank" rel="noreferrer">Sciebo</a>.</span>
+  <span>Checkbox ticks and the session clock are kept in your own browser only.</span>
+</footer>
+
+</div>
+
+<script>
+(() => {
+  const TOTAL = 90;
+  const KEY = 'team07-kickoff';
+  const store = {
+    get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } },
+    set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} },
+  };
+  let state = store.get();
+
+  // checklist
+  document.querySelectorAll('.outputs input').forEach((box) => {
+    box.checked = !!(state.checks && state.checks[box.id]);
+    box.addEventListener('change', () => {
+      state.checks = Object.assign({}, state.checks, { [box.id]: box.checked });
+      store.set(state);
+    });
+  });
+
+  // clock
+  const rows = [...document.querySelectorAll('#agenda-list li')];
+  const elBlock = document.getElementById('clock-block');
+  const elSub = document.getElementById('clock-sub');
+  const elLeft = document.getElementById('clock-left');
+  const elBar = document.getElementById('clock-bar');
+  const btnStart = document.getElementById('clock-start');
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+  function render() {
+    if (!state.start) {
+      rows.forEach((r) => r.classList.remove('is-now', 'is-done'));
+      elBlock.textContent = 'Not started';
+      elSub.textContent = 'Press Start when everyone is in the room.';
+      elLeft.textContent = fmt(TOTAL * 60);
+      elBar.style.width = '0%';
+      btnStart.hidden = false;
+      return;
+    }
+    btnStart.hidden = true;
+    const elapsed = (Date.now() - state.start) / 1000;
+    const min = elapsed / 60;
+    elBar.style.width = `${Math.min(100, (min / TOTAL) * 100)}%`;
+    if (min >= TOTAL) {
+      rows.forEach((r) => { r.classList.remove('is-now'); r.classList.add('is-done'); });
+      elBlock.textContent = 'Session over';
+      elSub.textContent = 'Check the five outputs at the top.';
+      elLeft.textContent = '0:00';
+      return;
+    }
+    rows.forEach((r) => {
+      const s = Number(r.dataset.start), e = Number(r.dataset.end);
+      r.classList.toggle('is-now', min >= s && min < e);
+      r.classList.toggle('is-done', min >= e);
+      if (min >= s && min < e) {
+        elBlock.textContent = r.querySelector('.title').textContent;
+        elSub.textContent = `Next block in ${fmt(e * 60 - elapsed)} · ${fmt(TOTAL * 60 - elapsed)} left in the session`;
+        elLeft.textContent = fmt(e * 60 - elapsed);
+      }
+    });
+  }
+
+  btnStart.addEventListener('click', () => { state.start = Date.now(); store.set(state); render(); });
+  document.getElementById('clock-reset').addEventListener('click', () => { delete state.start; store.set(state); render(); });
+  render();
+  setInterval(render, 1000);
+})();
+</script>
