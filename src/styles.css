@@ -676,3 +676,84 @@ a {
   font-weight: 400;
   color: var(--muted);
 }
+
+/* site scoring */
+.site-weights {
+  display: grid;
+  gap: 10px;
+}
+
+.proxy {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.site-map-controls {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.site-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.site-head small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.site-head b {
+  font-size: 1.1rem;
+  color: #1f8a74;
+}
+
+.site-factors {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.site-factors span {
+  display: grid;
+  gap: 2px;
+}
+
+.site-factors span::before {
+  content: '';
+  grid-area: 1 / 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.site-factors i {
+  grid-area: 1 / 1;
+  height: 5px;
+  border-radius: 3px;
+  background: #4fae9a;
+}
+
+.site-factors em {
+  font-style: normal;
+  font-size: 0.62rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

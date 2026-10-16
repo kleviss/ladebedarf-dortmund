@@ -4,6 +4,8 @@ import { ScenarioPanel } from './components/ScenarioPanel';
 import { DistrictPanel } from './components/DistrictPanel';
 import { RankingTable } from './components/RankingTable';
 import { Legend } from './components/Legend';
+import { SitePanel, type ParkingColour } from './components/SitePanel';
+import { defaultWeights, scoreSites, sitesByDistrict, type SiteSpot, type Weights } from './lib/sites';
 import { loadData, type AppData } from './lib/data';
 import { computeAll, defaultScenario, fmt, type Scenario } from './lib/isme';
 import { metricByKey, quantileClasses, type MetricKey } from './lib/metrics';
@@ -40,11 +42,15 @@ function Dashboard({ data }: { data: AppData }) {
   const [showChargers, setShowChargers] = useState(true);
   const [showPriority, setShowPriority] = useState(false);
   const [showParking, setShowParking] = useState(false);
+  const [weights, setWeights] = useState<Weights>(defaultWeights);
+  const [parkingColour, setParkingColour] = useState<ParkingColour>('score');
   const [copied, setCopied] = useState(false);
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
   const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
+  const sites = useMemo(() => scoreSites(data.parking.features.map((f) => f.properties as SiteSpot), weights), [data, weights]);
+  const sitesByUbz = useMemo(() => sitesByDistrict(sites), [sites]);
   const metric = metricByKey(metricKey);
   const classes = useMemo(() => quantileClasses(results.map(metric.value)), [results, metric]);
   const sum = useMemo(
@@ -117,6 +123,16 @@ function Dashboard({ data }: { data: AppData }) {
             onToggleChargers={setShowChargers}
             onTogglePriority={setShowPriority}
           />
+          <SitePanel
+            sites={sites}
+            weights={weights}
+            colour={parkingColour}
+            showParking={showParking}
+            onWeights={setWeights}
+            onColour={setParkingColour}
+            onShowParking={setShowParking}
+            onReset={() => setWeights(defaultWeights)}
+          />
           <ScenarioPanel
             scenario={scenario}
             city={city}
@@ -158,6 +174,8 @@ function Dashboard({ data }: { data: AppData }) {
             showChargers={showChargers}
             showPriority={showPriority}
             showParking={showParking}
+            sites={sites}
+            parkingColour={parkingColour}
             onSelect={setSelected}
           />
           {selectedResult && (
@@ -165,6 +183,7 @@ function Dashboard({ data }: { data: AppData }) {
               district={selectedResult}
               rank={gapRank.get(selectedResult.ubz) ?? 0}
               total={results.length}
+              sites={sitesByUbz.get(selectedResult.ubz)}
               onClose={() => setSelected(null)}
             />
           )}

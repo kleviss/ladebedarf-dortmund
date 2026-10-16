@@ -1,4 +1,5 @@
 import { fmt, pct, type DistrictResult, type SourceKind } from '../lib/isme';
+import { FACTORS, KIND_LABEL, STRONG, type DistrictSites } from '../lib/sites';
 
 const SOURCE_LABEL: Record<SourceKind, string> = {
   'city-data': 'Daten Stadt',
@@ -11,10 +12,11 @@ interface Props {
   district: DistrictResult;
   rank: number;
   total: number;
+  sites?: DistrictSites;
   onClose: () => void;
 }
 
-export function DistrictPanel({ district: d, rank, total, onClose }: Props) {
+export function DistrictPanel({ district: d, rank, total, sites, onClose }: Props) {
   return (
     <aside className="district" aria-labelledby="district-title">
       <header className="district-head">
@@ -49,6 +51,39 @@ export function DistrictPanel({ district: d, rank, total, onClose }: Props) {
           </li>
         ))}
       </ol>
+
+      {sites && sites.best.length > 0 && (
+        <section className="district-parking" aria-label="Beste Standortkandidaten">
+          <h3>Beste Standortkandidaten</h3>
+          <p className="hint">
+            {fmt(sites.strong)} von {fmt(sites.candidates)} Parkflächen mit Score ab {fmt(STRONG * 100)}.
+          </p>
+          <ol className="site-list">
+            {sites.best.map((s) => (
+              <li key={s.id}>
+                <div className="site-head">
+                  <span>
+                    {s.name ?? KIND_LABEL[s.kind]}
+                    <small>
+                      {s.name ? `${KIND_LABEL[s.kind]} · ` : ''}
+                      {fmt(s.distance)} m zum Ladestandort{s.capacity ? ` · ${fmt(s.capacity)} Plätze` : ''}
+                    </small>
+                  </span>
+                  <b className="num">{fmt(s.score * 100)}</b>
+                </div>
+                <div className="site-factors" aria-label="Kriterien">
+                  {FACTORS.map((f) => (
+                    <span key={f.key} title={`${f.label}: ${fmt(s.factors[f.key] * 100)}`}>
+                      <i style={{ width: `${s.factors[f.key] * 100}%` }} />
+                      <em>{f.label}</em>
+                    </span>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {d.parkingPublic != null && (
         <section className="district-parking" aria-label="Öffentliches Parken">

@@ -15,6 +15,8 @@ setWorkerUrl(workerUrl);
 import type { AppData } from '../lib/data';
 import type { DistrictResult } from '../lib/isme';
 import { RAMP, ZERO_COLOR, type Classes, type Metric } from '../lib/metrics';
+import { SCORE_RAMP, scoreClass, type ScoredSite } from '../lib/sites';
+import type { ParkingColour } from './SitePanel';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
 const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json';
@@ -28,6 +30,8 @@ interface Props {
   showChargers: boolean;
   showPriority: boolean;
   showParking: boolean;
+  sites: ScoredSite[];
+  parkingColour: ParkingColour;
   onSelect: (ubz: string | null) => void;
 }
 
@@ -37,7 +41,7 @@ interface Hover {
   ubz: string;
 }
 
-export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, onSelect }: Props) {
+export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, sites, parkingColour, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -132,8 +136,14 @@ export function MapView({ data, results, metric, classes, selected, showChargers
         source: 'parking',
         layout: { visibility: 'none' },
         paint: {
-          // status colours: green = charger within 100 m, amber = within 225 m, red = none
-          'circle-color': ['match', ['get', 'cover'], 0, '#0ca30c', 1, '#fab219', '#d03b3b'],
+          // distance mode: green = charger within 100 m, amber = within 225 m, red = none
+          // score mode: teal ramp by site score (feature-state set below)
+          'circle-color': [
+            'case',
+            ['==', ['feature-state', 'mode'], 'score'],
+            ['match', ['coalesce', ['feature-state', 'scls'], 0], 0, SCORE_RAMP[0], 1, SCORE_RAMP[1], 2, SCORE_RAMP[2], 3, SCORE_RAMP[3], SCORE_RAMP[4]],
+            ['match', ['get', 'cover'], 0, '#0ca30c', 1, '#fab219', '#d03b3b'],
+          ],
           'circle-radius': [
             'interpolate', ['linear'], ['zoom'],
             10, ['match', ['get', 'kind'], 'garage', 3.5, 'park-ride', 3.5, 2],
@@ -225,6 +235,13 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     if (!map || !ready) return;
     map.setLayoutProperty('parking', 'visibility', showParking ? 'visible' : 'none');
   }, [ready, showParking]);
+
+  // Site score colours, recomputed when the weights change.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const s of sites) map.setFeatureState({ source: 'parking', id: s.id }, { mode: parkingColour, scls: scoreClass(s.score) });
+  }, [ready, sites, parkingColour]);
 
   const hovered = hover ? results.get(hover.ubz) : undefined;
 

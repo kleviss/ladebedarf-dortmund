@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadData, type AppData, type DistanceBand, type ParkingSpot } from '../lib/data';
 import { computeAll, fmt, pct, ISME, useCasesFor, type DistrictResult, type Scenario } from '../lib/isme';
 import { readUrlState } from '../lib/urlState';
+import { CriteriaTable, criteriaOf, scoredSites, SitesReport, type Criterion } from './SitesReport';
 
 // One page, several presentation-ready reports. Each report is a <section> with
 // an anchor so it can be opened directly (berichte#vorher-nachher) and printed.
@@ -11,6 +12,7 @@ const REPORTS = [
   { id: 'prioritaeten', title: 'Prioritäten je Unterbezirk' },
   { id: 'parken', title: 'Parken und Ladeinfrastruktur' },
   { id: 'abdeckung', title: 'Abdeckung nach Gehweite' },
+  { id: 'standorte', title: 'Standorte im Unterbezirk' },
   { id: 'methode', title: 'Methode und Kriterien' },
   { id: 'datenqualitaet', title: 'Datenqualität und offene Fragen' },
 ] as const;
@@ -30,6 +32,7 @@ function ReportBody({ data }: { data: AppData }) {
   const scenario = useMemo(() => readUrlState().scenario, []);
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
   const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
+  const sites = useMemo(() => scoredSites(data), [data]);
   const appLink = `/${window.location.search}`;
 
   return (
@@ -60,7 +63,8 @@ function ReportBody({ data }: { data: AppData }) {
       <Priorities results={results} />
       <Parking results={results} spots={data.parking.features.map((f) => f.properties)} data={data} />
       <Coverage results={results} data={data} />
-      <Method scenario={scenario} cityPoints={cityPoints} city={city} />
+      <SitesReport data={data} results={results} sites={sites} />
+      <Method scenario={scenario} cityPoints={cityPoints} city={city} criteria={criteriaOf(data, results, city, sites)} />
       <DataQuality data={data} />
 
       <footer className="reports-foot">
@@ -387,7 +391,7 @@ function Coverage({ results, data }: { results: DistrictResult[]; data: AppData 
 
 // --- 5 Method --------------------------------------------------------------------------
 
-function Method({ scenario, cityPoints, city }: { scenario: Scenario; cityPoints: number; city: { residents: number; commuters: number; tourists: number; total: number } }) {
+function Method({ scenario, cityPoints, city, criteria }: { scenario: Scenario; cityPoints: number; city: { residents: number; commuters: number; tourists: number; total: number }; criteria: Criterion[] }) {
   const ucs = useCasesFor(scenario);
   return (
     <Report id="methode" title="Methode und Kriterien" lede="Die ISME-Methode der Stadt, je Unterbezirk umgesetzt, und welche Kriterien wir wie abdecken.">
@@ -420,40 +424,7 @@ function Method({ scenario, cityPoints, city }: { scenario: Scenario; cityPoints
         </table>
       </div>
       <h3>Kriterien</h3>
-      <div className="rtable-wrap">
-        <table className="rtable">
-          <thead>
-            <tr>
-              <th>Kriterium</th>
-              <th>Wofür</th>
-              <th>Daten</th>
-              <th>Stand</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ['E-Fahrzeuge', 'Menge', 'Statistik Stadt: Pkw, E-Pkw, Neuzulassungen je Unterbezirk', 'umgesetzt'],
-              ['Pendelnde / Büroflächen', 'Menge', 'Gewerbeflächen (RVR-Flächennutzung 2021, Stadt)', 'umgesetzt'],
-              ['Tourismus / Ziele', 'Menge', 'Einkaufs- und Freizeit-POIs (OpenStreetMap), wie im Gutachten', 'umgesetzt'],
-              ['Zuzug / Neubau', 'Menge', 'Bebauungspläne seit 2015 (Open Data) als Indikator', 'als Kennzahl'],
-              ['Nähe', 'Verteilung', 'Gehweite 225 m: Gebäude und Parkflächen zum Ladestandort', 'umgesetzt'],
-              ['Fahrzeugdichte', 'Verteilung', 'Pkw je km²', 'als Kennzahl'],
-              ['Parkplätze', 'Verteilung', 'OSM, Parkhäuser, P+R mit Abstand zum Ladestandort', 'umgesetzt'],
-              ['Bauliche Machbarkeit', 'Verteilung', 'Gebäudebestand; Flächennutzungsplan nur als Karte', 'teilweise'],
-              ['Stromnetz', 'Verteilung', 'keine Daten; laut Aufgabe kein Ziel', 'offen'],
-            ].map(([a, b, c, d]) => (
-              <tr key={a}>
-                <td>{a}</td>
-                <td>{b}</td>
-                <td>{c}</td>
-                <td>
-                  <span className={`status status-${d === 'umgesetzt' ? 'ok' : d === 'offen' ? 'open' : 'part'}`}>{d}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <CriteriaTable criteria={criteria} />
     </Report>
   );
 }
