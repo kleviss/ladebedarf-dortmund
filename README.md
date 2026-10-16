@@ -4,6 +4,7 @@ Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktu
 
 ![Map of the 170 Unterbezirke shaded by missing charging points](docs/screenshot-map.jpg)
 
+- [Team resources](#team-resources)
 - [The challenge](#the-challenge)
 - [Our solution](#our-solution)
 - [Calculation method](#calculation-method)
@@ -13,6 +14,17 @@ Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktu
 - [Deploy to Vercel](#deploy-to-vercel)
 - [Project structure](#project-structure)
 - [Roadmap and open tasks](#roadmap-and-open-tasks)
+
+---
+
+## Team resources
+
+Challenge material shared via Sciebo (TU Dortmund):
+
+| Folder | Contents |
+|---|---|
+| [Daten für Verwaltungschallenge (Team 07)](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge) | Data provided for the City of Dortmund challenge |
+| [Challenges](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Challenges&editing=false&openfile=true) | Challenge briefs, including this one (*Stadtverwaltung Challenge 1*) |
 
 ---
 
@@ -241,7 +253,7 @@ src/components/…           Scenario sliders, district detail, ranking, legend
 Pick a task, open an issue or a branch with its name, and update this list in your pull request.
 
 **Data**
-- [ ] Plug in the city's calculation method and datasets once received (`src/lib/model.ts`, `scripts/build-data.mjs`)
+- [ ] Plug in the city's calculation method and datasets from the [Sciebo data folder](#team-resources) (`src/lib/model.ts`, `scripts/build-data.mjs`)
 - [ ] Merge the Bundesnetzagentur Ladesäulenregister, deduplicate against NOX points
 - [ ] Use Zensus 2022 grid for population and building type per Unterbezirk
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district
