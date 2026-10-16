@@ -151,7 +151,7 @@ a {
 
 .layout {
   display: grid;
-  grid-template-columns: clamp(380px, 32vw, 480px) minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-w, 420px) 10px minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -765,4 +765,91 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* sidebar collapse + resize */
+/* the hidden sidebar takes no grid cell, so only resizer + map remain */
+.layout.is-collapsed {
+  grid-template-columns: 10px minmax(0, 1fr);
+}
+
+.sidebar-resizer {
+  position: relative;
+  z-index: 4;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.sidebar-handle {
+  position: absolute;
+  inset: 0;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 4px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.sidebar-handle:hover::after,
+.sidebar-handle:focus-visible::after,
+.sidebar-resizer.is-dragging .sidebar-handle::after {
+  background: var(--accent);
+}
+
+.sidebar-resizer.is-dragging {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  z-index: 1;
+  width: 22px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 2px 1px 4px rgb(0 0 0 / 0.08);
+}
+
+.sidebar-toggle:hover {
+  color: var(--accent);
+}
+
+/* drag doesn't select text */
+.layout:has(.sidebar-resizer.is-dragging) {
+  user-select: none;
+  cursor: col-resize;
+}
+
+.sidebar[hidden] {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .sidebar-resizer {
+    display: none;
+  }
+  .layout.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+  .sidebar[hidden] {
+    display: flex;
+  }
 }

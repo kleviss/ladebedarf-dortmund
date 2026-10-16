@@ -4,6 +4,7 @@ import { ScenarioPanel } from './components/ScenarioPanel';
 import { DistrictPanel } from './components/DistrictPanel';
 import { RankingTable } from './components/RankingTable';
 import { Legend } from './components/Legend';
+import { SidebarResizer, useSidebar } from './components/SidebarResizer';
 import { SitePanel, type ParkingColour } from './components/SitePanel';
 import { defaultWeights, scoreSites, sitesByDistrict, type SiteSpot, type Weights } from './lib/sites';
 import { loadData, type AppData } from './lib/data';
@@ -45,6 +46,7 @@ function Dashboard({ data }: { data: AppData }) {
   const [weights, setWeights] = useState<Weights>(defaultWeights);
   const [parkingColour, setParkingColour] = useState<ParkingColour>('score');
   const [copied, setCopied] = useState(false);
+  const sidebar = useSidebar();
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
   const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
@@ -110,8 +112,8 @@ function Dashboard({ data }: { data: AppData }) {
         </button>
       </header>
 
-      <main className="layout">
-        <div className="sidebar">
+      <main className={`layout${sidebar.collapsed ? ' is-collapsed' : ''}`} style={sidebar.style}>
+        <div className="sidebar" hidden={sidebar.collapsed}>
           <Legend
             metric={metric}
             classes={classes}
@@ -163,6 +165,14 @@ function Dashboard({ data }: { data: AppData }) {
             </p>
           </section>
         </div>
+
+        <SidebarResizer
+          width={sidebar.width}
+          collapsed={sidebar.collapsed}
+          onWidth={sidebar.setWidth}
+          onToggle={sidebar.toggle}
+          onReset={sidebar.reset}
+        />
 
         <div className="map-area">
           <MapView
