@@ -949,3 +949,88 @@ a {
   margin: 0;
   font-size: 0.9rem;
 }
+
+/* expert-mode switch */
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.mode-track {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--line);
+  transition: background 0.15s;
+}
+
+.mode-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.15s;
+}
+
+.mode-toggle.is-on .mode-track {
+  background: var(--accent);
+}
+
+.mode-toggle.is-on .mode-thumb {
+  transform: translateX(12px);
+}
+
+.mode-toggle:hover {
+  color: var(--ink);
+}
+
+/* simple district panel */
+.key-figures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin: 4px 0 10px;
+}
+
+.key-figures div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.key-figures dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.key-figures dd {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.key-figures .accent dd {
+  color: var(--accent);
+}
+
+.show-calc {
+  margin-bottom: 8px;
+}

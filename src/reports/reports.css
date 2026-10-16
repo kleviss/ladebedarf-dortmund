@@ -292,3 +292,13 @@
   float: right;
   margin-left: 12px;
 }
+
+.more-reports {
+  justify-items: start;
+}
+
+@media print {
+  .more-reports {
+    display: none;
+  }
+}

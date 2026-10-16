@@ -81,6 +81,17 @@ function num(r: DistrictResult, key: string): number {
   return typeof v === 'number' ? v : 0;
 }
 
+/** The four metrics shown in simple mode. */
+export const SIMPLE_METRICS: MetricKey[] = ['gap', 'needed', 'homeShare', 'parkingUncovered'];
+
+/** Expert mode: all metrics, grouped. */
+export const METRIC_GROUPS: { label: string; keys: MetricKey[] }[] = [
+  { label: 'Bedarf', keys: ['gap', 'gapPer1000Cars', 'needed', 'coverage'] },
+  { label: 'Bestand', keys: ['existing', 'parkingUncovered', 'buildingsCoveredShare', 'hpcRelief'] },
+  { label: 'Lokale Faktoren (Bottom-up)', keys: ['homeShare', 'efhShare', 'streetFactorLocal', 'fleetBev', 'transit'] },
+  { label: 'Kontext', keys: ['evShareToday', 'newEvsPer1000Cars', 'carDensity', 'pois', 'commercialHa', 'bplansRecent'] },
+];
+
 export const metricByKey = (key: MetricKey) => METRICS.find((m) => m.key === key) ?? METRICS[0];
 
 // Sequential blue ramp (light → dark), validated for the light map surface.

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { fmt, pct, type DistrictResult, type SourceKind } from '../lib/isme';
 import { FACTORS, KIND_LABEL, STRONG, type DistrictSites } from '../lib/sites';
 
@@ -14,9 +15,14 @@ interface Props {
   total: number;
   sites?: DistrictSites;
   onClose: () => void;
+  /** simple mode: four key figures, calculation behind a button */
+  simple?: boolean;
 }
 
-export function DistrictPanel({ district: d, rank, total, sites, onClose }: Props) {
+export function DistrictPanel({ district: d, rank, total, sites, simple = false, onClose }: Props) {
+  const [open, setOpen] = useState(false);
+  const home = (d as unknown as { homeShare?: number }).homeShare;
+  const showAll = !simple || open;
   return (
     <aside className="district" aria-labelledby="district-title">
       <header className="district-head">
@@ -35,6 +41,33 @@ export function DistrictPanel({ district: d, rank, total, sites, onClose }: Prop
         </button>
       </header>
 
+      {simple && (
+        <dl className="key-figures">
+          <div>
+            <dt>Bedarf</dt>
+            <dd className="num">{fmt(d.needed)} LP</dd>
+          </div>
+          <div>
+            <dt>Bestand</dt>
+            <dd className="num">{fmt(d.existing)} LP</dd>
+          </div>
+          <div className="accent">
+            <dt>Lücke</dt>
+            <dd className="num">{fmt(d.gap)} LP</dd>
+          </div>
+          <div>
+            <dt>Laden zu Hause</dt>
+            <dd className="num">{home != null ? pct(home) : '–'}</dd>
+          </div>
+        </dl>
+      )}
+      {simple && (
+        <button type="button" className="link-button show-calc" onClick={() => setOpen(!open)} aria-expanded={open}>
+          {open ? 'Rechenweg ausblenden' : 'Rechenweg anzeigen'}
+        </button>
+      )}
+      {showAll && (
+        <>
       <ol className="steps">
         {d.steps.map((s) => (
           <li key={s.key} className={`step step-${s.source}${s.indent ? ' step-indent' : ''}${s.key === 'gap' ? ' step-gap' : ''}`}>
@@ -149,6 +182,8 @@ export function DistrictPanel({ district: d, rank, total, sites, onClose }: Prop
             </div>
           </dl>
         </section>
+      )}
+        </>
       )}
     </aside>
   );

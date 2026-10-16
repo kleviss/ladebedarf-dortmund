@@ -4,6 +4,8 @@ import { computeAll, fmt, pct, ISME, useCasesFor, type DistrictResult, type Scen
 import { readUrlState } from '../lib/urlState';
 import { PageTabs } from '../components/PageTabs';
 import { BottomUpReport } from './BottomUpReport';
+import { ModeToggle } from '../components/ModeToggle';
+import { useExpertMode } from '../lib/mode';
 import { CriteriaTable, criteriaOf, scoredSites, SitesReport, type Criterion } from './SitesReport';
 
 // One page, several presentation-ready reports. Each report is a <section> with
@@ -19,6 +21,9 @@ const REPORTS = [
   { id: 'methode', title: 'Methode und Kriterien' },
   { id: 'datenqualitaet', title: 'Datenqualität und offene Fragen' },
 ] as const;
+
+/** Shown in simple mode: what the pitch needs. */
+const SIMPLE_REPORTS = new Set<string>(['vorher-nachher', 'prioritaeten', 'parken']);
 
 export function Reports() {
   const [data, setData] = useState<AppData | null>(null);
@@ -36,7 +41,9 @@ function ReportBody({ data }: { data: AppData }) {
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
   const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const sites = useMemo(() => scoredSites(data), [data]);
+  const [expert, setExpert] = useExpertMode();
   const appLink = `/${window.location.search}`;
+  const visible = REPORTS.filter((r) => expert || SIMPLE_REPORTS.has(r.id));
 
   return (
     <>
@@ -46,9 +53,11 @@ function ReportBody({ data }: { data: AppData }) {
           <div className="title-row">
             <h1>Ladebedarf Dortmund</h1>
             <PageTabs current="berichte" />
+            <ModeToggle expert={expert} onChange={setExpert} />
           </div>
           <p className="muted">
-            Berichte · {scenario.year}, {pct(scenario.bevShare)} BEV · {scenario.method === 'usecase' ? 'Lade-Use-Cases' : `Verhältnis ${scenario.ratio}:1`} ·{' '}
+            Berichte · {scenario.year}, {pct(scenario.bevShare)} BEV ·{' '}
+            {scenario.model === 'bottomup' ? 'Bottom-up je Unterbezirk' : scenario.method === 'usecase' ? 'ISME, Lade-Use-Cases' : `ISME, Verhältnis ${scenario.ratio}:1`} ·{' '}
             {scenario.scope === 'street' ? 'nur Straßenraum' : 'öffentlich zugängliche LP'}
           </p>
         </div>
@@ -60,7 +69,7 @@ function ReportBody({ data }: { data: AppData }) {
     <div className="reports">
       <nav className="reports-nav" aria-label="Berichte">
         <span className="muted">Im Bericht springen:</span>
-        {REPORTS.map((r) => (
+        {visible.map((r) => (
           <a key={r.id} href={`#${r.id}`}>
             {r.title}
           </a>
@@ -73,11 +82,29 @@ function ReportBody({ data }: { data: AppData }) {
       <BeforeAfter results={results} cityPoints={cityPoints} scenario={scenario} totalBev={city.total} data={data} />
       <Priorities results={results} />
       <Parking results={results} spots={data.parking.features.map((f) => f.properties)} data={data} />
-      <Coverage results={results} data={data} />
-      <BottomUpReport data={data} scenario={scenario} />
-      <SitesReport data={data} results={results} sites={sites} />
-      <Method scenario={scenario} cityPoints={cityPoints} city={city} criteria={criteriaOf(data, results, city, sites)} />
-      <DataQuality data={data} />
+      {expert ? (
+        <>
+          <Coverage results={results} data={data} />
+          <BottomUpReport data={data} scenario={scenario} />
+          <SitesReport data={data} results={results} sites={sites} />
+          <Method scenario={scenario} cityPoints={cityPoints} city={city} criteria={criteriaOf(data, results, city, sites)} />
+          <DataQuality data={data} />
+        </>
+      ) : (
+        <section className="report more-reports">
+          <h2>Weitere Berichte</h2>
+          <p className="muted">
+            {REPORTS.length - visible.length} Berichte für die Fachdiskussion:{' '}
+            {REPORTS.filter((r) => !SIMPLE_REPORTS.has(r.id))
+              .map((r) => r.title)
+              .join(', ')}
+            .
+          </p>
+          <button type="button" className="button" onClick={() => setExpert(true)}>
+            Im Expertenmodus anzeigen
+          </button>
+        </section>
+      )}
 
       <footer className="reports-foot">
         Daten: Stadt Dortmund (Sciebo Team 07, ISME-Gutachten Dez. 2023), Open Data Dortmund (dl-de/by-2-0), © OpenStreetMap-Mitwirkende (ODbL).

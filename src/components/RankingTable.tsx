@@ -6,6 +6,8 @@ interface Props {
   scenario: Scenario;
   selected: string | null;
   onSelect: (ubz: string) => void;
+  /** simple mode: show only the first rows */
+  limit?: number;
 }
 
 type SortKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'bev' | 'name' | 'parkingUncovered';
@@ -56,7 +58,7 @@ function toCsv(rows: DistrictResult[], s: Scenario) {
   return [header.join(';'), ...lines].join('\n');
 }
 
-export function RankingTable({ results, scenario, selected, onSelect }: Props) {
+export function RankingTable({ results, scenario, selected, limit, onSelect }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('gap');
   const [asc, setAsc] = useState(false);
 
@@ -120,7 +122,7 @@ export function RankingTable({ results, scenario, selected, onSelect }: Props) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
+            {(limit ? rows.slice(0, limit) : rows).map((r, i) => (
               <tr key={r.ubz} className={r.ubz === selected ? 'is-selected' : undefined}>
                 <td className="num muted">{i + 1}</td>
                 <td>
@@ -140,6 +142,11 @@ export function RankingTable({ results, scenario, selected, onSelect }: Props) {
           </tbody>
         </table>
       </div>
+      {limit && rows.length > limit && (
+        <p className="hint">
+          Top {limit} von {rows.length} Unterbezirken. Alle im Expertenmodus; der CSV-Export enthält immer alle.
+        </p>
+      )}
     </section>
   );
 }

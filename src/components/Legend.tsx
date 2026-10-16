@@ -1,6 +1,8 @@
-import { METRICS, RAMP, ZERO_COLOR, type Classes, type Metric, type MetricKey } from '../lib/metrics';
+import { METRIC_GROUPS, RAMP, SIMPLE_METRICS, ZERO_COLOR, metricByKey, type Classes, type Metric, type MetricKey } from '../lib/metrics';
 
 interface Props {
+  /** expert: all metrics grouped + priority grid; simple: four metrics */
+  expert: boolean;
   metric: Metric;
   classes: Classes;
   showChargers: boolean;
@@ -12,7 +14,7 @@ interface Props {
   onTogglePriority: (v: boolean) => void;
 }
 
-export function Legend({ metric, classes, showChargers, showPriority, showParking, onMetric, onToggleChargers, onTogglePriority, onToggleParking }: Props) {
+export function Legend({ expert, metric, classes, showChargers, showPriority, showParking, onMetric, onToggleChargers, onTogglePriority, onToggleParking }: Props) {
   const lower = (i: number) => (i === 0 ? 0 : classes.breaks[i - 1]);
   return (
     <div className="legend">
@@ -20,11 +22,21 @@ export function Legend({ metric, classes, showChargers, showPriority, showParkin
         Kartenfarbe
       </label>
       <select id="metric" value={metric.key} onChange={(e) => onMetric(e.target.value as MetricKey)}>
-        {METRICS.map((m) => (
-          <option key={m.key} value={m.key}>
-            {m.label}
-          </option>
-        ))}
+        {expert
+          ? METRIC_GROUPS.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.keys.map((k) => (
+                  <option key={k} value={k}>
+                    {metricByKey(k).label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : SIMPLE_METRICS.map((k) => (
+              <option key={k} value={k}>
+                {metricByKey(k).label}
+              </option>
+            ))}
       </select>
       <ul className="legend-scale">
         {classes.hasZero && (
@@ -47,11 +59,13 @@ export function Legend({ metric, classes, showChargers, showPriority, showParkin
         <span className="dot" aria-hidden="true" />
         Ladestandorte heute (Stadt, 912)
       </label>
-      <label className="toggle">
-        <input id="show-priority" type="checkbox" checked={showPriority} onChange={(e) => onTogglePriority(e.target.checked)} />
-        <span className="square" aria-hidden="true" />
-        Prioritätsflächen LIS-Ausbau (225-m-Raster)
-      </label>
+      {expert && (
+        <label className="toggle">
+          <input id="show-priority" type="checkbox" checked={showPriority} onChange={(e) => onTogglePriority(e.target.checked)} />
+          <span className="square" aria-hidden="true" />
+          Prioritätsflächen LIS-Ausbau (225-m-Raster)
+        </label>
+      )}
       <label className="toggle">
         <input id="show-parking" type="checkbox" checked={showParking} onChange={(e) => onToggleParking(e.target.checked)} />
         <span className="dot dot-parking" aria-hidden="true" />

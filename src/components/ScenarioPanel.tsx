@@ -9,6 +9,8 @@ interface Props {
   onChange: (s: Scenario) => void;
   onReset: () => void;
   calibration?: Calibration;
+  /** simple mode: only year and EV share */
+  simple?: boolean;
 }
 
 interface Option<T> {
@@ -88,14 +90,14 @@ function Slider({
   );
 }
 
-export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, calibration, onChange, onReset }: Props) {
+export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, calibration, simple = false, onChange, onReset }: Props) {
   const bottomUp = s.model === 'bottomup';
   const set = (patch: Partial<Scenario>) => onChange({ ...s, ...patch });
 
   return (
     <section className="panel" aria-labelledby="scenario-title">
       <div className="panel-head">
-        <h2 id="scenario-title">ISME-Szenario</h2>
+        <h2 id="scenario-title">{simple ? 'Szenario' : 'ISME-Szenario'}</h2>
         <button type="button" className="link-button" onClick={onReset}>
           Zurücksetzen
         </button>
@@ -113,6 +115,8 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, cal
         </span>
       </div>
 
+      {!simple && (
+        <>
       <Segmented<Scenario['model']>
         name="model"
         label="Modell"
@@ -128,6 +132,8 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, cal
             : 'ISME-Tabelle unverändert, nur auf Unterbezirke verteilt (Vergleich)'
         }
       />
+        </>
+      )}
 
       <Segmented<Scenario['year']>
         name="year"
@@ -153,6 +159,12 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, cal
         onChange={(v) => set({ bevShare: v / 100 })}
       />
 
+      {simple ? (
+        <p className="hint">
+          Bottom-up-Modell mit Standardannahmen. Alle Annahmen, das ISME-Vergleichsmodell und die lokalen Faktoren im Expertenmodus.
+        </p>
+      ) : (
+        <>
       {!bottomUp && (
         <Segmented<Scenario['method']>
           name="method"
@@ -358,6 +370,8 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, cal
         display={fmt(s.pointsPerSite)}
         onChange={(pointsPerSite) => set({ pointsPerSite })}
       />
+        </>
+      )}
     </section>
   );
 }

@@ -5,12 +5,14 @@ import { DistrictPanel } from './components/DistrictPanel';
 import { RankingTable } from './components/RankingTable';
 import { Legend } from './components/Legend';
 import { PageTabs } from './components/PageTabs';
+import { ModeToggle } from './components/ModeToggle';
+import { useExpertMode } from './lib/mode';
 import { SidebarResizer, useSidebar } from './components/SidebarResizer';
 import { SitePanel, type ParkingColour } from './components/SitePanel';
 import { defaultWeights, scoreSites, sitesByDistrict, type SiteSpot, type Weights } from './lib/sites';
 import { loadData, type AppData } from './lib/data';
 import { computeAll, defaultScenario, fmt, type Scenario } from './lib/isme';
-import { metricByKey, quantileClasses, type MetricKey } from './lib/metrics';
+import { SIMPLE_METRICS, metricByKey, quantileClasses, type MetricKey } from './lib/metrics';
 import { readUrlState, writeUrlState } from './lib/urlState';
 
 export default function App() {
@@ -48,13 +50,17 @@ function Dashboard({ data }: { data: AppData }) {
   const [parkingColour, setParkingColour] = useState<ParkingColour>('score');
   const [copied, setCopied] = useState(false);
   const sidebar = useSidebar();
+  const [expert, setExpert] = useExpertMode();
+  // simple mode: only the four presentation metrics, parking coloured by distance, no priority grid
+  const visibleMetric: MetricKey = expert || SIMPLE_METRICS.includes(metricKey) ? metricKey : 'gap';
+  const effectiveColour: ParkingColour = expert ? parkingColour : 'distance';
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
   const { results, city, cityPoints, calibration } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
   const sites = useMemo(() => scoreSites(data.parking.features.map((f) => f.properties as SiteSpot), weights), [data, weights]);
   const sitesByUbz = useMemo(() => sitesByDistrict(sites), [sites]);
-  const metric = metricByKey(metricKey);
+  const metric = metricByKey(visibleMetric);
   const classes = useMemo(() => quantileClasses(results.map(metric.value)), [results, metric]);
   const sum = useMemo(
     () => results.reduce((t, r) => ({ existing: t.existing + r.existing, gap: t.gap + r.gap }), { existing: 0, gap: 0 }),
@@ -67,7 +73,7 @@ function Dashboard({ data }: { data: AppData }) {
   const t = data.meta.totals;
   const evShareToday = t.totalEvs / (t.privateCars + t.commercialCars);
 
-  useEffect(() => writeUrlState(scenario, metricKey, selected), [scenario, metricKey, selected]);
+  useEffect(() => writeUrlState(scenario, visibleMetric, selected), [scenario, visibleMetric, selected, expert]);
 
   const selectedResult = selected ? byUbz.get(selected) : undefined;
   const stand = new Date(data.meta.fetchedAt).toLocaleDateString('de-DE');
@@ -89,6 +95,7 @@ function Dashboard({ data }: { data: AppData }) {
           <div className="title-row">
             <h1>Ladebedarf Dortmund</h1>
             <PageTabs current="karte" />
+            <ModeToggle expert={expert} onChange={setExpert} />
           </div>
           <p className="muted">
             ISME-Methode je statistischem Unterbezirk · {scenario.year}, {Math.round(scenario.bevShare * 100)} % BEV
@@ -119,6 +126,7 @@ function Dashboard({ data }: { data: AppData }) {
       >
         <div className="sidebar" hidden={sidebar.collapsed}>
           <Legend
+            expert={expert}
             metric={metric}
             classes={classes}
             showChargers={showChargers}
@@ -129,26 +137,29 @@ function Dashboard({ data }: { data: AppData }) {
             onToggleChargers={setShowChargers}
             onTogglePriority={setShowPriority}
           />
-          <SitePanel
-            sites={sites}
-            weights={weights}
-            colour={parkingColour}
-            showParking={showParking}
-            onWeights={setWeights}
-            onColour={setParkingColour}
-            onShowParking={setShowParking}
-            onReset={() => setWeights(defaultWeights)}
-          />
+          {expert && (
+            <SitePanel
+              sites={sites}
+              weights={weights}
+              colour={parkingColour}
+              showParking={showParking}
+              onWeights={setWeights}
+              onColour={setParkingColour}
+              onShowParking={setShowParking}
+              onReset={() => setWeights(defaultWeights)}
+            />
+          )}
           <ScenarioPanel
             scenario={scenario}
             city={city}
             cityPoints={cityPoints}
             evShareToday={evShareToday}
             calibration={calibration}
+            simple={!expert}
             onChange={setScenario}
             onReset={() => setScenario(defaultScenario)}
           />
-          <RankingTable results={results} scenario={scenario} selected={selected} onSelect={setSelected} />
+          <RankingTable results={results} scenario={scenario} selected={selected} limit={expert ? undefined : 10} onSelect={setSelected} />
           <section className="panel sources" aria-labelledby="sources-title">
             <h2 id="sources-title">Daten und Methode</h2>
             <p className="muted">
@@ -189,10 +200,10 @@ function Dashboard({ data }: { data: AppData }) {
             classes={classes}
             selected={selected}
             showChargers={showChargers}
-            showPriority={showPriority}
+            showPriority={expert && showPriority}
             showParking={showParking}
             sites={sites}
-            parkingColour={parkingColour}
+            parkingColour={effectiveColour}
             onSelect={setSelected}
           />
           {selectedResult && (
@@ -201,6 +212,7 @@ function Dashboard({ data }: { data: AppData }) {
               rank={gapRank.get(selectedResult.ubz) ?? 0}
               total={results.length}
               sites={sitesByUbz.get(selectedResult.ubz)}
+              simple={!expert}
               onClose={() => setSelected(null)}
             />
           )}

@@ -74,5 +74,6 @@ export function writeUrlState(s: Scenario, metric: MetricKey, ubz: string | null
   p.set('cr', String(Math.round(s.carReduction * 100)));
   p.set('k', metric);
   if (ubz) p.set('ubz', ubz);
+  if (new URLSearchParams(window.location.search).get('x') === '1') p.set('x', '1'); // expert mode
   window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`);
 }
