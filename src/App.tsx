@@ -56,14 +56,11 @@ function Dashboard({ data }: { data: AppData }) {
       <header className="topbar">
         <div className="brand">
           <h1>Dortmund Charging Demand</h1>
-          <p className="muted">Click a subdistrict to see existing charging points, estimated current demand and missing points.</p>
-          <p className="hint">Shading = missing charging points · Orange = recorded charging locations.</p>
         </div>
       </header>
       <main className={`current-layout${district ? ' has-selection' : ''}`}>
         <Legend
           districts={results}
-          classes={classes}
           selected={selected}
           showChargers={showChargers}
           onSelect={setSelected}

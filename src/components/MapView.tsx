@@ -222,6 +222,23 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
   return (
     <div className="map">
       <div ref={container} className="map-canvas" aria-label="Map of statistical subdistricts" role="region" />
+      <div className="map-legend" aria-label="Legend: missing charging points">
+        <span className="map-legend-title">Missing charging points</span>
+        <div className="map-legend-bar">
+          {[
+            ...(classes.hasZero ? [{ colour: ZERO_COLOR, label: '0' }] : []),
+            ...classes.breaks.map((b, i) => {
+              const from = i === 0 ? 1 : classes.breaks[i - 1] + 1;
+              return { colour: classes.colours[i], label: from === b ? String(b) : `${from}–${b}` };
+            }),
+          ].map((c) => (
+            <span key={c.label} className="map-legend-step">
+              <span className="map-legend-swatch" style={{ background: c.colour }} aria-hidden="true" />
+              {c.label}
+            </span>
+          ))}
+        </div>
+      </div>
       {hover && hovered && (
         <div className="map-tooltip" style={{ left: hover.x + 14, top: hover.y + 14 }} role="status">
           <strong>{hovered.name}</strong>
