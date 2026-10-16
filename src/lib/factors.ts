@@ -13,7 +13,7 @@
 //              × chargeAtDestinationShare × touristStreetShare ÷ evsPerStreetPoint
 //              × district share of visits (day) or of hotel weight (overnight)
 
-import { fmt, pct, type Step } from './isme';
+import { fmt, pct, type District, type DistrictResult, type Step } from './isme';
 
 export interface FactorDistrict {
   ubz: string;
@@ -230,6 +230,28 @@ export function computeFactors(
   });
 
   return { results, mfhPerDwelling, bevShare };
+}
+
+/** Current-stock view: a district's street-space demand today, rounded up to whole points. */
+export function currentStreetDemand(d: District, f: FactorResult): DistrictResult {
+  const needed = Math.ceil(f.needed);
+  const gap = Math.max(0, needed - f.existing);
+  const cars = d.privateCars + d.commercialCars;
+  return {
+    ...d,
+    cars,
+    evShareToday: cars > 0 ? d.totalEvs / cars : 0,
+    bevResidents: d.privateEvs,
+    bevCommuters: 0,
+    bevTourists: 0,
+    bev: d.totalEvs,
+    needed,
+    existing: f.existing,
+    gap,
+    gapPer1000Cars: cars > 0 ? (gap / cars) * 1000 : 0,
+    coverage: needed > 0 ? Math.min(f.existing / needed, 1) : 1,
+    steps: f.steps,
+  };
 }
 
 // --- CSV input --------------------------------------------------------------------

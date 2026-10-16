@@ -1085,6 +1085,32 @@ a {
   grid-template-columns: 1fr;
 }
 
+.factor-split {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.factor-split div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.factor-split dt {
+  font-weight: 600;
+}
+
+.factor-split dd {
+  margin: 0;
+}
+
+.factor-split dd.hint {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 1000px) {
   .current-layout,
   .current-layout.has-selection {

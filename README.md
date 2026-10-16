@@ -85,10 +85,15 @@ The web interface, number/date formatting and page
 metadata are in English; official district/place names and basemap attribution
 are preserved.
 
-Current demand uses each district's recorded `totalEvs` and the existing ISME public
-use cases: `ceil(totalEvs × (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8))`.
+Current demand is the street-space factor model ([`docs/factor-model.md`](docs/factor-model.md))
+with today's registered EVs: residents without a private charging option, in-commuters spread
+by estimated jobs and visitors by destinations and hotels, rounded up to whole points
+(`computeFactors` + `currentStreetDemand` in `src/lib/factors.ts`). The details panel shows
+the split by group. Car parks, customer parking and fast chargers are not included.
+Districts missing from the model fall back to the ISME public use cases:
+`ceil(totalEvs × (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8))`.
 Missing points are `max(0, required − existing)`. This stock-only estimate excludes
-future vehicle growth and additional commuter/tourist demand. It is based on the
+future vehicle growth. It is based on the
 included data, not a live measurement. The source records locations, not verified
 connector counts; existing points assume one point per location, and do not mean
 currently unoccupied or operational chargers. The displayed retrieval date is not

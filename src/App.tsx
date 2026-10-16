@@ -4,6 +4,8 @@ import { Legend } from './components/Legend';
 import { DistrictPanel } from './components/DistrictPanel';
 import { loadData, type AppData } from './lib/data';
 import { computeCurrentDemand } from './lib/isme';
+import { computeFactors, currentStreetDemand } from './lib/factors';
+import { factorDefaults, factorDestinations, factorDistricts } from './lib/factorData';
 
 export default function App() {
   const [data, setData] = useState<AppData | null>(null);
@@ -31,7 +33,19 @@ export default function App() {
 function Dashboard({ data }: { data: AppData }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showChargers, setShowChargers] = useState(true);
-  const results = useMemo(() => data.districts.features.map((f) => computeCurrentDemand(f.properties)), [data]);
+  // street-space demand today from the factor model; districts missing there keep the ISME estimate
+  const factors = useMemo(() => {
+    const run = computeFactors(factorDistricts, factorDestinations, { ...factorDefaults, bevMode: 'today' });
+    return new Map(run.results.map((r) => [r.ubz, r]));
+  }, []);
+  const results = useMemo(
+    () =>
+      data.districts.features.map((f) => {
+        const fr = factors.get(f.properties.ubz);
+        return fr ? currentStreetDemand(f.properties, fr) : computeCurrentDemand(f.properties);
+      }),
+    [data, factors],
+  );
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
   const district = selected ? byUbz.get(selected) : undefined;
 
@@ -62,7 +76,12 @@ function Dashboard({ data }: { data: AppData }) {
           />
         </div>
         {district && (
-          <DistrictPanel district={district} fetchedAt={data.meta.fetchedAt} onClose={() => setSelected(null)} />
+          <DistrictPanel
+            district={district}
+            factors={factors.get(district.ubz)}
+            fetchedAt={data.meta.fetchedAt}
+            onClose={() => setSelected(null)}
+          />
         )}
       </main>
     </div>

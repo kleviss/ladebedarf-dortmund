@@ -5,6 +5,7 @@ import parametersJson from '../../public/data/model/parameters.json';
 import {
   calibrateMfh,
   computeFactors,
+  currentStreetDemand,
   defaultFactorParams,
   homeCoverage,
   parseCsv,
@@ -69,6 +70,18 @@ describe('computeFactors with the defaults', () => {
 
   it('exposes every factor as a step for the UI', () => {
     expect(today.results[0].steps.map((s) => s.key)).toEqual(['homeCoverage', 'residents', 'commuters', 'tourists', 'needed', 'existing', 'gap']);
+  });
+});
+
+describe('currentStreetDemand', () => {
+  it('rounds the factor demand up and subtracts the existing points', () => {
+    const f = computeFactors(districts, destinations, defaults).results.find((r) => r.ubz === '071')!;
+    const d = { ubz: '071', name: 'Kaiserbrunnen', stadtbezirk: 'Innenstadt-Ost', areaKm2: 1, privateCars: 3380, privateEvs: 85, privateNewEvs: 0, commercialCars: 390, commercialEvs: 45, commercialNewEvs: 0, totalEvs: 130, chargers: 16 };
+    const r = currentStreetDemand(d, { ...f, existing: 5 });
+    expect(r.needed).toBe(Math.ceil(f.needed));
+    expect(r.gap).toBe(Math.ceil(f.needed) - 5);
+    expect(currentStreetDemand(d, f).gap).toBe(0);
+    expect(r.steps).toBe(f.steps);
   });
 });
 
