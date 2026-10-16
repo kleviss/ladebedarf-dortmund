@@ -62,6 +62,45 @@ The Sciebo data folder holds the city's **ISME calculation method** (Excel + rep
 
 ## Our solution
 
+### Simplified current-stock view
+
+The main app shows a left-hand filter pane, the district map and recorded charging
+locations. Choose an Unterbezirk from the alphabetical dropdown or click it on the
+map to zoom to its full boundary and see three figures:
+existing charging points (assumed), estimated points required for the recorded EV
+stock, and missing points. Close the details or choose "All subdistricts" to clear
+the selection and zoom back out to the entire city. Map clicks and the dropdown
+stay in sync. On smaller screens, the filter pane sits above the map.
+The checked "Show current charging points" checkbox toggles the recorded-location
+markers. Districts currently have neutral outlines only, with a light hover
+highlight; no demand-based colouring is applied pending a new shading rule.
+In city view, a blue outline with a white halo highlights the outer city limits,
+merged from the district polygons without internal borders. Selecting a district
+hides the city outline; closing its details restores it.
+The existing `Legend` and `DistrictPanel` components own the filter pane and
+three-figure details instead of duplicating them in `App`.
+The map resizes with its
+container so overlays remain aligned when the layout changes.
+The web interface, number/date formatting and page
+metadata are in English; official district/place names and basemap attribution
+are preserved.
+
+Current demand uses each district's recorded `totalEvs` and the existing ISME public
+use cases: `ceil(totalEvs × (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8))`.
+Missing points are `max(0, required − existing)`. This stock-only estimate excludes
+future vehicle growth and additional commuter/tourist demand. It is based on the
+included data, not a live measurement. The source records locations, not verified
+connector counts; existing points assume one point per location, and do not mean
+currently unoccupied or operational chargers. The displayed retrieval date is not
+necessarily the source's observation date.
+
+Scenario controls, ranking, reports navigation, extra map layers and detailed
+calculation panels are not mounted in this view. Their components and the original
+forecast calculations remain in the repository for future use. Old scenario URL
+parameters and saved expert-mode preferences do not change this view.
+
+### Original prototype features (currently hidden)
+
 A static web app (no backend) that runs the city's ISME method in the browser for all 145 Unterbezirke and updates instantly when a scenario changes.
 
 ![District detail with every ISME step and its source](docs/screenshot-detail.jpg)
