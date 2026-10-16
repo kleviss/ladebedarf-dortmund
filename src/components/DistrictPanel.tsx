@@ -1,8 +1,8 @@
-import { fmt, type DistrictResult, type SourceKind } from '../lib/model';
+import { fmt, pct, type DistrictResult, type SourceKind } from '../lib/isme';
 
 const SOURCE_LABEL: Record<SourceKind, string> = {
-  'open-data': 'Open Data',
-  estimate: 'Schätzung',
+  'city-data': 'Daten Stadt',
+  isme: 'ISME',
   assumption: 'Annahme',
   result: 'Ergebnis',
 };
@@ -24,7 +24,8 @@ export function DistrictPanel({ district: d, rank, total, onClose }: Props) {
           </p>
           <h2 id="district-title">{d.name}</h2>
           <p className="muted">
-            Rang {rank} von {total} nach fehlenden Ladepunkten · {fmt(d.areaKm2, 1)} km² · {fmt(d.buildings)} Gebäude
+            Rang {rank} von {total} nach fehlenden Ladepunkten · {fmt(d.areaKm2, 1)} km² · E-Anteil heute{' '}
+            {pct(d.evShareToday, 1)}
           </p>
         </div>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Details schließen">
@@ -34,11 +35,11 @@ export function DistrictPanel({ district: d, rank, total, onClose }: Props) {
 
       <ol className="steps">
         {d.steps.map((s) => (
-          <li key={s.key} className={`step step-${s.source}`}>
+          <li key={s.key} className={`step step-${s.source}${s.indent ? ' step-indent' : ''}${s.key === 'gap' ? ' step-gap' : ''}`}>
             <div className="step-main">
               <span className="step-label">{s.label}</span>
               <span className="step-value num">
-                {fmt(s.value, s.value < 10 && s.value > 0 ? 1 : 0)} <small>{s.unit}</small>
+                {fmt(s.value, s.value > 0 && s.value < 10 ? 1 : 0)} <small>{s.unit}</small>
               </span>
             </div>
             <div className="step-meta">

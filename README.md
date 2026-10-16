@@ -1,8 +1,8 @@
 # Ladebedarf Dortmund
 
-Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktur für Dortmund"** (demand-oriented charging infrastructure). It calculates how many public EV charging points each of Dortmund's 170 statistical *Unterbezirke* needs, compares that with what exists, and shows every factor behind the number.
+Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktur für Dortmund"** (demand-oriented charging infrastructure). It applies the city's own **ISME calculation method** to the city's data for Dortmund's 145 statistical *Unterbezirke*: how many publicly accessible EV charging points each one needs, how many exist, and every factor behind the number.
 
-![Map of the 170 Unterbezirke shaded by missing charging points](docs/screenshot-map.jpg)
+![Map of the 145 Unterbezirke shaded by missing charging points](docs/screenshot-map.jpg)
 
 - [Team resources](#team-resources)
 - [The challenge](#the-challenge)
@@ -32,7 +32,7 @@ In the repo:
 - [Team brief](docs/team-brief.md): problem, method, data and open tasks on one page
 - [Brainstorming strategy](docs/brainstorming.md): 90-minute kickoff for Philipp, Mehul and Klevis, the city's ISME method, mentor questions and the plan until the pitch
 
-The Sciebo data folder holds the city's **ISME calculation method** (Excel + report), **car and EV stock per Unterbezirk** (145 units), **912 current charging locations**, a 225 m priority grid and commercial areas. These close most of the [known data gaps](#known-data-gaps) below; the data files themselves stay on Sciebo and are not committed here.
+The Sciebo data folder holds the city's **ISME calculation method** (Excel + report), **car and EV stock per Unterbezirk** (145 units), **912 current charging locations**, a 225 m priority grid and commercial areas. The app is built on this data: `npm run data` downloads it, and the processed GeoJSON in `public/data/city/` is committed so the app builds without network access. The raw files (shapefiles, Excel, report) are not committed.
 
 ---
 
@@ -62,74 +62,109 @@ The Sciebo data folder holds the city's **ISME calculation method** (Excel + rep
 
 ## Our solution
 
-A static web app (no backend) that runs the demand calculation in the browser for all 170 Unterbezirke and updates instantly when assumptions change.
+A static web app (no backend) that runs the city's ISME method in the browser for all 145 Unterbezirke and updates instantly when a scenario changes.
 
-![District detail with every calculation step and its source](docs/screenshot-detail.jpg)
+![District detail with every ISME step and its source](docs/screenshot-detail.jpg)
 
 **Working now**
 
-- **Demand map.** The 170 Unterbezirke shaded by missing charging points, missing points per 1,000 residents, needed points, existing points or population density. Hover shows the value.
-- **District detail.** Click a district to see the full chain: residents → cars → EVs → EVs without private parking → needed points − existing points = gap. Each step is tagged *Open Data*, *Schätzung* (estimate), *Annahme* (assumption) or *Ergebnis* (result), with the formula used.
-- **Scenario sliders.** EV share, home-charging share, effect of building density, EVs per public charging point, cars per 1,000 residents. Defaults come from Open Data where possible.
-- **Priority ranking.** Sortable table of all 170 districts with CSV export.
-- **Shareable scenarios.** All settings and the selected district live in the URL (`?ev=20&home=60&r=10&ubz=122`). The "Szenario-Link kopieren" button copies it.
-- **Existing charging points** as a map layer.
+- **Demand map.** The 145 Unterbezirke shaded by missing charging points, missing points per 1,000 cars, needed points, existing points, coverage, or today's EV share. Hover shows the value.
+- **District detail.** Click a district for the full ISME chain: cars today → BEV of residents, commuters and tourists → charging points per use case → needed − existing = gap. Each step is tagged *Daten Stadt*, *ISME*, *Annahme* (assumption) or *Ergebnis* (result), with its formula.
+- **ISME scenario controls.** Target year (2030 / 2036), BEV share (5–50 %), use-case or ratio method, street-space-only or all publicly accessible points, and the open questions in the Excel as switches.
+- **Priority ranking.** Sortable table of all 145 districts with CSV export.
+- **Map layers.** 912 current charging locations and the city's 225 m priority grid.
+- **Shareable scenarios.** All settings and the selected district live in the URL. The "Szenario-Link kopieren" button copies it.
 
 **Why it fits the judging criteria**
 
 | Criterion | How we cover it |
 |---|---|
-| Quick analysis per subdistrict | One click on the map or table; recalculation is instant (170 rows in the browser). |
-| Transparent criteria | Every number shows its formula and whether it is open data, an estimate or an assumption. |
-| Value for planning | Ranking + CSV export for council papers; scenario links to compare options in meetings. |
+| Quick analysis per subdistrict | One click on the map or table; recalculation is instant. |
+| Transparent criteria | Every number shows its formula and whether it is city data, the ISME method, an assumption or a result. |
+| Value for planning | The city's own method, per Unterbezirk; ranking and CSV export for council papers; scenario links for meetings. |
 
 ---
 
 ## Calculation method
 
-> **Placeholder.** The city provides its own method during the challenge. Replace `computeDistrict` in [`src/lib/model.ts`](src/lib/model.ts) and keep returning the `steps` array so the UI keeps explaining every factor. Tests live in [`src/lib/model.test.ts`](src/lib/model.test.ts).
+The city's **ISME method** (*Berechnungsmethode ISME.xlsx* and *Gutachten ISME*, Dec 2023), implemented in [`src/lib/isme.ts`](src/lib/isme.ts). The tests in [`src/lib/isme.test.ts`](src/lib/isme.test.ts) reproduce the Excel cells.
 
-Per Unterbezirk *u*:
+**City level, as in the Excel:**
 
 ```
-residents_u   = population of the statistical district × (buildings_u / buildings of that district)
-cars_u        = residents_u × cars per 1,000 residents / 1,000
-evs_u         = cars_u × EV share
-homeShare_u   = clamp(homeChargingShare × (cityResidentsPerBuilding / residentsPerBuilding_u) ^ densityEffect, 5 %, 95 %)
-publicEvs_u   = evs_u × (1 − homeShare_u)
-needed_u      = publicEvs_u / EVs per public charging point
-gap_u         = max(0, needed_u − existing charging points_u)
+BEV residents   = cars(year) × BEV share            cars: 291,451 (2030) / 302,435 (2036)
+BEV commuters   = 99,400 × BEV share                142,000 in-commuters × 70 % by car
+BEV tourists    = (24,180,000 + 923,800) × BEV share / 365      day + overnight, 62 % by car
+
+charging points = Σ over use cases  BEV × share ÷ BEV per point      (use-case method)
+               or BEV ÷ 11 | 15 | 20                                  (ratio method)
 ```
 
-Residents per building is the proxy for private parking: apartment blocks (many residents per building) have fewer private spaces than detached houses.
+| Use case | Share of BEV | BEV per point | Counts as |
+|---|---:|---:|---|
+| Detached house with parking | 8 % | 1.39 | private |
+| Apartment building with parking | 44 % | 1.39 | private |
+| Employer | 11 % | 1.17 | private |
+| Public car parks | 2.6 % | 2.94 | publicly accessible |
+| Customer parking incl. destinations | 10.3 % | 4.08 | publicly accessible |
+| HPC hubs | 3.9 % | 19.1 | publicly accessible |
+| Street space | 20.2 % | 2.8 (alt. 5) | publicly accessible, the city's direct lever |
 
-| Parameter | Default | Basis |
-|---|---|---|
-| Cars per 1,000 residents | 485 | Open Data Dortmund, *Kraftfahrzeugdichte* 2023 |
-| EV share (BEV + PHEV) | 15 % | Scenario. Today: 4.1 % (8,440 BEV + 6,805 PHEV of 372,220 vehicles, 2023) |
-| Home / work charging | 60 % | Assumption, adjusted per district by density |
-| Density effect | 0.5 | Assumption |
-| EVs per public charging point | 10 | Rule of thumb, in line with EU AFIR ([Regulation (EU) 2023/1804](https://eur-lex.europa.eu/eli/reg/2023/1804/oj)) |
+**Per Unterbezirk (our addition, following chapter 6.1 of the report):**
+
+```
+BEV_u      = BEV residents × privateCars_u / Σ privateCars        (or by today's private EVs)
+           + (BEV commuters + BEV tourists) × commercialCars_u / Σ commercialCars
+needed_u   = charging points for BEV_u (method and scope as above)
+existing_u = charging locations in u × points per location
+gap_u      = max(0, needed_u − existing_u)
+```
+
+The report spreads commuters by employees and tourists by points of interest per Unterbezirk. We don't have those yet, so commercial cars stand in for workplaces and destinations; this is tagged *Annahme* in the app. Per-district results always add up to the city total.
+
+**Defaults:** 2030, 15 % BEV, use-case method, all publicly accessible points, 2.8 BEV per street point, 10.3 % customer parking, 1 charging point per location. At these settings the city needs 7,465 points; 912 locations exist.
+
+**Open points in the city's material** (switchable in the app):
+
+- The Excel labels customer parking 10.3 % but its formula uses 1.3 % (`=C22*0.013`).
+- The charger file has 912 *locations*; whether these are stations or charging points is unclear (setting "Ladepunkte je Bestandsstandort").
+- The shapefile gives *Kirchhörde-West/ Schanze* the duplicate ID 697; the statistics use 698. The import fixes this by name.
+- One charging location lies outside all 145 Unterbezirke.
 
 ---
 
 ## Data sources
 
-### Open Data Dortmund (used now)
+### City of Dortmund, Sciebo Team 07 folder (used now)
+
+[Daten für Verwaltungschallenge](https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge) · imported by [`scripts/build-city-data.mjs`](scripts/build-city-data.mjs)
+
+| File | Content | Used for |
+|---|---|---|
+| `Statistik/2026_Auswertung der Statistik für QGIS.csv` | Private and commercial cars, EVs and new EV registrations for 145 units | BEV distribution, today's EV share |
+| `Unterbezirke/Unterbezirke_Auto_Bestand_Neuzulassungen.shp` | 145 polygons (Web Mercator) | Map geometry, reprojected to WGS84 |
+| `aktueller Bestand an Ladesäulen/Ladesaeulen_Punkte.dbf` | 912 charging locations (lat/lon) | Existing points per Unterbezirk |
+| `Fläche mit Priorität für LIS-Ausbau/…dbf` | 225 m grid, 6,422 cells, point count per cell | Map layer (293 cells with points) |
+| `Berechnungsmethode/Berechnungsmethode ISME.xlsx`, `Gutachten ISME.pdf` | The ISME method | Constants and formulas in `src/lib/isme.ts` |
+| `Gewerbegebiete/Gewerbe in Dortmund.kml` | Commercial areas (17 MB) | Not used yet |
+
+### Open Data Dortmund (enrichment)
 
 Portal: <https://open-data.dortmund.de/> · API console: <https://open-data.dortmund.de/api/explore/v2.1/console> · Licence: [Datenlizenz Deutschland – Namensnennung 2.0](https://www.govdata.de/dl-de/by-2-0)
 
-| Dataset | ID | Level | Used for |
+The first prototype ran on these; [`scripts/build-opendata.mjs`](scripts/build-opendata.mjs) (`npm run data:opendata`) still fetches them for enrichment, but the app doesn't use them now.
+
+| Dataset | ID | Level | Possible use |
 |---|---|---|---|
-| [Unterbezirke](https://open-data.dortmund.de/explore/dataset/fb62-unterbezirke/) | `fb62-unterbezirke` | 170 polygons | Map geometry; maps each Unterbezirk to its statistical district and Stadtbezirk |
-| [Gebäude](https://open-data.dortmund.de/explore/dataset/fb62-gebaeude/) | `fb62-gebaeude` | 109,658 points with Unterbezirk no. | Building count per district (population split, density proxy) |
-| [E-Tankstellen Standorte – Projekt NOX-Block](https://open-data.dortmund.de/explore/dataset/fb1-ii-smart-city-e-tankstellen-ladepunkte-nox/) | `fb1-ii-smart-city-e-tankstellen-ladepunkte-nox` | 320 points with Unterbezirk no. | Existing charging points (NOX project only) |
-| [Bevölkerung nach Geschlecht und Migrationshintergrund 2023](https://open-data.dortmund.de/explore/dataset/ds-bevolkerung-nach-geschlecht-und-migrationshintergrund-2023/) | `ds-bevolkerung-nach-geschlecht-und-migrationshintergrund-2023` | 62 statistical districts | Population |
-| [Kraftfahrzeugdichte](https://open-data.dortmund.de/explore/dataset/kraftfahrzeugdichte/) | `kraftfahrzeugdichte` | City, yearly | Cars per 1,000 residents |
-| [Bestand an Kraftfahrzeugen nach Energiequelle](https://open-data.dortmund.de/explore/dataset/bestand-an-kraftfahrzeugen-nach-energiequelle/) | `bestand-an-kraftfahrzeugen-nach-energiequelle` | City, yearly | Current EV share |
+| [Unterbezirke](https://open-data.dortmund.de/explore/dataset/fb62-unterbezirke/) | `fb62-unterbezirke` | 170 polygons | Finer geometry than the city's 145 units |
+| [Gebäude](https://open-data.dortmund.de/explore/dataset/fb62-gebaeude/) | `fb62-gebaeude` | 109,658 points with Unterbezirk no. | Building density, private-parking proxy |
+| [E-Tankstellen Standorte – Projekt NOX-Block](https://open-data.dortmund.de/explore/dataset/fb1-ii-smart-city-e-tankstellen-ladepunkte-nox/) | `fb1-ii-smart-city-e-tankstellen-ladepunkte-nox` | 320 points | Lantern charging subset |
+| [Bevölkerung nach Geschlecht und Migrationshintergrund 2023](https://open-data.dortmund.de/explore/dataset/ds-bevolkerung-nach-geschlecht-und-migrationshintergrund-2023/) | `ds-bevolkerung-nach-geschlecht-und-migrationshintergrund-2023` | 62 statistical districts | Residents (ISME spreads residents' BEV by population) |
+| [Kraftfahrzeugdichte](https://open-data.dortmund.de/explore/dataset/kraftfahrzeugdichte/) | `kraftfahrzeugdichte` | City, yearly | Cross-check car stock |
+| [Bestand an Kraftfahrzeugen nach Energiequelle](https://open-data.dortmund.de/explore/dataset/bestand-an-kraftfahrzeugen-nach-energiequelle/) | `bestand-an-kraftfahrzeugen-nach-energiequelle` | City, yearly | EV growth trend |
 | [Fahrzeugbestand nach Fahrzeugarten](https://open-data.dortmund.de/explore/dataset/fahrzeugbestand-nach-fahrzeugarten/) | `fahrzeugbestand-nach-fahrzeugarten` | City, yearly | Car totals |
 
-### Open Data Dortmund (useful next)
+### More Open Data Dortmund datasets
 
 | Dataset | ID | Why |
 |---|---|---|
@@ -178,10 +213,11 @@ curl "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets/fb62-gebae
 
 | Gap | Current handling | Better fix |
 |---|---|---|
-| No vehicle or EV numbers below city level | City-wide car density × EV share for every district | Ask the city for registrations per Unterbezirk |
-| Population only for 62 statistical districts | Split to 170 Unterbezirke by building count (labelled *Schätzung*) | City data per Unterbezirk, or Zensus 2022 grid |
-| Building count includes non-residential buildings | Accepted for the prototype | Filter residential buildings (ALKIS / Zensus) |
-| Charging points: NOX-Block project only (320) | Shown as is | Merge Bundesnetzagentur register, drop duplicates within ~20 m |
+| No employees or points of interest per Unterbezirk | Commuters and tourists spread by commercial cars (*Annahme*) | Employee counts from the city; POIs from OSM or Open Data |
+| No residents in the city's statistics | Residents' BEV spread by private cars | Open Data population (62 districts) or Zensus 2022 grid |
+| Unclear whether the 912 entries are locations or charging points | Setting "Ladepunkte je Bestandsstandort", default 1 | Ask the city |
+| ISME coverage step (walking distances 225 / 500 / 100 / 375 m) not built yet | Not shown | Buffers around the 912 locations per Unterbezirk |
+| Meaning of the priority grid's point count | Shown as a map layer only | Ask the city |
 | Land-use plan has no data rows | Not used | Overlay as WMS layer |
 
 ---
@@ -200,12 +236,14 @@ Then open <http://localhost:5173>.
 | Command | What it does |
 |---|---|
 | `npm run dev` | Starts the dev server |
-| `npm run data` | Downloads fresh data from Open Data Dortmund into `public/data/` |
+| `npm run data` | Builds `public/data/city/` from the Sciebo files (cached in `data/raw/`) |
+| `npm run data:refresh` | Same, but downloads the Sciebo files again |
+| `npm run data:opendata` | Fetches Open Data Dortmund into `public/data/opendata/` (not used by the app yet) |
 | `npm test` | Runs the model tests (Vitest) |
 | `npm run build` | Type-checks and builds to `dist/` |
 | `npm run preview` | Serves the built app locally |
 
-The generated files in `public/data/` are committed, so the app builds without network access. Run `npm run data` to refresh them and commit the result.
+The generated files in `public/data/city/` are committed, so the app builds without network access. Run `npm run data:refresh` when the city updates the Sciebo folder and commit the result.
 
 ---
 
@@ -234,19 +272,20 @@ git clone https://github.com/kleviss/ladebedarf-dortmund.git
 ## Project structure
 
 ```
-scripts/build-data.mjs     Fetches and joins Open Data → public/data/
-public/data/               Generated data (committed)
-src/lib/model.ts           Demand calculation (replace with the city's method)
-src/lib/model.test.ts      Tests for the calculation
-src/lib/metrics.ts         Map metrics, colour classes
-src/lib/urlState.ts        Scenario ↔ URL
-src/components/MapView.tsx MapLibre map: choropleth, charging points, hover, click
-src/components/…           Scenario sliders, district detail, ranking, legend
+scripts/build-city-data.mjs  Sciebo city data → public/data/city/ (shapefile, dBase and CSV readers, reprojection)
+scripts/build-opendata.mjs   Open Data Dortmund → public/data/opendata/ (enrichment, not used yet)
+public/data/city/            Generated city data (committed)
+src/lib/isme.ts              ISME method, city level and per Unterbezirk
+src/lib/isme.test.ts         Tests against the ISME Excel
+src/lib/metrics.ts           Map metrics, colour classes
+src/lib/urlState.ts          Scenario ↔ URL
+src/components/MapView.tsx   MapLibre map: choropleth, charging locations, priority grid, hover, click
+src/components/…             Scenario controls, district detail, ranking, legend
 ```
 
 **Stack:** Vite, React, TypeScript, [MapLibre GL JS](https://maplibre.org/), Vitest. Basemap from basemap.de. No backend, no cookies, no Google Fonts (system fonts only), which keeps the app GDPR-friendly for a public-sector audience.
 
-**Design notes:** UI text is German because the users are city staff. Map colours use one sequential blue ramp (light = low, dark = high); districts with a value of 0 are grey. Existing charging points are orange.
+**Design notes:** UI text is German because the users are city staff. Map colours use one sequential blue ramp (light = low, dark = high); districts with a value of 0 are grey. Existing charging locations are orange, the priority grid violet.
 
 ---
 
@@ -255,8 +294,12 @@ src/components/…           Scenario sliders, district detail, ranking, legend
 Pick a task, open an issue or a branch with its name, and update this list in your pull request.
 
 **Data**
-- [ ] Plug in the city's calculation method and datasets from the [Sciebo data folder](#team-resources) (`src/lib/model.ts`, `scripts/build-data.mjs`)
-- [ ] Merge the Bundesnetzagentur Ladesäulenregister, deduplicate against NOX points
+- [x] Plug in the city's ISME method and the Sciebo data (`src/lib/isme.ts`, `scripts/build-city-data.mjs`)
+- [ ] ISME coverage step: walking-distance buffers (225 / 500 / 100 / 375 m) per Unterbezirk
+- [ ] ISME ranking: coverage score × sum indicator (Jenks classes)
+- [ ] Spread commuters by employees and tourists by points of interest instead of commercial cars
+- [ ] Use the commercial areas (KML) for the employer use case
+- [ ] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister
 - [ ] Use Zensus 2022 grid for population and building type per Unterbezirk
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district
 - [ ] Add points of interest (schools, hospitals, supermarkets via OSM) as destination-charging factor
@@ -265,7 +308,7 @@ Pick a task, open an issue or a branch with its name, and update this list in yo
 - [ ] Weighted priority score: let users weight gap, coverage, occupancy, public transport, destinations
 - [ ] Coverage view: share of buildings more than 300 m from a charging point
 - [ ] Compare two districts or two scenarios side by side
-- [ ] Scenario years (2025 / 2030 / 2035) from the EV growth trend
+- [x] Scenario years 2030 / 2036 and BEV share 5–50 % (ISME Excel)
 - [ ] One-page PDF summary per district
 - [ ] Methodology page explaining every assumption in plain language
 

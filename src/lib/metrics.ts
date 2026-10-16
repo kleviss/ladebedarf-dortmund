@@ -1,6 +1,6 @@
-import { fmt, type DistrictResult } from './model';
+import { fmt, pct, type DistrictResult } from './isme';
 
-export type MetricKey = 'gap' | 'gapPer1000' | 'needed' | 'chargers' | 'densityPerKm2';
+export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'coverage';
 
 export interface Metric {
   key: MetricKey;
@@ -10,42 +10,21 @@ export interface Metric {
   format: (n: number) => string;
 }
 
+const points = (n: number) => `${fmt(n, n > 0 && n < 10 ? 1 : 0)} LP`;
+
 export const METRICS: Metric[] = [
+  { key: 'gap', label: 'Fehlende Ladepunkte', short: 'Lücke', value: (r) => r.gap, format: points },
   {
-    key: 'gap',
-    label: 'Fehlende Ladepunkte',
-    short: 'Lücke',
-    value: (r) => r.gap,
-    format: (n) => `${fmt(n, n < 10 ? 1 : 0)} LP`,
+    key: 'gapPer1000Cars',
+    label: 'Fehlende Ladepunkte je 1.000 Pkw',
+    short: 'Lücke je 1.000 Pkw',
+    value: (r) => r.gapPer1000Cars,
+    format: (n) => fmt(n, 1),
   },
-  {
-    key: 'gapPer1000',
-    label: 'Fehlende Ladepunkte je 1.000 Einwohner*innen',
-    short: 'Lücke je 1.000 EW',
-    value: (r) => r.gapPer1000,
-    format: (n) => fmt(n, 2),
-  },
-  {
-    key: 'needed',
-    label: 'Benötigte öffentliche Ladepunkte',
-    short: 'Bedarf',
-    value: (r) => r.needed,
-    format: (n) => `${fmt(n, n < 10 ? 1 : 0)} LP`,
-  },
-  {
-    key: 'chargers',
-    label: 'Vorhandene Ladepunkte (NOX-Block)',
-    short: 'Bestand',
-    value: (r) => r.chargers,
-    format: (n) => `${fmt(n)} LP`,
-  },
-  {
-    key: 'densityPerKm2',
-    label: 'Einwohner*innen je km²',
-    short: 'Dichte',
-    value: (r) => r.densityPerKm2,
-    format: (n) => `${fmt(n)} EW/km²`,
-  },
+  { key: 'needed', label: 'Benötigte Ladepunkte', short: 'Bedarf', value: (r) => r.needed, format: points },
+  { key: 'existing', label: 'Vorhandene Ladepunkte', short: 'Bestand', value: (r) => r.existing, format: points },
+  { key: 'coverage', label: 'Deckungsgrad (Bestand ÷ Bedarf)', short: 'Deckung', value: (r) => r.coverage, format: (n) => pct(n) },
+  { key: 'evShareToday', label: 'E-Anteil am Pkw-Bestand heute', short: 'E-Anteil', value: (r) => r.evShareToday, format: (n) => pct(n, 1) },
 ];
 
 export const metricByKey = (key: MetricKey) => METRICS.find((m) => m.key === key) ?? METRICS[0];
@@ -77,7 +56,6 @@ export function quantileClasses(values: number[]): Classes {
     const idx = Math.min(positive.length - 1, Math.ceil((i / k) * positive.length) - 1);
     breaks.push(positive.length ? niceRound(positive[Math.max(0, idx)]) : 0);
   }
-  // keep breaks strictly increasing
   for (let i = 1; i < breaks.length; i++) {
     if (breaks[i] <= breaks[i - 1]) breaks[i] = breaks[i - 1] + Number.EPSILON;
   }

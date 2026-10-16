@@ -5,3 +5,5 @@ dist
 *.log
 .env*
 !.env.example
+data/raw
+public/data/opendata

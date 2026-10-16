@@ -5,7 +5,7 @@ import { DistrictPanel } from './components/DistrictPanel';
 import { RankingTable } from './components/RankingTable';
 import { Legend } from './components/Legend';
 import { loadData, type AppData } from './lib/data';
-import { computeAll, currentEvShare, defaultScenario, fmt, totals, type Scenario } from './lib/model';
+import { computeAll, defaultScenario, fmt, type Scenario } from './lib/isme';
 import { metricByKey, quantileClasses, type MetricKey } from './lib/metrics';
 import { readUrlState, writeUrlState } from './lib/urlState';
 
@@ -23,7 +23,7 @@ export default function App() {
         <h1>Daten konnten nicht geladen werden</h1>
         <p>{error}</p>
         <p>
-          Führe <code>npm run data</code> aus, damit die Dateien in <code>public/data/</code> erzeugt werden.
+          Führe <code>npm run data</code> aus, damit die Dateien in <code>public/data/city/</code> erzeugt werden.
         </p>
       </div>
     );
@@ -33,24 +33,29 @@ export default function App() {
 }
 
 function Dashboard({ data }: { data: AppData }) {
-  const city = data.meta.city;
   const initial = useMemo(() => readUrlState(), []);
-  const [scenario, setScenario] = useState<Scenario>({ ...defaultScenario(city), ...initial.scenario });
+  const [scenario, setScenario] = useState<Scenario>(initial.scenario);
   const [metricKey, setMetricKey] = useState<MetricKey>(initial.metric ?? 'gap');
   const [selected, setSelected] = useState<string | null>(initial.ubz ?? null);
   const [showChargers, setShowChargers] = useState(true);
+  const [showPriority, setShowPriority] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
-  const results = useMemo(() => computeAll(districts, scenario, city), [districts, scenario, city]);
+  const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
   const metric = metricByKey(metricKey);
   const classes = useMemo(() => quantileClasses(results.map(metric.value)), [results, metric]);
-  const sum = useMemo(() => totals(results), [results]);
+  const sum = useMemo(
+    () => results.reduce((t, r) => ({ existing: t.existing + r.existing, gap: t.gap + r.gap }), { existing: 0, gap: 0 }),
+    [results],
+  );
   const gapRank = useMemo(
     () => new Map([...results].sort((a, b) => b.gap - a.gap).map((r, i) => [r.ubz, i + 1])),
     [results],
   );
+  const t = data.meta.totals;
+  const evShareToday = t.totalEvs / (t.privateCars + t.commercialCars);
 
   useEffect(() => writeUrlState(scenario, metricKey, selected), [scenario, metricKey, selected]);
 
@@ -72,16 +77,18 @@ function Dashboard({ data }: { data: AppData }) {
       <header className="topbar">
         <div className="brand">
           <h1>Ladebedarf Dortmund</h1>
-          <p className="muted">Öffentliche Ladepunkte je statistischem Unterbezirk · Prototyp</p>
+          <p className="muted">
+            ISME-Methode je statistischem Unterbezirk · {scenario.year}, {Math.round(scenario.bevShare * 100)} % BEV
+          </p>
         </div>
         <dl className="kpis">
           <div>
             <dt>Bedarf</dt>
-            <dd className="num">{fmt(sum.needed)} LP</dd>
+            <dd className="num">{fmt(cityPoints)} LP</dd>
           </div>
           <div>
             <dt>Bestand</dt>
-            <dd className="num">{fmt(sum.chargers)} LP</dd>
+            <dd className="num">{fmt(sum.existing)} LP</dd>
           </div>
           <div>
             <dt>Lücke</dt>
@@ -99,32 +106,39 @@ function Dashboard({ data }: { data: AppData }) {
             metric={metric}
             classes={classes}
             showChargers={showChargers}
+            showPriority={showPriority}
             onMetric={setMetricKey}
             onToggleChargers={setShowChargers}
+            onTogglePriority={setShowPriority}
           />
           <ScenarioPanel
             scenario={scenario}
-            currentEvShare={currentEvShare(city)}
-            evYear={city.evYear}
+            city={city}
+            cityPoints={cityPoints}
+            evShareToday={evShareToday}
             onChange={setScenario}
-            onReset={() => setScenario(defaultScenario(city))}
+            onReset={() => setScenario(defaultScenario)}
           />
-          <RankingTable results={results} selected={selected} onSelect={setSelected} />
+          <RankingTable results={results} scenario={scenario} selected={selected} onSelect={setSelected} />
           <section className="panel sources" aria-labelledby="sources-title">
-            <h2 id="sources-title">Datenquellen</h2>
+            <h2 id="sources-title">Daten und Methode</h2>
             <p className="muted">
-              Stand {stand}. {data.meta.license}. Einwohner*innen je Unterbezirk sind aus den 62 statistischen
-              Bezirken nach Gebäudeanteil geschätzt.
+              Stadt Dortmund, Stand {stand}: {fmt(t.units)} statistische Unterbezirke mit {fmt(t.privateCars)} privaten und{' '}
+              {fmt(t.commercialCars)} gewerblichen Pkw, {fmt(t.totalEvs)} E-Pkw und {fmt(t.chargers)} Ladestandorten.
+              Berechnung nach dem ISME-Gutachten (Dez. 2023) und der ISME-Tabelle.
             </p>
-            <ul>
-              {data.meta.sources.map((s) => (
-                <li key={s.id}>
-                  <a href={s.url} target="_blank" rel="noreferrer">
-                    {s.id}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {data.meta.fixes.length > 0 && (
+              <ul>
+                {data.meta.fixes.map((f) => (
+                  <li key={f}>Korrektur: {f}</li>
+                ))}
+              </ul>
+            )}
+            <p>
+              <a href={data.meta.source.url} target="_blank" rel="noreferrer">
+                Daten auf Sciebo (Team 07)
+              </a>
+            </p>
           </section>
         </div>
 
@@ -136,6 +150,7 @@ function Dashboard({ data }: { data: AppData }) {
             classes={classes}
             selected={selected}
             showChargers={showChargers}
+            showPriority={showPriority}
             onSelect={setSelected}
           />
           {selectedResult && (

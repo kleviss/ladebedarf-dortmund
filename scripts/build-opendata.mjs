@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Fetches Open Data Dortmund datasets, joins them per statistical Unterbezirk
-// and writes static files to public/data/. Run with `npm run data`.
+// and writes static files to public/data/. Run with `npm run data:opendata`. Not used by the app yet; kept for enrichment (population, POIs).
 //
 // Output:
-//   public/data/unterbezirke.geojson  170 polygons with all factors as properties
-//   public/data/ladepunkte.geojson    existing public charging points
-//   public/data/meta.json             city-wide constants + source list
+//   public/data/opendata/unterbezirke.geojson  170 polygons with all factors as properties
+//   public/data/opendata/ladepunkte.geojson    existing public charging points
+//   public/data/opendata/meta.json             city-wide constants + source list
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const API = 'https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets';
 const PORTAL = 'https://open-data.dortmund.de/explore/dataset';
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'data');
+const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'data', 'opendata');
 
 const DS = {
   unterbezirke: 'fb62-unterbezirke',

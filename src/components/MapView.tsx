@@ -13,7 +13,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
 setWorkerUrl(workerUrl);
 import type { AppData } from '../lib/data';
-import type { DistrictResult } from '../lib/model';
+import type { DistrictResult } from '../lib/isme';
 import { RAMP, ZERO_COLOR, type Classes, type Metric } from '../lib/metrics';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
@@ -26,6 +26,7 @@ interface Props {
   classes: Classes;
   selected: string | null;
   showChargers: boolean;
+  showPriority: boolean;
   onSelect: (ubz: string | null) => void;
 }
 
@@ -35,7 +36,7 @@ interface Hover {
   ubz: string;
 }
 
-export function MapView({ data, results, metric, classes, selected, showChargers, onSelect }: Props) {
+export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -65,6 +66,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
 
       map.addSource('ubz', { type: 'geojson', data: data.districts });
       map.addSource('chargers', { type: 'geojson', data: data.chargers });
+      map.addSource('priority', { type: 'geojson', data: data.priority });
 
       map.addLayer(
         {
@@ -96,6 +98,23 @@ export function MapView({ data, results, metric, classes, selected, showChargers
         },
         firstSymbol,
       );
+      map.addLayer({
+        id: 'priority-fill',
+        type: 'fill',
+        source: 'priority',
+        layout: { visibility: 'none' },
+        paint: {
+          'fill-color': '#6250d6',
+          'fill-opacity': ['interpolate', ['linear'], ['get', 'points'], 1, 0.25, 8, 0.65],
+        },
+      });
+      map.addLayer({
+        id: 'priority-line',
+        type: 'line',
+        source: 'priority',
+        layout: { visibility: 'none' },
+        paint: { 'line-color': '#6250d6', 'line-width': 1 },
+      });
       map.addLayer({
         id: 'ubz-selected',
         type: 'line',
@@ -175,6 +194,12 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     if (!map || !ready) return;
     map.setLayoutProperty('chargers', 'visibility', showChargers ? 'visible' : 'none');
   }, [ready, showChargers]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const id of ['priority-fill', 'priority-line']) map.setLayoutProperty(id, 'visibility', showPriority ? 'visible' : 'none');
+  }, [ready, showPriority]);
 
   const hovered = hover ? results.get(hover.ubz) : undefined;
 

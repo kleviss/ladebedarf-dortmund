@@ -4,11 +4,13 @@ interface Props {
   metric: Metric;
   classes: Classes;
   showChargers: boolean;
+  showPriority: boolean;
   onMetric: (k: MetricKey) => void;
   onToggleChargers: (v: boolean) => void;
+  onTogglePriority: (v: boolean) => void;
 }
 
-export function Legend({ metric, classes, showChargers, onMetric, onToggleChargers }: Props) {
+export function Legend({ metric, classes, showChargers, showPriority, onMetric, onToggleChargers, onTogglePriority }: Props) {
   const lower = (i: number) => (i === 0 ? 0 : classes.breaks[i - 1]);
   return (
     <div className="legend">
@@ -39,14 +41,14 @@ export function Legend({ metric, classes, showChargers, onMetric, onToggleCharge
         ))}
       </ul>
       <label className="toggle">
-        <input
-          id="show-chargers"
-          type="checkbox"
-          checked={showChargers}
-          onChange={(e) => onToggleChargers(e.target.checked)}
-        />
+        <input id="show-chargers" type="checkbox" checked={showChargers} onChange={(e) => onToggleChargers(e.target.checked)} />
         <span className="dot" aria-hidden="true" />
-        Vorhandene Ladepunkte (NOX-Block)
+        Ladestandorte heute (Stadt, 912)
+      </label>
+      <label className="toggle">
+        <input id="show-priority" type="checkbox" checked={showPriority} onChange={(e) => onTogglePriority(e.target.checked)} />
+        <span className="square" aria-hidden="true" />
+        Prioritätsflächen LIS-Ausbau (225-m-Raster)
       </label>
     </div>
   );

@@ -1,0 +1,29 @@
+{
+  "fetchedAt": "2026-10-16T10:27:19.963Z",
+  "source": {
+    "name": "Stadt Dortmund via Sciebo (Team 07)",
+    "url": "https://tu-dortmund.sciebo.de/s/kHXddKmMZpK8ECR?dir=/Teams/07_Team/Daten%20f%C3%BCr%20Verwaltungschallenge",
+    "files": [
+      "Unterbezirke/Unterbezirke_Auto_Bestand_Neuzulassungen.shp",
+      "Unterbezirke/Unterbezirke_Auto_Bestand_Neuzulassungen.dbf",
+      "Statistik/2026_Auswertung der Statistik für QGIS.csv",
+      "aktueller Bestand an Ladesäulen/Ladesaeulen_Punkte.dbf",
+      "Fläche mit Priorität für LIS-Ausbau/Fläche mit hoher Priorität für LIS-Ausbau.dbf"
+    ]
+  },
+  "totals": {
+    "units": 145,
+    "privateCars": 269430,
+    "privateEvs": 6895,
+    "commercialCars": 31965,
+    "commercialEvs": 5820,
+    "totalEvs": 12715,
+    "newEvs": 2885,
+    "chargers": 912,
+    "chargersOutside": 1,
+    "priorityCells": 293
+  },
+  "fixes": [
+    "\"Kirchhörde-West/ Schanze\": ID 697 → 698 (duplicate ID in shapefile; statistics use 698)"
+  ]
+}
