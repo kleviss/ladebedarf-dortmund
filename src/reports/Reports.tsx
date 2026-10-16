@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadData, type AppData, type DistanceBand, type ParkingSpot } from '../lib/data';
 import { computeAll, fmt, pct, ISME, useCasesFor, type DistrictResult, type Scenario } from '../lib/isme';
 import { readUrlState } from '../lib/urlState';
+import { PageTabs } from '../components/PageTabs';
 import { CriteriaTable, criteriaOf, scoredSites, SitesReport, type Criterion } from './SitesReport';
 
 // One page, several presentation-ready reports. Each report is a <section> with
@@ -39,12 +40,14 @@ function ReportBody({ data }: { data: AppData }) {
     <div className="reports">
       <header className="reports-top">
         <div>
-          <p className="eyebrow">Ladebedarf Dortmund · Berichte</p>
-          <h1>Berichte</h1>
+          <div className="title-row">
+            <h1>Ladebedarf Dortmund</h1>
+            <PageTabs current="berichte" />
+          </div>
           <p className="muted">
             Szenario: {scenario.year}, {pct(scenario.bevShare)} BEV, {scenario.method === 'usecase' ? 'Lade-Use-Cases' : `Verhältnis ${scenario.ratio}:1`},{' '}
-            {scenario.scope === 'street' ? 'nur Straßenraum' : 'öffentlich zugängliche LP'}. Im{' '}
-            <a href={appLink}>Werkzeug</a> ändern, dann über „Berichte“ wieder öffnen.
+            {scenario.scope === 'street' ? 'nur Straßenraum' : 'öffentlich zugängliche LP'}. Unter{' '}
+            <a href={appLink}>Karte</a> ändern; die Berichte übernehmen das Szenario.
           </p>
         </div>
         <nav aria-label="Berichte">

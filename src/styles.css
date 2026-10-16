@@ -853,3 +853,38 @@ a {
     display: flex;
   }
 }
+
+/* title with Karte | Berichte tabs */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.page-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.page-tabs a {
+  padding: 4px 12px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  font-weight: 550;
+  text-decoration: none;
+}
+
+.page-tabs a:hover {
+  color: var(--accent);
+}
+
+.page-tabs a[aria-current='page'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}

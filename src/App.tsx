@@ -4,6 +4,7 @@ import { ScenarioPanel } from './components/ScenarioPanel';
 import { DistrictPanel } from './components/DistrictPanel';
 import { RankingTable } from './components/RankingTable';
 import { Legend } from './components/Legend';
+import { PageTabs } from './components/PageTabs';
 import { SidebarResizer, useSidebar } from './components/SidebarResizer';
 import { SitePanel, type ParkingColour } from './components/SitePanel';
 import { defaultWeights, scoreSites, sitesByDistrict, type SiteSpot, type Weights } from './lib/sites';
@@ -85,7 +86,10 @@ function Dashboard({ data }: { data: AppData }) {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <h1>Ladebedarf Dortmund</h1>
+          <div className="title-row">
+            <h1>Ladebedarf Dortmund</h1>
+            <PageTabs current="karte" />
+          </div>
           <p className="muted">
             ISME-Methode je statistischem Unterbezirk · {scenario.year}, {Math.round(scenario.bevShare * 100)} % BEV
           </p>
@@ -104,9 +108,6 @@ function Dashboard({ data }: { data: AppData }) {
             <dd className="num strong">{fmt(sum.gap)} LP</dd>
           </div>
         </dl>
-        <a className="link-button header-link" href={`/berichte.html${window.location.search}`}>
-          Berichte
-        </a>
         <button type="button" className="button" onClick={copyLink}>
           {copied ? 'Link kopiert' : 'Szenario-Link kopieren'}
         </button>
