@@ -1,196 +1,85 @@
-import { useState } from 'react';
-import { fmt, pct, type DistrictResult, type SourceKind } from '../lib/isme';
-import { FACTORS, KIND_LABEL, STRONG, type DistrictSites } from '../lib/sites';
-
-const SOURCE_LABEL: Record<SourceKind, string> = {
-  'city-data': 'Daten Stadt',
-  isme: 'ISME',
-  assumption: 'Annahme',
-  result: 'Ergebnis',
-};
+import type { FactorResult } from '../lib/factors';
+import type { DistrictResult } from '../lib/isme';
 
 interface Props {
   district: DistrictResult;
-  rank: number;
-  total: number;
-  sites?: DistrictSites;
+  /** Street-space factor model for this district; without it the ISME estimate is shown */
+  factors?: FactorResult;
+  /** EV share of the scenario, or null for today's registered EVs */
+  scenario?: number | null;
+  fetchedAt: string;
   onClose: () => void;
-  /** simple mode: four key figures, calculation behind a button */
-  simple?: boolean;
 }
 
-export function DistrictPanel({ district: d, rank, total, sites, simple = false, onClose }: Props) {
-  const [open, setOpen] = useState(false);
-  const home = (d as unknown as { homeShare?: number }).homeShare;
-  const showAll = !simple || open;
+const fmt = (value: number, digits = 0) =>
+  value.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose }: Props) {
   return (
-    <aside className="district" aria-labelledby="district-title">
+    <aside className="current-district" aria-labelledby="district-title" aria-live="polite">
       <header className="district-head">
         <div>
-          <p className="eyebrow">
-            Unterbezirk {d.ubz} · {d.stadtbezirk}
-          </p>
-          <h2 id="district-title">{d.name}</h2>
-          <p className="muted">
-            Rang {rank} von {total} nach fehlenden Ladepunkten · {fmt(d.areaKm2, 1)} km² · E-Anteil heute{' '}
-            {pct(d.evShareToday, 1)}
-          </p>
+          <p className="eyebrow">Subdistrict {district.ubz} · {district.stadtbezirk}</p>
+          <h2 id="district-title">{district.name}</h2>
         </div>
-        <button type="button" className="icon-button" onClick={onClose} aria-label="Details schließen">
+        <button type="button" className="icon-button" onClick={onClose} aria-label="Close details and return to city view" title="Return to city view">
           ×
         </button>
       </header>
-
-      {simple && (
-        <dl className="key-figures">
-          <div>
-            <dt>Bedarf</dt>
-            <dd className="num">{fmt(d.needed)} LP</dd>
-          </div>
-          <div>
-            <dt>Bestand</dt>
-            <dd className="num">{fmt(d.existing)} LP</dd>
-          </div>
-          <div className="accent">
-            <dt>Lücke</dt>
-            <dd className="num">{fmt(d.gap)} LP</dd>
-          </div>
-          <div>
-            <dt>Laden zu Hause</dt>
-            <dd className="num">{home != null ? pct(home) : '–'}</dd>
-          </div>
-        </dl>
-      )}
-      {d.attractionNames && d.attractionNames.length > 0 && (
-        <p className="district-attractions">
-          <b>Touristische Ziele ({d.attractionNames.length}):</b> {d.attractionNames.join(', ')}
-          {d.hotels ? ` · ${d.hotels} Unterkünfte im Unterbezirk` : ''}
+      <dl className="key-figures current-figures">
+        <div>
+          <dt>Existing charging points*</dt>
+          <dd className="num">{fmt(district.existing)}</dd>
+        </div>
+        <div>
+          <dt>{factors ? 'Required in street space (estimated)' : 'Currently required (estimated)'}</dt>
+          <dd className="num">{fmt(district.needed)}</dd>
+        </div>
+        <div className="accent">
+          <dt>Missing charging points (estimated)</dt>
+          <dd className="num">{fmt(district.gap)}</dd>
+        </div>
+      </dl>
+      {factors ? (
+        <>
+          <dl className="factor-split" aria-label="Required points by group">
+            <div>
+              <dt>Residents</dt>
+              <dd className="num">{fmt(factors.residents, 1)}</dd>
+              <dd className="hint">
+                {scenario === null ? `${fmt(district.privateEvs)} private EVs` : `${fmt(district.privateCars)} private cars × ${fmt(scenario * 100)} %`},{' '}
+                {fmt(factors.homeCoverage * 100)} % can charge at home
+              </dd>
+            </div>
+            <div>
+              <dt>In-commuters</dt>
+              <dd className="num">{fmt(factors.commuters, 1)}</dd>
+              <dd className="hint">{fmt(factors.jobs)} estimated jobs</dd>
+            </div>
+            <div>
+              <dt>Visitors</dt>
+              <dd className="num">{fmt(factors.tourists, 1)}</dd>
+              <dd className="hint">day trips to destinations, overnight guests by hotels</dd>
+            </div>
+          </dl>
+          <p className="hint">
+            Street-space factor model with{' '}
+            {scenario === null ? "today's registered electric cars, no forecast" : `a scenario of ${fmt(scenario * 100)} % electric cars`}. Car parks, customer
+            parking and fast chargers are not included. Demand is rounded up to whole charging points.
+          </p>
+        </>
+      ) : (
+        <p className="hint">
+          Estimated from {fmt(district.totalEvs)} recorded electric cars and the ISME public-charging
+          use cases. No future growth or additional commuter or tourist demand is included.
+          Demand is rounded up to whole charging points.
         </p>
       )}
-      {simple && (
-        <button type="button" className="link-button show-calc" onClick={() => setOpen(!open)} aria-expanded={open}>
-          {open ? 'Rechenweg ausblenden' : 'Rechenweg anzeigen'}
-        </button>
-      )}
-      {showAll && (
-        <>
-      <ol className="steps">
-        {d.steps.map((s) => (
-          <li key={s.key} className={`step step-${s.source}${s.indent ? ' step-indent' : ''}${s.key === 'gap' ? ' step-gap' : ''}`}>
-            <div className="step-main">
-              <span className="step-label">{s.label}</span>
-              <span className="step-value num">
-                {fmt(s.value, s.value > 0 && s.value < 10 ? 1 : 0)} <small>{s.unit}</small>
-              </span>
-            </div>
-            <div className="step-meta">
-              <span className={`chip chip-${s.source}`}>{SOURCE_LABEL[s.source]}</span>
-              <span className="step-formula">{s.formula}</span>
-            </div>
-          </li>
-        ))}
-      </ol>
-
-      {sites && sites.best.length > 0 && (
-        <section className="district-parking" aria-label="Beste Standortkandidaten">
-          <h3>Beste Standortkandidaten</h3>
-          <p className="hint">
-            {fmt(sites.strong)} von {fmt(sites.candidates)} Parkflächen mit Score ab {fmt(STRONG * 100)}.
-          </p>
-          <ol className="site-list">
-            {sites.best.map((s) => (
-              <li key={s.id}>
-                <div className="site-head">
-                  <span>
-                    {s.name ?? KIND_LABEL[s.kind]}
-                    <small>
-                      {s.name ? `${KIND_LABEL[s.kind]} · ` : ''}
-                      {fmt(s.distance)} m zum Ladestandort{s.capacity ? ` · ${fmt(s.capacity)} Plätze` : ''}
-                    </small>
-                  </span>
-                  <b className="num">{fmt(s.score * 100)}</b>
-                </div>
-                <div className="site-factors" aria-label="Kriterien">
-                  {FACTORS.map((f) => (
-                    <span key={f.key} title={`${f.label}: ${fmt(s.factors[f.key] * 100)}`}>
-                      <i style={{ width: `${s.factors[f.key] * 100}%` }} />
-                      <em>{f.label}</em>
-                    </span>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      {d.parkingPublic != null && (
-        <section className="district-parking" aria-label="Öffentliches Parken">
-          <h3>Öffentliches Parken</h3>
-          <dl>
-            <div>
-              <dt>Parkflächen</dt>
-              <dd className="num">{fmt(d.parkingPublic)}</dd>
-            </div>
-            <div>
-              <dt>ohne Ladestandort in 225 m</dt>
-              <dd className="num strong">
-                {fmt(d.parkingUncovered ?? 0)}
-                {d.parkingPublic > 0 && <small> ({pct((d.parkingUncovered ?? 0) / d.parkingPublic)})</small>}
-              </dd>
-            </div>
-            <div>
-              <dt>Parkhäuser, Tiefgaragen, P+R</dt>
-              <dd className="num">{fmt(d.parkingGarages ?? 0)}</dd>
-            </div>
-            <div>
-              <dt>bekannte Stellplätze</dt>
-              <dd className="num">{fmt(d.parkingCapacity ?? 0)}</dd>
-            </div>
-          </dl>
-          <p className="hint">OpenStreetMap und Open Data Dortmund. Kapazität ist in OSM oft nicht erfasst.</p>
-        </section>
-      )}
-
-      {d.buildings != null && (
-        <section className="district-parking" aria-label="Weitere Faktoren">
-          <h3>Weitere Faktoren</h3>
-          <dl>
-            <div>
-              <dt>Gebäude ≤ 225 m zum Ladestandort</dt>
-              <dd className="num strong">
-                {d.buildings > 0 ? pct((d.buildingsCovered ?? 0) / d.buildings) : '–'} <small>von {fmt(d.buildings)}</small>
-              </dd>
-            </div>
-            <div>
-              <dt>Pkw je km²</dt>
-              <dd className="num">{fmt(d.areaKm2 > 0 ? d.cars / d.areaKm2 : 0)}</dd>
-            </div>
-            <div>
-              <dt>Einkaufs- / Freizeitziele</dt>
-              <dd className="num">
-                {fmt(d.poisShopping ?? 0)} / {fmt(d.poisLeisure ?? 0)}
-              </dd>
-            </div>
-            <div>
-              <dt>Gewerbeflächen</dt>
-              <dd className="num">{fmt(d.commercialHa ?? 0, 1)} ha</dd>
-            </div>
-            <div>
-              <dt>Bebauungspläne (seit 2015)</dt>
-              <dd className="num">
-                {fmt(d.bplans ?? 0)} ({fmt(d.bplansRecent ?? 0)})
-              </dd>
-            </div>
-            <div>
-              <dt>Stromnetz</dt>
-              <dd>keine Daten</dd>
-            </div>
-          </dl>
-        </section>
-      )}
-        </>
-      )}
+      <p className="hint">
+        * Existing stock assumes one charging point per recorded location. Connector counts
+        and live availability are not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')};
+        source observations may be older.
+      </p>
     </aside>
   );
 }

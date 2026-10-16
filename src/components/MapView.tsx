@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Map as MapLibreMap,
+  LngLatBounds,
   NavigationControl,
   ScaleControl,
   setWorkerUrl,
@@ -14,9 +15,8 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 setWorkerUrl(workerUrl);
 import type { AppData } from '../lib/data';
 import type { DistrictResult } from '../lib/isme';
-import { RAMP, ZERO_COLOR, type Classes, type Metric } from '../lib/metrics';
-import { SCORE_RAMP, scoreClass, type ScoredSite } from '../lib/sites';
-import type { ParkingColour } from './SitePanel';
+import { cityBoundary } from '../lib/cityBoundary';
+import { RAMP, ZERO_COLOR, type Classes } from '../lib/metrics';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
 const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json';
@@ -24,15 +24,10 @@ const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_w
 interface Props {
   data: AppData;
   results: Map<string, DistrictResult>;
-  metric: Metric;
+  /** Colour classes of the missing charging points */
   classes: Classes;
   selected: string | null;
   showChargers: boolean;
-  showPriority: boolean;
-  showParking: boolean;
-  showAttractions: boolean;
-  sites: ScoredSite[];
-  parkingColour: ParkingColour;
   onSelect: (ubz: string | null) => void;
 }
 
@@ -42,21 +37,11 @@ interface Hover {
   ubz: string;
 }
 
-interface AttractionHover {
-  x: number;
-  y: number;
-  name: string;
-  kind: string;
-  hotelsNear: number;
-  hotelNames: string[];
-}
-
-export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, showAttractions, sites, parkingColour, onSelect }: Props) {
+export function MapView({ data, results, classes, selected, showChargers, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<Hover | null>(null);
-  const [attrHover, setAttrHover] = useState<AttractionHover | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -73,6 +58,8 @@ export function MapView({ data, results, metric, classes, selected, showChargers
       attributionControl: { compact: true },
     });
     mapRef.current = map;
+    const resizeObserver = new ResizeObserver(() => map.resize());
+    resizeObserver.observe(container.current);
     map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right');
     map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
 
@@ -82,9 +69,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
 
       map.addSource('ubz', { type: 'geojson', data: data.districts });
       map.addSource('chargers', { type: 'geojson', data: data.chargers });
-      map.addSource('priority', { type: 'geojson', data: data.priority });
-      map.addSource('parking', { type: 'geojson', data: data.parking });
-      map.addSource('ziele', { type: 'geojson', data: data.ziele });
+      map.addSource('city-boundary', { type: 'geojson', data: cityBoundary(data.districts) });
 
       map.addLayer(
         {
@@ -92,6 +77,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
           type: 'fill',
           source: 'ubz',
           paint: {
+            // colour class per district from feature state 'cls' (-1 = no missing points)
             'fill-color': [
               'match',
               ['coalesce', ['feature-state', 'cls'], -1],
@@ -102,7 +88,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
               4, RAMP[4],
               ZERO_COLOR,
             ],
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.92, 0.78],
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.6],
           },
         },
         firstSymbol,
@@ -112,26 +98,21 @@ export function MapView({ data, results, metric, classes, selected, showChargers
           id: 'ubz-line',
           type: 'line',
           source: 'ubz',
-          paint: { 'line-color': '#ffffff', 'line-width': 0.8 },
+          paint: { 'line-color': '#50647b', 'line-width': 1, 'line-opacity': 0.75 },
         },
         firstSymbol,
       );
       map.addLayer({
-        id: 'priority-fill',
-        type: 'fill',
-        source: 'priority',
-        layout: { visibility: 'none' },
-        paint: {
-          'fill-color': '#6250d6',
-          'fill-opacity': ['interpolate', ['linear'], ['get', 'points'], 1, 0.25, 8, 0.65],
-        },
+        id: 'city-boundary-halo',
+        type: 'line',
+        source: 'city-boundary',
+        paint: { 'line-color': '#ffffff', 'line-width': 6 },
       });
       map.addLayer({
-        id: 'priority-line',
+        id: 'city-boundary-line',
         type: 'line',
-        source: 'priority',
-        layout: { visibility: 'none' },
-        paint: { 'line-color': '#6250d6', 'line-width': 1 },
+        source: 'city-boundary',
+        paint: { 'line-color': '#256abf', 'line-width': 3 },
       });
       map.addLayer({
         id: 'ubz-selected',
@@ -140,29 +121,6 @@ export function MapView({ data, results, metric, classes, selected, showChargers
         paint: {
           'line-color': '#0b0b0b',
           'line-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 0],
-        },
-      });
-      map.addLayer({
-        id: 'parking',
-        type: 'circle',
-        source: 'parking',
-        layout: { visibility: 'none' },
-        paint: {
-          // distance mode: green = charger within 100 m, amber = within 225 m, red = none
-          // score mode: teal ramp by site score (feature-state set below)
-          'circle-color': [
-            'case',
-            ['==', ['feature-state', 'mode'], 'score'],
-            ['match', ['coalesce', ['feature-state', 'scls'], 0], 0, SCORE_RAMP[0], 1, SCORE_RAMP[1], 2, SCORE_RAMP[2], 3, SCORE_RAMP[3], SCORE_RAMP[4]],
-            ['match', ['get', 'cover'], 0, '#0ca30c', 1, '#fab219', '#d03b3b'],
-          ],
-          'circle-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            10, ['match', ['get', 'kind'], 'garage', 3.5, 'park-ride', 3.5, 2],
-            15, ['match', ['get', 'kind'], 'garage', 8, 'park-ride', 8, 5],
-          ],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': ['match', ['get', 'kind'], 'garage', 1.5, 'park-ride', 1.5, 0.5],
         },
       });
       map.addLayer({
@@ -176,43 +134,6 @@ export function MapView({ data, results, metric, classes, selected, showChargers
           'circle-stroke-width': 1,
         },
       });
-
-      // tourist attractions: dots, names from zoom 12.5
-      map.addLayer({
-        id: 'ziele',
-        type: 'circle',
-        source: 'ziele',
-        layout: { visibility: 'none' },
-        paint: {
-          'circle-color': '#b0367a',
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.5, 15, 8],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 1.5,
-        },
-      });
-      map.addLayer({
-        id: 'ziele-label',
-        type: 'symbol',
-        source: 'ziele',
-        minzoom: 12.5,
-        layout: {
-          visibility: 'none',
-          'text-field': ['get', 'name'],
-          'text-font': ['Noto Sans Regular'],
-          'text-size': 11,
-          'text-offset': [0, 0.9],
-          'text-anchor': 'top',
-          'text-max-width': 10,
-        },
-        paint: { 'text-color': '#5a1a3e', 'text-halo-color': '#ffffff', 'text-halo-width': 1.4 },
-      });
-      map.on('mousemove', 'ziele', (e: MapLayerMouseEvent) => {
-        const p = e.features?.[0]?.properties;
-        if (!p) return;
-        const parse = (v: unknown) => (typeof v === 'string' ? (JSON.parse(v) as string[]) : ((v as string[]) ?? []));
-        setAttrHover({ x: e.point.x, y: e.point.y, name: p.name, kind: p.kind, hotelsNear: Number(p.hotelsNear ?? 0), hotelNames: parse(p.hotelNames) });
-      });
-      map.on('mouseleave', 'ziele', () => setAttrHover(null));
 
       let hoveredId: number | string | undefined;
       map.on('mousemove', 'ubz-fill', (e: MapLayerMouseEvent) => {
@@ -241,31 +162,54 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     });
 
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
     };
   }, [data]);
 
-  // Recolor when the scenario or metric changes.
+  // Fit the selected district, or the whole city when the details are closed.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    for (const f of data.districts.features) {
-      const r = results.get(f.properties.ubz);
-      if (!r || f.id == null) continue;
-      map.setFeatureState({ source: 'ubz', id: f.id }, { cls: classes.classOf(metric.value(r)) });
+    map.resize();
+    for (const layer of ['city-boundary-halo', 'city-boundary-line']) {
+      map.setLayoutProperty(layer, 'visibility', selected === null ? 'visible' : 'none');
     }
-  }, [ready, results, metric, classes, data]);
+    for (const f of data.districts.features) {
+      if (f.id == null) continue;
+      map.setFeatureState({ source: 'ubz', id: f.id }, { selected: f.properties.ubz === selected });
+    }
+    const district = data.districts.features.find((f) => f.properties.ubz === selected);
+    const bounds = new LngLatBounds();
+    for (const feature of district ? [district] : data.districts.features) {
+      for (const polygon of feature.geometry.coordinates) {
+        for (const ring of polygon) {
+          for (const coordinate of ring) {
+            bounds.extend([coordinate[0], coordinate[1]]);
+          }
+        }
+      }
+    }
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, {
+        padding: 32,
+        maxZoom: district ? 15 : 10.4,
+        duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 700,
+      });
+    }
+  }, [ready, selected, data]);
 
-  // Selection outline + fly to the district.
+  // Shade every district by its missing charging points.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
     for (const f of data.districts.features) {
       if (f.id == null) continue;
-      map.setFeatureState({ source: 'ubz', id: f.id }, { selected: f.properties.ubz === selected });
+      const r = results.get(f.properties.ubz);
+      map.setFeatureState({ source: 'ubz', id: f.id }, { cls: r ? classes.classOf(r.gap) : -1 });
     }
-  }, [ready, selected, data]);
+  }, [ready, results, classes, data]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -273,54 +217,34 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     map.setLayoutProperty('chargers', 'visibility', showChargers ? 'visible' : 'none');
   }, [ready, showChargers]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-    for (const id of ['priority-fill', 'priority-line']) map.setLayoutProperty(id, 'visibility', showPriority ? 'visible' : 'none');
-  }, [ready, showPriority]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-    map.setLayoutProperty('parking', 'visibility', showParking ? 'visible' : 'none');
-  }, [ready, showParking]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-    for (const id of ['ziele', 'ziele-label']) map.setLayoutProperty(id, 'visibility', showAttractions ? 'visible' : 'none');
-    if (!showAttractions) setAttrHover(null);
-  }, [ready, showAttractions]);
-
-  // Site score colours, recomputed when the weights change.
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-    for (const s of sites) map.setFeatureState({ source: 'parking', id: s.id }, { mode: parkingColour, scls: scoreClass(s.score) });
-  }, [ready, sites, parkingColour]);
-
   const hovered = hover ? results.get(hover.ubz) : undefined;
 
   return (
     <div className="map">
-      <div ref={container} className="map-canvas" aria-label="Karte der statistischen Unterbezirke" role="region" />
-      {attrHover ? (
-        <div className="map-tooltip" style={{ left: attrHover.x + 14, top: attrHover.y + 14 }} role="status">
-          <strong>{attrHover.name}</strong>
-          <span className="muted">{attrHover.kind}</span>
-          <span>
-            {attrHover.hotelsNear > 0
-              ? `${attrHover.hotelsNear} Unterkünfte ≤ 1,5 km${attrHover.hotelNames.length ? `: ${attrHover.hotelNames.slice(0, 3).join(', ')}` : ''}`
-              : 'Keine Unterkunft ≤ 1,5 km'}
-          </span>
+      <div ref={container} className="map-canvas" aria-label="Map of statistical subdistricts" role="region" />
+      <div className="map-legend" aria-label="Legend: missing charging points">
+        <span className="map-legend-title">Missing charging points</span>
+        <div className="map-legend-bar">
+          {[
+            ...(classes.hasZero ? [{ colour: ZERO_COLOR, label: '0' }] : []),
+            ...classes.breaks.map((b, i) => {
+              const from = i === 0 ? 1 : classes.breaks[i - 1] + 1;
+              return { colour: classes.colours[i], label: from === b ? String(b) : `${from}–${b}` };
+            }),
+          ].map((c) => (
+            <span key={c.label} className="map-legend-step">
+              <span className="map-legend-swatch" style={{ background: c.colour }} aria-hidden="true" />
+              {c.label}
+            </span>
+          ))}
         </div>
-      ) : hover && hovered && (
+      </div>
+      {hover && hovered && (
         <div className="map-tooltip" style={{ left: hover.x + 14, top: hover.y + 14 }} role="status">
           <strong>{hovered.name}</strong>
           <span className="muted">{hovered.stadtbezirk}</span>
-          <span>
-            {metric.short}: <b className="num">{metric.format(metric.value(hovered))}</b>
-          </span>
+          <span>Missing charging points: <b className="num">{hovered.gap.toLocaleString('en-GB')}</b></span>
+          <span>Existing: {hovered.existing.toLocaleString('en-GB')} · Required: {hovered.needed.toLocaleString('en-GB')}</span>
         </div>
       )}
     </div>

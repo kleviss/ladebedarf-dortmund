@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cityBev, computeAll, defaultScenario, pointsFor, type District, type Scenario, totalsOf, touristShares } from './isme';
+import { cityBev, computeAll, computeCurrentDemand, defaultScenario, pointsFor, type District, type Scenario, totalsOf, touristShares } from './isme';
 
 // Expected values are cells from "Berechnungsmethode ISME.xlsx", sheet Tabelle1.
 
@@ -41,6 +41,47 @@ describe('pointsFor', () => {
     const r = pointsFor(1000, { ...defaultScenario, scope: 'public' });
     expect(r.byUseCase.map((x) => x.uc.key)).toEqual(['carpark', 'customer', 'hpc', 'street']);
     expect(r.total).toBeCloseTo(1000 * (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8), 6);
+  });
+});
+
+describe('computeCurrentDemand', () => {
+  const district: District = {
+    ubz: '001', name: 'Test', stadtbezirk: 'Test', areaKm2: 1,
+    privateCars: 3000, privateEvs: 60, privateNewEvs: 0,
+    commercialCars: 1000, commercialEvs: 40, commercialNewEvs: 0,
+    totalEvs: 100, chargers: 3,
+  };
+
+  it('uses recorded private and commercial EVs, with no growth or visitor demand', () => {
+    const r = computeCurrentDemand(district);
+    const expected = Math.ceil(100 * (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8));
+    expect(r.needed).toBe(expected);
+    expect(r.existing).toBe(3);
+    expect(r.gap).toBe(expected - 3);
+    expect(r.bev).toBe(100);
+    expect(r.bevCommuters).toBe(0);
+    expect(r.bevTourists).toBe(0);
+    expect(computeCurrentDemand({ ...district, privateCars: 9000, commercialCars: 5000 }).needed).toBe(expected);
+  });
+
+  it('rounds demand up before subtraction and clamps surplus stock to zero missing', () => {
+    const r = computeCurrentDemand({ ...district, totalEvs: 1, chargers: 0 });
+    expect(r.needed).toBe(1);
+    expect(r.gap).toBe(1);
+    expect(computeCurrentDemand({ ...district, chargers: 100 }).gap).toBe(0);
+  });
+
+  it('handles a district with no cars or EVs', () => {
+    const r = computeCurrentDemand({
+      ...district, totalEvs: 0, privateEvs: 0, commercialEvs: 0,
+      privateCars: 0, commercialCars: 0, chargers: 0,
+    });
+    expect(r.needed).toBe(0);
+    expect(r.existing).toBe(0);
+    expect(r.gap).toBe(0);
+    expect(r.evShareToday).toBe(0);
+    expect(r.gapPer1000Cars).toBe(0);
+    expect(r.coverage).toBe(1);
   });
 });
 

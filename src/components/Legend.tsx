@@ -1,92 +1,41 @@
-import { METRIC_GROUPS, SIMPLE_METRICS, ZERO_COLOR, metricByKey, type Classes, type Metric, type MetricKey } from '../lib/metrics';
+import { useMemo } from 'react';
+import type { ComponentProps } from 'react';
+import type { District } from '../lib/isme';
+import { FactorControls } from './FactorControls';
 
 interface Props {
-  /** expert: all metrics grouped + priority grid; simple: four metrics */
-  expert: boolean;
-  metric: Metric;
-  classes: Classes;
+  districts: District[];
+  selected: string | null;
   showChargers: boolean;
-  showPriority: boolean;
-  showParking: boolean;
-  onToggleParking: (v: boolean) => void;
-  showAttractions: boolean;
-  attractionCount: number;
-  onToggleAttractions: (v: boolean) => void;
-  onMetric: (k: MetricKey) => void;
-  onToggleChargers: (v: boolean) => void;
-  onTogglePriority: (v: boolean) => void;
+  onSelect: (ubz: string | null) => void;
+  onToggleChargers: (visible: boolean) => void;
+  factorSettings: ComponentProps<typeof FactorControls>;
 }
 
-export function Legend({ expert, metric, classes, showChargers, showPriority, showParking, showAttractions, attractionCount, onMetric, onToggleChargers, onTogglePriority, onToggleParking, onToggleAttractions }: Props) {
-  const lower = (i: number) => (i === 0 ? 0 : classes.breaks[i - 1]);
+export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings }: Props) {
+  const subdistricts = useMemo(
+    () => [...districts].sort((a, b) => a.name.localeCompare(b.name, 'en') || a.ubz.localeCompare(b.ubz)),
+    [districts],
+  );
+
   return (
-    <div className="legend">
-      <label htmlFor="metric" className="legend-label">
-        Kartenfarbe
-      </label>
-      <select id="metric" value={metric.key} onChange={(e) => onMetric(e.target.value as MetricKey)}>
-        {expert
-          ? METRIC_GROUPS.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.keys.map((k) => (
-                  <option key={k} value={k}>
-                    {metricByKey(k).label}
-                  </option>
-                ))}
-              </optgroup>
-            ))
-          : SIMPLE_METRICS.map((k) => (
-              <option key={k} value={k}>
-                {metricByKey(k).label}
-              </option>
-            ))}
-      </select>
-      <ul className="legend-scale">
-        {classes.hasZero && (
-          <li>
-            <span className="swatch" style={{ background: ZERO_COLOR }} />
-            <span className="num">0</span>
-          </li>
-        )}
-        {classes.colours.map((c, i) => (
-          <li key={c}>
-            <span className="swatch" style={{ background: c }} />
-            <span className="num">
-              {metric.format(lower(i)).replace(/ .*/, '')} – {metric.format(classes.breaks[i])}
-            </span>
-          </li>
+    <aside className="current-filters" aria-labelledby="filters-title">
+      <h2 id="filters-title">Filters</h2>
+      <label htmlFor="subdistrict-select">Subdistrict (Unterbezirk)</label>
+      <select id="subdistrict-select" value={selected ?? ''} onChange={(event) => onSelect(event.target.value || null)}>
+        <option value="">All subdistricts — city view</option>
+        {subdistricts.map((district) => (
+          <option key={district.ubz} value={district.ubz}>
+            {district.name} ({district.ubz})
+          </option>
         ))}
-      </ul>
+      </select>
       <label className="toggle">
-        <input id="show-chargers" type="checkbox" checked={showChargers} onChange={(e) => onToggleChargers(e.target.checked)} />
+        <input type="checkbox" checked={showChargers} onChange={(event) => onToggleChargers(event.target.checked)} />
         <span className="dot" aria-hidden="true" />
-        Ladestandorte heute (Stadt, 912)
+        Show current charging points
       </label>
-      <label className="toggle">
-        <input id="show-attractions" type="checkbox" checked={showAttractions} onChange={(e) => onToggleAttractions(e.target.checked)} />
-        <span className="dot dot-attraction" aria-hidden="true" />
-        Touristische Ziele ({attractionCount}, Namen ab Zoom)
-      </label>
-      {expert && (
-        <label className="toggle">
-          <input id="show-priority" type="checkbox" checked={showPriority} onChange={(e) => onTogglePriority(e.target.checked)} />
-          <span className="square" aria-hidden="true" />
-          Prioritätsflächen LIS-Ausbau (225-m-Raster)
-        </label>
-      )}
-      <label className="toggle">
-        <input id="show-parking" type="checkbox" checked={showParking} onChange={(e) => onToggleParking(e.target.checked)} />
-        <span className="dot dot-parking" aria-hidden="true" />
-        Öffentliche Parkflächen (OSM, Parkhäuser, P+R)
-      </label>
-      {showParking && (
-        <ul className="legend-status">
-          <li><span className="sdot" style={{ background: '#0ca30c' }} />Ladestandort ≤ 100 m</li>
-          <li><span className="sdot" style={{ background: '#fab219' }} />Ladestandort ≤ 225 m</li>
-          <li><span className="sdot" style={{ background: '#d03b3b' }} />Kein Ladestandort in 225 m</li>
-          <li className="muted">Große Punkte: Parkhaus, Tiefgarage, P+R</li>
-        </ul>
-      )}
-    </div>
+      <FactorControls {...factorSettings} />
+    </aside>
   );
 }

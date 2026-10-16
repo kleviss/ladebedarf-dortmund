@@ -62,6 +62,50 @@ The Sciebo data folder holds the city's **ISME calculation method** (Excel + rep
 
 ## Our solution
 
+### Simplified current-stock view
+
+The main app shows a left-hand filter pane, the district map and recorded charging
+locations. Choose an Unterbezirk from the alphabetical dropdown or click it on the
+map to zoom to its full boundary and see three figures:
+existing charging points (assumed), estimated points required for the recorded EV
+stock, and missing points. Close the details or choose "All subdistricts" to clear
+the selection and zoom back out to the entire city. Map clicks and the dropdown
+stay in sync. On smaller screens, the filter pane sits above the map.
+The checked "Show current charging points" checkbox toggles the recorded-location
+markers. Districts are shaded by missing charging points (blue ramp, quantile
+classes, grey = demand covered); hovering shows missing, existing and required points.
+In city view, a blue outline with a white halo highlights the outer city limits,
+merged from the district polygons without internal borders. Selecting a district
+hides the city outline; closing its details restores it.
+The existing `Legend` and `DistrictPanel` components own the filter pane and
+three-figure details instead of duplicating them in `App`.
+The map resizes with its
+container so overlays remain aligned when the layout changes.
+The web interface, number/date formatting and page
+metadata are in English; official district/place names and basemap attribution
+are preserved.
+
+Current demand is the street-space factor model ([`docs/factor-model.md`](docs/factor-model.md))
+with today's registered EVs: residents without a private charging option, in-commuters spread
+by estimated jobs and visitors by destinations and hotels, rounded up to whole points
+(`computeFactors` + `currentStreetDemand` in `src/lib/factors.ts`). The details panel shows
+the split by group. Under *Model settings* the filter pane groups every parameter into General, Residence, Work and Travel: sliders start at the defaults from `parameters.json`, info icons show the formula, data source and kind of each value, and *Reset to defaults* restores them. Car parks, customer parking and fast chargers are not included.
+Districts missing from the model fall back to the ISME public use cases:
+`ceil(totalEvs × (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8))`.
+Missing points are `max(0, required − existing)`. This stock-only estimate excludes
+future vehicle growth. It is based on the
+included data, not a live measurement. The source records locations, not verified
+connector counts; existing points assume one point per location, and do not mean
+currently unoccupied or operational chargers. The displayed retrieval date is not
+necessarily the source's observation date.
+
+Scenario controls, ranking, reports navigation, extra map layers and detailed
+calculation panels are not mounted in this view. Their components and the original
+forecast calculations remain in the repository for future use. Old scenario URL
+parameters and saved expert-mode preferences do not change this view.
+
+### Original prototype features (currently hidden)
+
 A static web app (no backend) that runs the city's ISME method in the browser for all 145 Unterbezirke and updates instantly when a scenario changes.
 
 ![District detail with every ISME step and its source](docs/screenshot-detail.jpg)
