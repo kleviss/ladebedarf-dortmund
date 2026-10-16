@@ -1519,6 +1519,15 @@ a {
   font-weight: 600;
 }
 
+.info-sources {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}
+
 .info-kind {
   font-style: italic;
 }

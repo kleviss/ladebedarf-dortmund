@@ -66,6 +66,8 @@ interface Section {
   /** other symbols used in the formula: [TeX, meaning] */
   legend: [string, string][];
   data: string;
+  /** full citations */
+  sources: string[];
 }
 
 const SECTIONS: Section[] = [
@@ -81,6 +83,11 @@ const SECTIONS: Section[] = [
       ['k', 'EVs per street charging point'],
     ],
     data: 'Today: registered EVs per subdistrict (city statistics 2026). Scenario: private cars × EV share. Existing: city charger file, 912 locations.',
+    sources: [
+      'Stadt Dortmund (2026): Auswertung der Statistik – Pkw- und E-Pkw-Bestand je Unterbezirk. Datenpaket Verwaltungschallenge, DO-DATA-Hackathon.',
+      'Stadt Dortmund (2026): Aktueller Bestand an Ladesäulen. Datenpaket Verwaltungschallenge, DO-DATA-Hackathon.',
+      'ISME (2023): Ladeinfrastrukturkonzept Dortmund Teil ISME. Gutachten im Auftrag der Stadt Dortmund, Dezember 2023, Tab. 4–5.',
+    ],
   },
   {
     key: 'residents',
@@ -99,6 +106,12 @@ const SECTIONS: Section[] = [
       ['E_u', 'EVs: registered today or cars × e'],
     ],
     data: 'Dwellings: Zensus 2022, 100 m grid. Garages and carports: ALKIS (Open Data Dortmund). OSM factor: private parking and underground garages, OpenStreetMap. s_MFH is calibrated so the city mean of A equals the ISME home share (66.3 %).',
+    sources: [
+      'Statistisches Bundesamt (2025): Zensus 2022 – Wohnungen nach Gebäudetyp (Größe), Gitterzellen 100 m. www.destatis.de/zensus2022, dl-de/by-2-0.',
+      'Stadt Dortmund (2026): Liegenschaftskataster – Gebäude, Bauwerke (ALKIS). Open Data Dortmund, dl-de/by-2-0.',
+      'OpenStreetMap contributors (2026): amenity=parking, parking=underground. ODbL.',
+      'ISME (2023): Ladeinfrastrukturkonzept Dortmund Teil ISME. Gutachten im Auftrag der Stadt Dortmund, Dezember 2023, Tab. 5 and p. 16.',
+    ],
   },
   {
     key: 'commuters',
@@ -112,6 +125,12 @@ const SECTIONS: Section[] = [
       ['m_c', 'm² per job: office 30, retail 50, education/health 60, industry 100, warehouse 200, mixed use ½ × 40'],
     ],
     data: 'In-commuters: Open Data Dortmund, 2022. Floor area: ALKIS. Check: 269,963 estimated jobs vs 264,322 employees at place of work (2024).',
+    sources: [
+      'Stadt Dortmund (2024): Berufseinpendler*innen seit 2006, Stand 2022. Open Data Dortmund, dl-de/by-2-0.',
+      'Stadt Dortmund (2025): Sozialversicherungspflichtig Beschäftigte am Ort der Arbeit, Stand 2024. Open Data Dortmund, dl-de/by-2-0.',
+      'Stadt Dortmund (2026): Liegenschaftskataster – Gebäude, Bauwerke (ALKIS). Open Data Dortmund, dl-de/by-2-0.',
+      'ISME (2023): Ladeinfrastrukturkonzept Dortmund Teil ISME. Gutachten im Auftrag der Stadt Dortmund, Dezember 2023, p. 12 and 16.',
+    ],
   },
   {
     key: 'tourists',
@@ -124,6 +143,13 @@ const SECTIONS: Section[] = [
       ['\\nu_u', 'share of hotels, weighted by nearby destinations'],
     ],
     data: 'Visits: Open Data Dortmund (Zoo, museums, Dortmunder U, Konzerthaus, Theater); destinations without a figure use v₀. Hotels: OpenStreetMap. Overnight stays: Open Data 2024.',
+    sources: [
+      'Stadt Dortmund: Zoo Besuche (2024); Museen – Besuche (2023); Besuche Dortmunder U (2019); Konzerthaus und Theater – Veranstaltungen und Besuche (2022/23); Sehenswürdigkeiten. Open Data Dortmund, dl-de/by-2-0.',
+      'Stadt Dortmund (2025): Betriebe, Betten, Ankünfte und Übernachtungen im Fremdenverkehr, Stand 2024. Open Data Dortmund, dl-de/by-2-0.',
+      'OpenStreetMap contributors (2026): tourism=hotel, guest_house, hostel. ODbL.',
+      'Deutscher Bundestag (2018): Drucksache 19/1162 – Pkw-Besetzungsgrad 1,46 (DIW, 2016).',
+      'ISME (2023): Ladeinfrastrukturkonzept Dortmund Teil ISME. Gutachten im Auftrag der Stadt Dortmund, Dezember 2023, p. 12 and 16.',
+    ],
   },
 ];
 
@@ -212,7 +238,14 @@ function SectionTip({ section }: { section: Section }) {
         <span className="info-label">Data</span>
         {section.data}
       </p>
-      <p className="info-note">Details and validation: docs/factor-model.md</p>
+      <div>
+        <span className="info-label">Sources</span>
+        <ol className="info-sources">
+          {section.sources.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ol>
+      </div>
     </InfoTip>
   );
 }

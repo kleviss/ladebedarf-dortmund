@@ -85,7 +85,7 @@
       "step": 0.1,
       "unit": "per dwelling",
       "kind": "tested",
-      "source": "Best of 0 / 0.5 / 1.0 / 1.5 when predicting the real private EV share per Unterbezirk (docs/factor-model.md, validation)"
+      "source": "Own validation: 10-fold cross-validation against registered private EVs per Unterbezirk (Stadt Dortmund, Auswertung der Statistik 2026); best of 0 / 0.5 / 1.0 / 1.5 (R² 0.58 vs 0.35 / 0.53)"
     },
     {
       "key": "mfhPerDwelling",
@@ -116,7 +116,7 @@
       "labelEn": "OSM parking factor per Stadtbezirk",
       "default": true,
       "kind": "tested",
-      "source": "Raises the cross-validated R² from 0.54 to 0.60 (docs/factor-model.md, validation)",
+      "source": "Own validation: 10-fold cross-validation against registered private EVs per Unterbezirk (Stadt Dortmund, Auswertung der Statistik 2026); R² 0.58 with vs 0.54 without the factor",
       "note": "Low values in Eving (0.31) and Mengede (0.46) may reflect thin OSM mapping."
     },
     {
