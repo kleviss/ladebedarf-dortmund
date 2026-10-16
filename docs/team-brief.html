@@ -1,0 +1,395 @@
+<title>Ladebedarf Dortmund</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column with wide tables in their own scroll boxes; signage-style headings for a mobility subject. */
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --ink: #10151c;
+  --ink-2: #444d5a;
+  --muted: #677180;
+  --line: #dde2e8;
+  --accent: #1c5cab;
+  --accent-soft: #e4eefb;
+  --charge: #c54a17;
+  --charge-soft: #fdebe2;
+  --good: #1d7a43;
+  --ramp-1: #b7d3f6;
+  --ramp-3: #3987e5;
+  --ramp-5: #104281;
+  --display: 'Barlow Semi Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --body: 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --surface: #151b23; --ink: #e9edf2; --ink-2: #b9c2ce; --muted: #8b95a4;
+    --line: #273141; --accent: #6da7ec; --accent-soft: #172840; --charge: #f08a5d; --charge-soft: #3a2116;
+    --good: #4cc27c; --ramp-1: #2a4a72; --ramp-3: #3987e5; --ramp-5: #b7d3f6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --surface: #151b23; --ink: #e9edf2; --ink-2: #b9c2ce; --muted: #8b95a4;
+  --line: #273141; --accent: #6da7ec; --accent-soft: #172840; --charge: #f08a5d; --charge-soft: #3a2116;
+  --good: #4cc27c; --ramp-1: #2a4a72; --ramp-3: #3987e5; --ramp-5: #b7d3f6;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--body);
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 72px;
+  display: grid;
+  gap: 56px;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.85rem; font-weight: 700; }
+h3 { font-size: 1.2rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.eyebrow {
+  font: 600 0.78rem/1 var(--body);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.muted { color: var(--muted); }
+section { display: grid; gap: 18px; min-width: 0; }
+
+/* header */
+.masthead { display: grid; gap: 16px; }
+.lede { font-size: 1.2rem; color: var(--ink-2); max-width: 60ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.92rem; color: var(--muted); }
+.meta span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ramp-3); margin-right: 8px; vertical-align: 1px; }
+.meta span:nth-child(2)::before { background: var(--charge); }
+.meta span:nth-child(3)::before { background: var(--good); }
+
+/* sign-style verdict */
+.verdict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+.verdict .sign {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: grid; place-items: center;
+}
+.verdict .sign svg { width: 24px; height: 24px; }
+.verdict .sign path { fill: var(--surface); }
+.verdict p + p { margin-top: 8px; }
+
+/* facts grid */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.facts div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; min-width: 0; }
+.facts dt { font: 600 0.78rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.facts dd { margin: 0; }
+
+/* calculation chain */
+.chain { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.chain li {
+  display: grid; gap: 6px; align-content: start;
+  padding: 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+}
+.chain .op { font: 500 0.78rem/1.2 var(--mono); color: var(--muted); min-height: 2.4em; }
+.chain .val { font: 700 1.6rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.chain .lbl { font-size: 0.85rem; line-height: 1.3; color: var(--ink-2); }
+.chain .tag { justify-self: start; font: 600 0.68rem/1 var(--body); padding: 3px 6px; border-radius: 4px; background: var(--bg); color: var(--ink-2); letter-spacing: 0.02em; }
+.chain .tag.data { background: var(--accent-soft); color: var(--accent); }
+.chain .tag.est { background: var(--charge-soft); color: var(--charge); }
+.chain li.result { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chain li.result .val { color: var(--accent); }
+@media (max-width: 760px) {
+  .chain { grid-template-columns: 1fr; }
+  .chain li { grid-template-columns: 5.5rem 1fr; grid-template-areas: "val lbl" "val op" "val tag"; column-gap: 14px; row-gap: 2px; }
+  .chain .val { grid-area: val; align-self: center; }
+  .chain .lbl { grid-area: lbl; }
+  .chain .op { grid-area: op; min-height: 0; }
+  .chain .tag { grid-area: tag; }
+}
+.formula {
+  margin: 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 400 0.84rem/1.7 var(--mono);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* screenshot */
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { width: 100%; max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+figcaption { font-size: 0.9rem; color: var(--muted); }
+
+.kpis { display: flex; flex-wrap: wrap; gap: 12px 36px; }
+.kpis div { display: grid; gap: 2px; }
+.kpis dt { font: 600 0.75rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.kpis dd { margin: 0; font: 700 2rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.kpis .gap dd { color: var(--accent); }
+.kpis .stock dd { color: var(--charge); }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px 28px; margin: 0; padding: 0; list-style: none; }
+.features li { display: grid; gap: 4px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.features strong { font-family: var(--display); font-size: 1.1rem; font-weight: 600; }
+.features span { color: var(--ink-2); font-size: 0.95rem; }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 620px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font: 600 0.75rem/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); background: var(--bg); }
+td .mono { color: var(--ink-2); word-break: break-all; }
+.pill { display: inline-block; font: 600 0.72rem/1 var(--body); padding: 4px 7px; border-radius: 999px; white-space: nowrap; }
+.pill.used { background: var(--accent-soft); color: var(--accent); }
+.pill.next { background: var(--bg); color: var(--ink-2); border: 1px solid var(--line); }
+.pill.gap { background: var(--charge-soft); color: var(--charge); }
+
+/* tasks */
+.tasks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.tasks h3 { margin-bottom: 10px; }
+.tasks ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.tasks li { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; font-size: 0.95rem; }
+.tasks li::before { content: ''; width: 14px; height: 14px; margin-top: 5px; border: 1.5px solid var(--muted); border-radius: 3px; }
+.tasks li.done::before { background: var(--good); border-color: var(--good); }
+
+/* commands */
+.cmds { display: grid; gap: 10px; }
+.cmd { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.cmd code { font-size: 0.86rem; overflow-x: auto; white-space: nowrap; min-width: 0; }
+.cmd .what { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); margin-top: -4px; }
+.copy { font: 600 0.8rem/1 var(--body); padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.copy:hover { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer { font-size: 0.88rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Stadt Dortmund · Challenge 1 · Team brief</p>
+  <h1>Ladebedarf Dortmund</h1>
+  <p class="lede">How many public charging points does each of Dortmund’s 170 statistical Unterbezirke need, how many exist, and why? Our plan, the data we found, and the prototype we already have.</p>
+  <div class="meta">
+    <span>170 Unterbezirke mapped</span>
+    <span>320 existing charging points</span>
+    <span>Prototype running · repo <code>ladebedarf-dortmund</code></span>
+  </div>
+</header>
+
+<section aria-labelledby="verdict">
+  <h2 id="verdict">Where we stand</h2>
+  <div class="verdict">
+    <div class="sign" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 2 5 13.5h5.5L9 22l9.5-12.5H13L13.5 2Z"/></svg></div>
+    <div>
+      <p><strong>A frontend-only app works.</strong> The Open Data Dortmund API accepts browser requests from any site, groups data on its server, and has outlines for all 170 Unterbezirke. We fetch everything at build time and ship static files, so there is no backend to run.</p>
+      <p><strong>The gap is vehicle data.</strong> Car and EV numbers exist only for the whole city, and population only for 62 statistical districts. We estimate per Unterbezirk until the city hands over its own datasets.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="challenge">
+  <h2 id="challenge">The challenge</h2>
+  <p>Build a digital tool that calculates and clearly shows where Dortmund needs publicly accessible EV charging points, per statistical subdistrict, and transparently ranks potential areas. Charging points compete for street space with cycle paths, wider pavements and greenery, so the city wants to build only where need is demonstrable.</p>
+  <dl class="facts">
+    <div><dt>For</dt><dd>City staff, planning and transport teams, energy providers</dd></div>
+    <div><dt>Judged on</dt><dd>Quick analysis per subdistrict, transparent criteria, value for planning</dd></div>
+    <div><dt>Not required</dt><dd>Exact site plan, grid-connection check, market-ready product</dd></div>
+    <div><dt>City provides</dt><dd>A basic demand method, selected datasets, expert support</dd></div>
+  </dl>
+</section>
+
+<section aria-labelledby="method">
+  <h2 id="method">How the calculation works</h2>
+  <p>Every number on the map comes from this chain. Below: the Unterbezirk <strong>Eving (122)</strong> at the default scenario. The method is our placeholder until the city’s method arrives; it lives in one tested function, so swapping it is a small change.</p>
+  <ol class="chain">
+    <li><span class="op">population split by buildings</span><span class="val">4,208</span><span class="lbl">residents</span><span class="tag est">Estimate</span></li>
+    <li><span class="op">× 485 cars / 1,000</span><span class="val">2,041</span><span class="lbl">cars</span><span class="tag data">Open Data</span></li>
+    <li><span class="op">× 15 % EV share</span><span class="val">306</span><span class="lbl">EVs</span><span class="tag">Assumption</span></li>
+    <li><span class="op">× 44 % no private space</span><span class="val">134</span><span class="lbl">EVs that need public charging</span><span class="tag">Assumption</span></li>
+    <li><span class="op">÷ 10 EVs per point</span><span class="val">13</span><span class="lbl">points needed</span><span class="tag">Result</span></li>
+    <li><span class="op">− NOX-Block points</span><span class="val">0</span><span class="lbl">points existing</span><span class="tag data">Open Data</span></li>
+    <li class="result"><span class="op">max(0, need − stock)</span><span class="val">13</span><span class="lbl">points missing</span><span class="tag">Result</span></li>
+  </ol>
+  <pre class="formula">cars        = residents × cars per 1,000 / 1,000
+evs         = cars × EV share
+homeShare   = clamp(base × (city residents per building / district residents per building) ^ densityEffect, 5 %, 95 %)
+needed      = evs × (1 − homeShare) / EVs per public point
+gap         = max(0, needed − existing points)</pre>
+  <p class="muted">Residents per building stands in for private parking: apartment blocks have fewer driveways and garages than detached houses. Today’s EV share is 4.1 % (8,440 BEV + 6,805 PHEV of 372,220 vehicles, 2023); 15 % is a scenario value.</p>
+</section>
+
+<section aria-labelledby="prototype">
+  <h2 id="prototype">The prototype</h2>
+  <figure>
+    <img src="screenshot-map.jpg" alt="Map of Dortmund with the 170 Unterbezirke shaded from light to dark blue by missing charging points, orange dots for existing charging points, and a sidebar with scenario sliders.">
+    <figcaption>Unterbezirke shaded by missing charging points; orange dots are existing NOX-Block points.</figcaption>
+  </figure>
+  <dl class="kpis" aria-label="City totals at the default scenario">
+    <div><dt>Needed</dt><dd>1,829</dd></div>
+    <div class="stock"><dt>Existing</dt><dd>320</dd></div>
+    <div class="gap"><dt>Missing</dt><dd>1,536</dd></div>
+  </dl>
+  <p class="muted">City totals at the default scenario, placeholder method. Missing is summed per district, and districts with more points than needed count as 0, so it is more than needed minus existing.</p>
+  <ul class="features">
+    <li><strong>Demand map</strong><span>Five metrics: gap, gap per 1,000 residents, need, stock, density. Hover for values.</span></li>
+    <li><strong>District breakdown</strong><span>Click a district for the chain above, each step tagged Open Data, Estimate, Assumption or Result.</span></li>
+    <li><strong>Scenario sliders</strong><span>EV share, home charging, density effect, EVs per point, car density. Instant recalculation.</span></li>
+    <li><strong>Ranking and export</strong><span>All 170 districts, sortable, CSV export for council papers.</span></li>
+    <li><strong>Shareable links</strong><span>Scenario and selected district live in the URL, e.g. <code>?ev=20&amp;r=10&amp;ubz=122</code>.</span></li>
+    <li><strong>No backend</strong><span>Static Vite build for Vercel. System fonts, official basemap.de map, no cookies.</span></li>
+  </ul>
+</section>
+
+<section aria-labelledby="data">
+  <h2 id="data">Data we found</h2>
+  <p>Open Data Dortmund has 826 datasets. These are the ones that matter for this challenge. All under <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noreferrer">dl-de/by-2-0</a>; API console at <a href="https://open-data.dortmund.de/api/explore/v2.1/console" target="_blank" rel="noreferrer">open-data.dortmund.de</a>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Dataset</th><th>Level</th><th>What it gives us</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/fb62-unterbezirke/" target="_blank" rel="noreferrer">Unterbezirke</a><br><span class="mono">fb62-unterbezirke</span></td><td>170 polygons</td><td>Map shapes and the link to statistical district and Stadtbezirk</td><td><span class="pill used">In use</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/fb62-gebaeude/" target="_blank" rel="noreferrer">Gebäude</a><br><span class="mono">fb62-gebaeude</span></td><td>109,658 points</td><td>Buildings per Unterbezirk; population split and density proxy</td><td><span class="pill used">In use</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/fb1-ii-smart-city-e-tankstellen-ladepunkte-nox/" target="_blank" rel="noreferrer">E-Tankstellen NOX-Block</a><br><span class="mono">fb1-ii-smart-city-e-tankstellen-ladepunkte-nox</span></td><td>320 points</td><td>Existing charging points, tagged with Unterbezirk. NOX project only, in 63 of 170 districts</td><td><span class="pill used">In use</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/ds-bevolkerung-nach-geschlecht-und-migrationshintergrund-2023/" target="_blank" rel="noreferrer">Bevölkerung 2023</a><br><span class="mono">ds-bevolkerung-nach-geschlecht-…-2023</span></td><td>62 districts</td><td>Population (612,065 in total)</td><td><span class="pill used">In use</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/kraftfahrzeugdichte/" target="_blank" rel="noreferrer">Kraftfahrzeugdichte</a> and <a href="https://open-data.dortmund.de/explore/dataset/bestand-an-kraftfahrzeugen-nach-energiequelle/" target="_blank" rel="noreferrer">Kfz nach Energiequelle</a></td><td>City</td><td>485 cars per 1,000 residents; EV stock by year</td><td><span class="pill used">In use</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/parkplatzsensoren/" target="_blank" rel="noreferrer">Parkplatzsensoren</a><br><span class="mono">parkplatzsensoren</span></td><td>~190 sensors</td><td>Occupied/free events on EV bays: real charger usage. Only the last ~5 weeks are kept</td><td><span class="pill next">Next</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/haltestellen/" target="_blank" rel="noreferrer">Haltestellen</a>, <a href="https://open-data.dortmund.de/explore/dataset/parkhauser/" target="_blank" rel="noreferrer">Parkhäuser</a>, <a href="https://open-data.dortmund.de/explore/dataset/verkehrszaehlung-zaehlstellenplan/" target="_blank" rel="noreferrer">Verkehrszählung</a></td><td>Points</td><td>Public transport, off-street parking with live free spaces, 1,109 traffic count points</td><td><span class="pill next">Next</span></td></tr>
+        <tr><td><a href="https://open-data.dortmund.de/explore/dataset/flaechennutzungsplan-aktuell/" target="_blank" rel="noreferrer">Flächennutzungsplan</a>, <a href="https://open-data.dortmund.de/explore/dataset/b-plan/" target="_blank" rel="noreferrer">B-Pläne</a></td><td>Map layer</td><td>Land use; the plan has no data rows, so overlay only</td><td><span class="pill next">Next</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Outside Open Data Dortmund</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Why we want it</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/Ladesaeulenkarte/start.html" target="_blank" rel="noreferrer">Bundesnetzagentur Ladesäulenregister</a></td><td>Every public charger in Germany with kW, operator and start date. Completes the NOX-only list.</td></tr>
+        <tr><td><a href="https://www.zensus2022.de/DE/Ergebnisse-des-Zensus/gitterzellen.html" target="_blank" rel="noreferrer">Zensus 2022 grid (100 m)</a></td><td>Population, building types and owner rate. Better population split and private-parking proxy.</td></tr>
+        <tr><td><a href="https://overpass-turbo.eu/" target="_blank" rel="noreferrer">OpenStreetMap via Overpass</a></td><td>Supermarkets, parking areas and other destinations.</td></tr>
+        <tr><td><a href="https://www.standorttool.de/" target="_blank" rel="noreferrer">StandortTOOL</a></td><td>National demand model from the Nationale Leitstelle Ladeinfrastruktur, to benchmark our numbers.</td></tr>
+        <tr><td><a href="https://basemap.de/" target="_blank" rel="noreferrer">basemap.de</a></td><td>Official German basemap; already the map background.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Known gaps</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Gap</th><th>What we do now</th><th>Better fix</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill gap">Vehicles</span> No car or EV data below city level</td><td>City car density × EV share everywhere</td><td>Registrations per Unterbezirk from the city</td></tr>
+        <tr><td><span class="pill gap">Population</span> 62 districts, not 170</td><td>Split by building count, labelled Estimate</td><td>City data or Zensus grid</td></tr>
+        <tr><td><span class="pill gap">Chargers</span> NOX-Block project only</td><td>Shown as is</td><td>Merge Bundesnetzagentur register, dedupe within ~20 m</td></tr>
+        <tr><td><span class="pill gap">Buildings</span> Includes non-residential</td><td>Accepted for now</td><td>Filter residential (ALKIS / Zensus)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="tasks">
+  <h2 id="tasks">Open tasks</h2>
+  <p>Pick one, branch with its name, and tick it off in the README with your pull request.</p>
+  <div class="tasks">
+    <div>
+      <h3>Data</h3>
+      <ul>
+        <li>Plug in the city’s method and datasets</li>
+        <li>Merge the Bundesnetzagentur register</li>
+        <li>Zensus 2022 grid for population and building type</li>
+        <li>Snapshot parking sensors, compute charger occupancy</li>
+        <li>Destinations from OSM and city POI datasets</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Product</h3>
+      <ul>
+        <li class="done">Demand map, district breakdown, sliders, ranking</li>
+        <li>Weighted priority score with user weights</li>
+        <li>Coverage: buildings more than 300 m from a charger</li>
+        <li>Compare two districts or two scenarios</li>
+        <li>Scenario years 2025 / 2030 / 2035</li>
+        <li>One-page PDF per district</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Quality</h3>
+      <ul>
+        <li>BITV 2.0 / WCAG 2.1 AA check</li>
+        <li>Mobile layout polish</li>
+        <li>English UI toggle</li>
+        <li>Methodology page in plain language</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="start">
+  <h2 id="start">Run it</h2>
+  <p>Node.js 20 or newer. The generated data is in the repo, so the app runs without network access to the API.</p>
+  <div class="cmds">
+    <div class="cmd"><code>npm install</code><button type="button" class="copy" data-copy="npm install">Copy</button></div>
+    <div class="cmd"><code>npm run dev</code><button type="button" class="copy" data-copy="npm run dev">Copy</button><span class="what">Opens on localhost:5173</span></div>
+    <div class="cmd"><code>npm run data</code><button type="button" class="copy" data-copy="npm run data">Copy</button><span class="what">Refreshes public/data/ from Open Data Dortmund</span></div>
+    <div class="cmd"><code>npm test</code><button type="button" class="copy" data-copy="npm test">Copy</button><span class="what">Tests for the demand model</span></div>
+  </div>
+  <h3>Deploy on Vercel</h3>
+  <p>Push the repo to GitHub, import it at <a href="https://vercel.com/new" target="_blank" rel="noreferrer">vercel.com/new</a>. Vercel detects Vite (build <code>npm run build</code>, output <code>dist</code>). No environment variables. Every pull request gets its own preview URL.</p>
+</section>
+
+<footer>
+  <span>Data © Stadt Dortmund (dl-de/by-2-0) · Basemap © basemap.de / BKG · Prepared 16 October 2026.</span>
+  <span>Figures for Eving and the city totals come from the prototype’s placeholder method at its default scenario and will change once the city’s method is in.</span>
+</footer>
+
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const text = btn.dataset.copy;
+    const done = () => { btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); };
+    const fallback = () => {
+      const code = btn.parentElement.querySelector('code');
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      btn.textContent = 'Selected';
+    };
+    try {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } catch (e) {
+      fallback();
+    }
+  });
+});
+</script>
