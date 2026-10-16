@@ -310,15 +310,13 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
         </div>
         {showChargers && (
           <div className="map-legend-block">
-            <span className="map-legend-title">Charging stations</span>
-            <ul className="station-key">
-              <li><span className="dot" aria-hidden="true" />Public AC</li>
-              <li><span className="dot dot-dc" aria-hidden="true" />Fast charger (DC)</li>
-              <li><span className="dot dot-offstreet" aria-hidden="true" />Car park, customers</li>
-              <li className="station-key-note">
-                <span className="dot dot-big" aria-hidden="true">2</span>Size and number = charging points
-              </li>
+            <span className="map-legend-title">Stations</span>
+            <ul className="station-key" aria-label="Public AC, fast charger, car park or customers; size = charging points">
+              <li title="Public AC charging"><span className="dot" aria-hidden="true" />AC</li>
+              <li title="Fast charger (DC)"><span className="dot dot-dc" aria-hidden="true" />DC</li>
+              <li title="Car park or customer parking"><span className="dot dot-offstreet" aria-hidden="true" />Private</li>
             </ul>
+            <span className="station-key-note">size = points</span>
           </div>
         )}
       </div>

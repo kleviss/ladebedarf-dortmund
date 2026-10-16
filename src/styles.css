@@ -1583,23 +1583,24 @@ a {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 3px;
+  display: flex;
+  gap: 8px;
+}
+
+.station-key li {
+  gap: 4px;
+}
+
+.station-key .dot {
+  width: 8px;
+  height: 8px;
 }
 
 .station-key-note {
+  display: block;
+  margin-top: 2px;
   color: var(--muted);
-}
-
-.station-key .dot-big {
-  width: 15px;
-  height: 15px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1;
+  font-size: 0.68rem;
 }
 
 .station-key li {
