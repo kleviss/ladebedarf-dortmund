@@ -76,6 +76,8 @@ export interface District {
   attractionNames?: string[];
   /** Hotels, guest houses, hostels (OSM) */
   hotels?: number;
+  /** Hotels weighted 1–2 by attractions within 1.5 km (guests stay near what they visit) */
+  hotelWeight?: number;
 }
 
 export type Year = 2030 | 2036;
@@ -258,6 +260,7 @@ export interface Totals {
   pois: number;
   attractions: number;
   hotels: number;
+  hotelWeight: number;
 }
 
 export function totalsOf(districts: District[]): Totals {
@@ -272,8 +275,9 @@ export function totalsOf(districts: District[]): Totals {
       pois: t.pois + poisOf(d),
       attractions: t.attractions + (d.attractions ?? 0),
       hotels: t.hotels + (d.hotels ?? 0),
+      hotelWeight: t.hotelWeight + (d.hotelWeight ?? d.hotels ?? 0),
     }),
-    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0, commercialHa: 0, pois: 0, attractions: 0, hotels: 0 },
+    { privateCars: 0, privateEvs: 0, commercialCars: 0, totalEvs: 0, chargers: 0, commercialHa: 0, pois: 0, attractions: 0, hotels: 0, hotelWeight: 0 },
   );
 }
 
@@ -306,7 +310,8 @@ export function touristShares(d: District, s: Pick<Scenario, 'touristKey'>, t: T
   else if (attr != null) [day, dayBasis] = [attr, 'attractions'];
   else if (poi != null) [day, dayBasis] = [poi, 'pois'];
   else [day, dayBasis] = [commercial, 'commercialCars'];
-  const hotels = t.hotels > 0 ? (d.hotels ?? 0) / t.hotels : null;
+  // hotels near attractions count up to double: guests stay close to what they visit
+  const hotels = t.hotelWeight > 0 ? (d.hotelWeight ?? d.hotels ?? 0) / t.hotelWeight : null;
   return hotels != null ? { day, overnight: hotels, dayBasis, overnightBasis: 'hotels' } : { day, overnight: day, dayBasis, overnightBasis: 'day' };
 }
 
@@ -322,7 +327,7 @@ export function touristFormula(d: District, city: CityBev, sh: TouristShares): s
   const day = `Tagesgäste ${fmt(city.dayTourists)} × ${pct(sh.day, 2)} (${BASIS_LABEL[sh.dayBasis]}: ${fmt(d.attractions ?? 0)} Ziele, ${fmt(poisOf(d))} POIs)`;
   const night =
     sh.overnightBasis === 'hotels'
-      ? `Übernachtungsgäste ${fmt(city.overnightTourists)} × ${pct(sh.overnight, 2)} (${fmt(d.hotels ?? 0)} Unterkünfte)`
+      ? `Übernachtungsgäste ${fmt(city.overnightTourists)} × ${pct(sh.overnight, 2)} (${fmt(d.hotels ?? 0)} Unterkünfte, Gewicht ${fmt(d.hotelWeight ?? d.hotels ?? 0, 1)} nach Nähe zu Zielen)`
       : `Übernachtungsgäste ${fmt(city.overnightTourists)} × ${pct(sh.overnight, 2)}`;
   return `${day} + ${night}`;
 }

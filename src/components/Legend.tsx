@@ -9,12 +9,15 @@ interface Props {
   showPriority: boolean;
   showParking: boolean;
   onToggleParking: (v: boolean) => void;
+  showAttractions: boolean;
+  attractionCount: number;
+  onToggleAttractions: (v: boolean) => void;
   onMetric: (k: MetricKey) => void;
   onToggleChargers: (v: boolean) => void;
   onTogglePriority: (v: boolean) => void;
 }
 
-export function Legend({ expert, metric, classes, showChargers, showPriority, showParking, onMetric, onToggleChargers, onTogglePriority, onToggleParking }: Props) {
+export function Legend({ expert, metric, classes, showChargers, showPriority, showParking, showAttractions, attractionCount, onMetric, onToggleChargers, onTogglePriority, onToggleParking, onToggleAttractions }: Props) {
   const lower = (i: number) => (i === 0 ? 0 : classes.breaks[i - 1]);
   return (
     <div className="legend">
@@ -58,6 +61,11 @@ export function Legend({ expert, metric, classes, showChargers, showPriority, sh
         <input id="show-chargers" type="checkbox" checked={showChargers} onChange={(e) => onToggleChargers(e.target.checked)} />
         <span className="dot" aria-hidden="true" />
         Ladestandorte heute (Stadt, 912)
+      </label>
+      <label className="toggle">
+        <input id="show-attractions" type="checkbox" checked={showAttractions} onChange={(e) => onToggleAttractions(e.target.checked)} />
+        <span className="dot dot-attraction" aria-hidden="true" />
+        Touristische Ziele ({attractionCount}, Namen ab Zoom)
       </label>
       {expert && (
         <label className="toggle">

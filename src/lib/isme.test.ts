@@ -115,6 +115,13 @@ describe('touristShares', () => {
   const b = d('002', { attractions: 1, poisShopping: 30, poisLeisure: 0, hotels: 3 });
   const t = totalsOf([a, b]);
 
+  it('weights hotels near attractions more for overnight guests', () => {
+    const near = d('001', { attractions: 1, poisShopping: 1, hotels: 1, hotelWeight: 2 });
+    const far = d('002', { attractions: 1, poisShopping: 1, hotels: 1, hotelWeight: 1 });
+    const sh = touristShares(near, { touristKey: 'mixed' }, totalsOf([near, far]));
+    expect(sh.overnight).toBeCloseTo(2 / 3, 9);
+  });
+
   it('spreads day tourists half by attractions, half by POIs, and overnight guests by hotels', () => {
     const sh = touristShares(a, { touristKey: 'mixed' }, t);
     expect(sh.day).toBeCloseTo(0.5 * 0.75 + 0.5 * 0.25, 9);

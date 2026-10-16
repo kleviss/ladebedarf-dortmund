@@ -46,6 +46,7 @@ function Dashboard({ data }: { data: AppData }) {
   const [showChargers, setShowChargers] = useState(true);
   const [showPriority, setShowPriority] = useState(false);
   const [showParking, setShowParking] = useState(false);
+  const [showAttractions, setShowAttractions] = useState(initial.metric === 'attractions');
   const [weights, setWeights] = useState<Weights>(defaultWeights);
   const [parkingColour, setParkingColour] = useState<ParkingColour>('score');
   const [copied, setCopied] = useState(false);
@@ -133,7 +134,13 @@ function Dashboard({ data }: { data: AppData }) {
             showPriority={showPriority}
             showParking={showParking}
             onToggleParking={setShowParking}
-            onMetric={setMetricKey}
+            showAttractions={showAttractions}
+            attractionCount={data.ziele.features.length}
+            onToggleAttractions={setShowAttractions}
+            onMetric={(k) => {
+              setMetricKey(k);
+              if (k === 'attractions') setShowAttractions(true); // show the places with their names
+            }}
             onToggleChargers={setShowChargers}
             onTogglePriority={setShowPriority}
           />
@@ -202,6 +209,7 @@ function Dashboard({ data }: { data: AppData }) {
             showChargers={showChargers}
             showPriority={expert && showPriority}
             showParking={showParking}
+            showAttractions={showAttractions}
             sites={sites}
             parkingColour={effectiveColour}
             onSelect={setSelected}

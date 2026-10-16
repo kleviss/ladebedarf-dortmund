@@ -201,6 +201,71 @@ function TourismCheck({ data, scenario }: { data: AppData; scenario: Scenario })
           </tbody>
         </table>
       </div>
+      <HotelsNearAttractions data={data} />
+    </>
+  );
+}
+
+/** Do guests stay close to what they visit? Hotels within 1.5 km of each attraction. */
+function HotelsNearAttractions({ data }: { data: AppData }) {
+  const ziele = data.ziele.features.map((f) => f.properties);
+  if (!ziele.length) return null;
+  const districts = data.districts.features.map((f) => f.properties);
+  const r = correlation(
+    districts.map((d) => d.attractions ?? 0),
+    districts.map((d) => d.hotels ?? 0),
+  );
+  const t = data.meta.tourism;
+  // outside the city centre (> 2 km from the Reinoldikirche), where hotel clusters say more
+  const coords = new Map(data.ziele.features.map((f) => [f.properties.name, f.geometry.coordinates]));
+  const fromCentre = (name: string) => {
+    const [x, y] = coords.get(name) ?? [0, 0];
+    return Math.hypot((x - 7.4653) * 69400, (y - 51.5139) * 110570);
+  };
+  const outside = ziele
+    .filter((z) => fromCentre(z.name) > 2000)
+    .sort((a, b) => b.hotelsNear - a.hotelsNear)
+    .slice(0, 8);
+  const lonely = ziele.filter((z) => z.hotelsNear === 0);
+  const names = new Map(districts.map((d) => [d.ubz, d.name]));
+  return (
+    <>
+      <h3>Übernachten nahe den Zielen</h3>
+      <p className="muted small">
+        {fmt(t?.hotelsNearAttractions ?? 0)} von {fmt(t?.hotels ?? 0)} Unterkünften liegen höchstens 1,5 km von einem touristischen Ziel entfernt;
+        Ziele und Unterkünfte je Unterbezirk korrelieren mit {fmt(r, 2)}. Deshalb zählt eine Unterkunft mit Zielen in der Nähe bis zu doppelt, wenn
+        Übernachtungsgäste verteilt werden: Wer zum Spiel ins Stadion fährt, übernachtet oft in den Hotels an den Westfalenhallen. Ziele mehr als 2 km vom Stadtzentrum:
+      </p>
+      <div className="rtable-wrap">
+        <table className="rtable">
+          <thead>
+            <tr>
+              <th>Ziel</th>
+              <th>Unterbezirk</th>
+              <th className="num">Unterkünfte ≤ 1,5 km</th>
+              <th>z. B.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {outside.map((z) => (
+              <tr key={z.name}>
+                <td>
+                  {z.name}
+                  <small>{z.kind}</small>
+                </td>
+                <td>{names.get(z.ubz)}</td>
+                <td className="num strong">{fmt(z.hotelsNear)}</td>
+                <td>{z.hotelNames.slice(0, 3).join(', ')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {lonely.length > 0 && (
+        <p className="muted small">
+          Ohne Unterkunft in 1,5 km ({lonely.length}): {lonely.map((z) => z.name).join(', ')}.
+        </p>
+      )}
     </>
   );
 }

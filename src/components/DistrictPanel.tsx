@@ -61,6 +61,12 @@ export function DistrictPanel({ district: d, rank, total, sites, simple = false,
           </div>
         </dl>
       )}
+      {d.attractionNames && d.attractionNames.length > 0 && (
+        <p className="district-attractions">
+          <b>Touristische Ziele ({d.attractionNames.length}):</b> {d.attractionNames.join(', ')}
+          {d.hotels ? ` · ${d.hotels} Unterkünfte im Unterbezirk` : ''}
+        </p>
+      )}
       {simple && (
         <button type="button" className="link-button show-calc" onClick={() => setOpen(!open)} aria-expanded={open}>
           {open ? 'Rechenweg ausblenden' : 'Rechenweg anzeigen'}

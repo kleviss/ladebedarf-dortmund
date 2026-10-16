@@ -89,8 +89,8 @@ function num(r: DistrictResult, key: string): number {
   return typeof v === 'number' ? v : 0;
 }
 
-/** The four metrics shown in simple mode. */
-export const SIMPLE_METRICS: MetricKey[] = ['gap', 'needed', 'homeShare', 'parkingUncovered'];
+/** The metrics shown in simple mode. */
+export const SIMPLE_METRICS: MetricKey[] = ['gap', 'needed', 'homeShare', 'parkingUncovered', 'attractions'];
 
 /** Expert mode: all metrics, grouped. */
 export const METRIC_GROUPS: { label: string; keys: MetricKey[] }[] = [

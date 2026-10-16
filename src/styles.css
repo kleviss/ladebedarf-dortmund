@@ -1034,3 +1034,18 @@ a {
 .show-calc {
   margin-bottom: 8px;
 }
+
+.toggle .dot-attraction {
+  background: #b0367a;
+}
+
+/* attraction names in the district panel */
+.district-attractions {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+
+.district-attractions b {
+  color: var(--ink);
+}

@@ -30,6 +30,7 @@ interface Props {
   showChargers: boolean;
   showPriority: boolean;
   showParking: boolean;
+  showAttractions: boolean;
   sites: ScoredSite[];
   parkingColour: ParkingColour;
   onSelect: (ubz: string | null) => void;
@@ -41,11 +42,21 @@ interface Hover {
   ubz: string;
 }
 
-export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, sites, parkingColour, onSelect }: Props) {
+interface AttractionHover {
+  x: number;
+  y: number;
+  name: string;
+  kind: string;
+  hotelsNear: number;
+  hotelNames: string[];
+}
+
+export function MapView({ data, results, metric, classes, selected, showChargers, showPriority, showParking, showAttractions, sites, parkingColour, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<Hover | null>(null);
+  const [attrHover, setAttrHover] = useState<AttractionHover | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -73,6 +84,7 @@ export function MapView({ data, results, metric, classes, selected, showChargers
       map.addSource('chargers', { type: 'geojson', data: data.chargers });
       map.addSource('priority', { type: 'geojson', data: data.priority });
       map.addSource('parking', { type: 'geojson', data: data.parking });
+      map.addSource('ziele', { type: 'geojson', data: data.ziele });
 
       map.addLayer(
         {
@@ -165,6 +177,43 @@ export function MapView({ data, results, metric, classes, selected, showChargers
         },
       });
 
+      // tourist attractions: dots, names from zoom 12.5
+      map.addLayer({
+        id: 'ziele',
+        type: 'circle',
+        source: 'ziele',
+        layout: { visibility: 'none' },
+        paint: {
+          'circle-color': '#b0367a',
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.5, 15, 8],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+        },
+      });
+      map.addLayer({
+        id: 'ziele-label',
+        type: 'symbol',
+        source: 'ziele',
+        minzoom: 12.5,
+        layout: {
+          visibility: 'none',
+          'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': 11,
+          'text-offset': [0, 0.9],
+          'text-anchor': 'top',
+          'text-max-width': 10,
+        },
+        paint: { 'text-color': '#5a1a3e', 'text-halo-color': '#ffffff', 'text-halo-width': 1.4 },
+      });
+      map.on('mousemove', 'ziele', (e: MapLayerMouseEvent) => {
+        const p = e.features?.[0]?.properties;
+        if (!p) return;
+        const parse = (v: unknown) => (typeof v === 'string' ? (JSON.parse(v) as string[]) : ((v as string[]) ?? []));
+        setAttrHover({ x: e.point.x, y: e.point.y, name: p.name, kind: p.kind, hotelsNear: Number(p.hotelsNear ?? 0), hotelNames: parse(p.hotelNames) });
+      });
+      map.on('mouseleave', 'ziele', () => setAttrHover(null));
+
       let hoveredId: number | string | undefined;
       map.on('mousemove', 'ubz-fill', (e: MapLayerMouseEvent) => {
         const f = e.features?.[0];
@@ -236,6 +285,13 @@ export function MapView({ data, results, metric, classes, selected, showChargers
     map.setLayoutProperty('parking', 'visibility', showParking ? 'visible' : 'none');
   }, [ready, showParking]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const id of ['ziele', 'ziele-label']) map.setLayoutProperty(id, 'visibility', showAttractions ? 'visible' : 'none');
+    if (!showAttractions) setAttrHover(null);
+  }, [ready, showAttractions]);
+
   // Site score colours, recomputed when the weights change.
   useEffect(() => {
     const map = mapRef.current;
@@ -248,7 +304,17 @@ export function MapView({ data, results, metric, classes, selected, showChargers
   return (
     <div className="map">
       <div ref={container} className="map-canvas" aria-label="Karte der statistischen Unterbezirke" role="region" />
-      {hover && hovered && (
+      {attrHover ? (
+        <div className="map-tooltip" style={{ left: attrHover.x + 14, top: attrHover.y + 14 }} role="status">
+          <strong>{attrHover.name}</strong>
+          <span className="muted">{attrHover.kind}</span>
+          <span>
+            {attrHover.hotelsNear > 0
+              ? `${attrHover.hotelsNear} Unterkünfte ≤ 1,5 km${attrHover.hotelNames.length ? `: ${attrHover.hotelNames.slice(0, 3).join(', ')}` : ''}`
+              : 'Keine Unterkunft ≤ 1,5 km'}
+          </span>
+        </div>
+      ) : hover && hovered && (
         <div className="map-tooltip" style={{ left: hover.x + 14, top: hover.y + 14 }} role="status">
           <strong>{hovered.name}</strong>
           <span className="muted">{hovered.stadtbezirk}</span>

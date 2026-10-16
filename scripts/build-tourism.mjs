@@ -4,7 +4,11 @@
 //   attractions  city lists: Sehenswürdigkeiten, Museen, Veranstaltungsorte and the
 //                stadium (SIGNAL IDUNA PARK), de-duplicated by name
 //   hotels       hotels, guest houses, hostels from OpenStreetMap
-// and to meta.json the latest overnight stays (Open Data, Fremdenverkehr).
+//   hotelWeight  hotels weighted by attractions nearby: guests often stay close to what they
+//                visit (stadium, Westfalenhallen, city centre), so a hotel counts
+//                1 + min(attractions within 1.5 km, 5) / 5, i.e. up to double
+// writes public/data/city/ziele.geojson (attraction points with hotels nearby)
+// and adds the latest overnight stays (Open Data, Fremdenverkehr) to meta.json.
 
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -22,6 +26,15 @@ const refresh = process.argv.includes('--refresh');
 const ATTRACTION_LISTS = ['sehenswurdigkeiten', 'museum', 'veranstaltungsorte'];
 // the stadium list is mostly local sports grounds; only the stadium itself draws visitors
 const STADIUM = /SIGNAL IDUNA PARK/i;
+/** Hotels within this distance count as "near" an attraction. */
+const NEAR_M = 1500;
+/** A hotel with this many attractions nearby counts double; more don't add. */
+const NEAR_CAP = 5;
+const KX = 111320 * Math.cos((51.51 * Math.PI) / 180);
+const KY = 110570;
+const metres = (a, b) => Math.hypot((a[0] - b[0]) * KX, (a[1] - b[1]) * KY);
+
+const KIND = { sehenswurdigkeiten: 'Sehenswürdigkeit', museum: 'Museum', veranstaltungsorte: 'Veranstaltungsort', fussballstadion: 'Stadion' };
 
 async function cached(name, load) {
   const file = join(RAW, name);
@@ -93,7 +106,8 @@ async function main() {
     ),
   )[0];
 
-  const stats = new Map(districts.features.map((f) => [f.properties.ubz, { attractions: 0, hotels: 0, attractionNames: [] }]));
+  const stats = new Map(districts.features.map((f) => [f.properties.ubz, { attractions: 0, hotels: 0, hotelWeight: 0, attractionNames: [] }]));
+  const points = [];
   const seen = new Set();
   let attractions = 0;
   for (const { id, rows } of lists) {
@@ -109,21 +123,51 @@ async function main() {
       s.attractions += 1;
       s.attractionNames.push(name);
       attractions += 1;
+      points.push({ pt: [g.lon, g.lat], name, kind: KIND[id], type: r.objektart ?? null, ubz });
     }
   }
   let hotelCount = 0;
+  let hotelsNearAny = 0;
+  const hotelPts = [];
   for (const e of hotels) {
-    const ubz = locate([e.center?.lon ?? e.lon, e.center?.lat ?? e.lat]);
+    const pt = [e.center?.lon ?? e.lon, e.center?.lat ?? e.lat];
+    const ubz = locate(pt);
     if (!ubz) continue;
-    stats.get(ubz).hotels += 1;
+    const near = points.filter((a) => metres(a.pt, pt) <= NEAR_M).length;
+    const s = stats.get(ubz);
+    s.hotels += 1;
+    s.hotelWeight += 1 + Math.min(near, NEAR_CAP) / NEAR_CAP;
+    if (near > 0) hotelsNearAny += 1;
     hotelCount += 1;
+    hotelPts.push({ pt, name: e.tags?.name ?? null });
   }
+  const round = (n) => Math.round(n * 1e5) / 1e5;
+  const ziele = {
+    type: 'FeatureCollection',
+    features: points.map((a) => {
+      const near = hotelPts.filter((h) => metres(a.pt, h.pt) <= NEAR_M);
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: a.pt.map(round) },
+        properties: {
+          name: a.name,
+          kind: a.kind,
+          type: a.type,
+          ubz: a.ubz,
+          hotelsNear: near.length,
+          hotelNames: near.map((h) => h.name).filter(Boolean).slice(0, 5),
+        },
+      };
+    }),
+  };
+  await writeFile(join(CITY, 'ziele.geojson'), JSON.stringify(ziele));
 
   for (const f of districts.features) {
     const s = stats.get(f.properties.ubz);
     f.properties.attractions = s.attractions;
-    f.properties.attractionNames = s.attractionNames.slice(0, 6);
+    f.properties.attractionNames = s.attractionNames;
     f.properties.hotels = s.hotels;
+    f.properties.hotelWeight = s.hotelWeight;
   }
   await writeFile(path, JSON.stringify(districts));
 
@@ -138,13 +182,16 @@ async function main() {
     ],
     attractions,
     hotels: hotelCount,
+    hotelsNearAttractions: hotelsNearAny,
+    nearMetres: NEAR_M,
+    nearCap: NEAR_CAP,
     overnightStays: stays.ubernachtungen_insgesamt,
     overnightYear: Number(stays.jahr),
     accommodationBusinesses: stays.angebot_betriebe,
   };
   await writeFile(metaPath, JSON.stringify(meta, null, 2));
   console.log(
-    `✔ ${attractions} touristische Ziele · ${hotelCount} Unterkünfte (Statistik: ${stays.angebot_betriebe}) · ${stays.ubernachtungen_insgesamt.toLocaleString('de-DE')} Übernachtungen ${stays.jahr}`,
+    `✔ ${attractions} touristische Ziele · ${hotelCount} Unterkünfte, ${hotelsNearAny} davon ≤ ${NEAR_M} m zu einem Ziel (Statistik: ${stays.angebot_betriebe}) · ${stays.ubernachtungen_insgesamt.toLocaleString('de-DE')} Übernachtungen ${stays.jahr}`,
   );
 }
 

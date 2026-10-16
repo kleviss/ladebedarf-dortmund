@@ -32,6 +32,8 @@ export interface CityMeta {
     sources: string[];
     attractions: number;
     hotels: number;
+    hotelsNearAttractions?: number;
+    nearMetres?: number;
     overnightStays: number;
     overnightYear: number;
     accommodationBusinesses: number;
@@ -72,6 +74,16 @@ export interface DistanceBand {
   median: number;
 }
 
+export interface Attraction {
+  name: string;
+  kind: string;
+  type: string | null;
+  ubz: string;
+  /** hotels / guest houses within 1.5 km */
+  hotelsNear: number;
+  hotelNames: string[];
+}
+
 export interface ParkingSpot {
   ubz: string;
   kind: 'lot' | 'street' | 'garage' | 'park-ride';
@@ -89,6 +101,8 @@ export interface AppData {
   chargers: GeoJSON.FeatureCollection<GeoJSON.Point, { ubz: string | null }>;
   priority: GeoJSON.FeatureCollection<GeoJSON.Polygon, { points: number }>;
   parking: GeoJSON.FeatureCollection<GeoJSON.Point, ParkingSpot>;
+  /** Tourist attractions with hotels nearby (scripts/build-tourism.mjs) */
+  ziele: GeoJSON.FeatureCollection<GeoJSON.Point, Attraction>;
   meta: CityMeta;
 }
 
@@ -101,12 +115,13 @@ async function getJson<T>(path: string): Promise<T> {
 /** Loads the static files written by `npm run data` (city data from Sciebo). */
 export async function loadData(): Promise<AppData> {
   const base = `${import.meta.env.BASE_URL}data/city/`;
-  const [districts, chargers, priority, parking, meta] = await Promise.all([
+  const [districts, chargers, priority, parking, ziele, meta] = await Promise.all([
     getJson<AppData['districts']>(`${base}unterbezirke.geojson`),
     getJson<AppData['chargers']>(`${base}ladepunkte.geojson`),
     getJson<AppData['priority']>(`${base}prioritaet.geojson`),
     getJson<AppData['parking']>(`${base}parkplaetze.geojson`),
+    getJson<AppData['ziele']>(`${base}ziele.geojson`).catch(() => ({ type: 'FeatureCollection' as const, features: [] })),
     getJson<CityMeta>(`${base}meta.json`),
   ]);
-  return { districts, chargers, priority, parking, meta };
+  return { districts, chargers, priority, parking, ziele, meta };
 }
