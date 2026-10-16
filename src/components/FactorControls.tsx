@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import type { FactorParams, ParameterSpec } from '../lib/factors';
+import { InfoTip, Tex } from './InfoTip';
 
 export interface FactorTotals {
   residents: number;
@@ -18,11 +18,43 @@ interface Props {
 }
 
 const KIND: Record<string, string> = {
-  data: 'Measured / published data',
-  isme: 'From the ISME report (Dec 2023)',
-  tested: 'Chosen by testing against real district data',
-  calibrated: 'Calibrated to an ISME city figure',
+  data: 'Data',
+  isme: 'ISME report',
+  tested: 'Tested',
+  calibrated: 'Calibrated',
   assumption: 'Assumption',
+};
+
+const KIND_TEXT: Record<string, string> = {
+  data: 'Measured or published figure',
+  isme: 'Taken from the ISME report (Dec 2023)',
+  tested: 'Chosen by testing variants against real district data',
+  calibrated: 'Solved so the city result matches an ISME figure',
+  assumption: 'Rule of thumb or team decision, no direct source',
+};
+
+/** Symbol of each parameter in the section formulas. */
+const SYMBOL: Partial<Record<keyof FactorParams, string>> = {
+  bevShareToday: 'e',
+  bevShareScenario: 'e',
+  evsPerStreetPoint: 'k',
+  pointsPerSite: 'p',
+  homeShareCity: '\\bar A',
+  drivewayPerDwelling: 's_{\\mathrm{EZ}}',
+  mfhPerDwelling: 's_{\\mathrm{MFH}}',
+  useOsmFactor: 'f^{\\mathrm{OSM}}_b',
+  residentsStreetShare: 'r_R',
+  inCommuters: 'P',
+  commuterCarShare: 'a_W',
+  commuterStreetShare: 'r_W',
+  m2PerJob: 'm_c',
+  dayVisitorsPerYear: 'V_d',
+  overnightStaysPerYear: 'V_n',
+  touristCarShare: 'a_T',
+  personsPerCar: '\\pi',
+  chargeAtDestinationShare: 'c',
+  touristStreetShare: 'r_T',
+  defaultVisitors: 'v_0',
 };
 
 interface Section {
@@ -30,7 +62,9 @@ interface Section {
   title: string;
   factors: string[];
   total?: keyof FactorTotals;
-  formula: string;
+  tex: string[];
+  /** other symbols used in the formula: [TeX, meaning] */
+  legend: [string, string][];
   data: string;
 }
 
@@ -39,35 +73,57 @@ const SECTIONS: Section[] = [
     key: 'general',
     title: 'General',
     factors: ['global', 'existing'],
-    formula: 'Missing points = max(0, ⌈residents + work + travel⌉ − locations × points per location)',
-    data: 'Today: registered EVs per subdistrict (city statistics 2026). Scenario: private cars × EV share. Existing: city charger file (912 locations).',
+    tex: ['\\text{missing}_u = \\max\\!\\big(0,\\ \\lceil R_u + W_u + T_u \\rceil - n_u\\,p\\big)'],
+    legend: [
+      ['R_u, W_u, T_u', 'points for residence, work, travel'],
+      ['n_u', 'existing charging locations'],
+      ['e', 'EV share: today 4.2 % or the scenario'],
+      ['k', 'EVs per street charging point'],
+    ],
+    data: 'Today: registered EVs per subdistrict (city statistics 2026). Scenario: private cars × EV share. Existing: city charger file, 912 locations.',
   },
   {
     key: 'residents',
     title: 'Residence',
     factors: ['residents'],
     total: 'residents',
-    formula:
-      'Home coverage = min(1, (garages + driveway × house dwellings + spaces per apartment × apartments × OSM factor) ÷ dwellings). Points = EVs × (1 − coverage) × street share ÷ EVs per point',
-    data: 'Dwellings by building type: Zensus 2022 (100 m grid). Garages and carports: ALKIS (Open Data Dortmund). OSM factor: private parking and underground garages per apartment in the Stadtbezirk.',
+    tex: [
+      'A_u = \\min\\!\\left(1,\\ \\dfrac{G_u + s_{\\mathrm{EZ}}\\,D^{\\mathrm{EZ}}_u + s_{\\mathrm{MFH}}\\,D^{\\mathrm{MFH}}_u\\,f^{\\mathrm{OSM}}_b}{D_u}\\right)',
+      'R_u = \\dfrac{E_u\\,(1 - A_u)\\,r_R}{k}',
+    ],
+    legend: [
+      ['A_u', 'share of households that can charge at home'],
+      ['G_u', 'garages and carports'],
+      ['D_u, D^{\\mathrm{EZ}}_u, D^{\\mathrm{MFH}}_u', 'dwellings: all, in houses, in apartment blocks'],
+      ['f^{\\mathrm{OSM}}_b', 'private parking per apartment in the Stadtbezirk ÷ city'],
+      ['E_u', 'EVs: registered today or cars × e'],
+    ],
+    data: 'Dwellings: Zensus 2022, 100 m grid. Garages and carports: ALKIS (Open Data Dortmund). OSM factor: private parking and underground garages, OpenStreetMap. s_MFH is calibrated so the city mean of A equals the ISME home share (66.3 %).',
   },
   {
     key: 'commuters',
     title: 'Work',
     factors: ['commuters'],
     total: 'commuters',
-    formula:
-      'Points = in-commuters × by car × EV share × street share ÷ EVs per point × share of estimated jobs. Jobs = floor area ÷ m² per job (office 30, retail 50, education/health 60, industry 100, warehouse 200, mixed use ½ × 40)',
-    data: 'In-commuters: Open Data Dortmund (2022). Floor area: ALKIS footprint × storeys. Check: 269,963 estimated jobs vs 264,322 employees at place of work.',
+    tex: ['W_u = \\dfrac{P\\,a_W\\,e\\,r_W}{k}\\cdot\\dfrac{J_u}{\\sum_v J_v}', 'J_u = \\sum_c \\dfrac{F_{u,c}}{m_c}'],
+    legend: [
+      ['J_u', 'estimated jobs in the subdistrict'],
+      ['F_{u,c}', 'floor area of building class c (footprint × storeys)'],
+      ['m_c', 'm² per job: office 30, retail 50, education/health 60, industry 100, warehouse 200, mixed use ½ × 40'],
+    ],
+    data: 'In-commuters: Open Data Dortmund, 2022. Floor area: ALKIS. Check: 269,963 estimated jobs vs 264,322 employees at place of work (2024).',
   },
   {
     key: 'tourists',
     title: 'Travel',
     factors: ['tourists'],
     total: 'tourists',
-    formula:
-      'Points = (day visitors × share of visits + overnight stays × share of hotels) ÷ 365 × by car ÷ persons per car × EV share × charge at destination × street share ÷ EVs per point',
-    data: 'Visits: Open Data Dortmund (Zoo, museums, Dortmunder U, Konzerthaus, Theater), others use the default. Hotels: OpenStreetMap, weighted by nearby destinations. Overnight stays: Open Data 2024.',
+    tex: ['T_u = \\dfrac{V_d\\,\\delta_u + V_n\\,\\nu_u}{365}\\cdot\\dfrac{a_T}{\\pi}\\cdot\\dfrac{e\\,c\\,r_T}{k}'],
+    legend: [
+      ['\\delta_u', 'share of all visits to destinations in the subdistrict'],
+      ['\\nu_u', 'share of hotels, weighted by nearby destinations'],
+    ],
+    data: 'Visits: Open Data Dortmund (Zoo, museums, Dortmunder U, Konzerthaus, Theater); destinations without a figure use v₀. Hotels: OpenStreetMap. Overnight stays: Open Data 2024.',
   },
 ];
 
@@ -81,40 +137,83 @@ function format(spec: ParameterSpec, value: unknown): string {
   return value.toLocaleString('en-GB', { maximumFractionDigits: digits });
 }
 
-function Info({ label, children }: { label: string; children: ReactNode }) {
+function ParamTip({ spec, value, defaults }: { spec: ParameterSpec; value: unknown; defaults: FactorParams }) {
+  const def = defaults[spec.key];
+  const symbol = SYMBOL[spec.key];
+  const label = spec.labelEn ?? spec.label;
   return (
-    <span className="info">
-      <button
-        type="button"
-        className="info-btn"
-        aria-label={`How is ${label} calculated?`}
-        onClick={(e) => e.preventDefault() /* inside <summary>: don't toggle the section */}
-      >
-        i
-      </button>
-      <span role="tooltip" className="info-tip">
-        {children}
-      </span>
-    </span>
+    <InfoTip label={label}>
+      <header className="info-card-head">
+        <span className="info-card-title">
+          {symbol && <Tex tex={symbol} />} {label}
+        </span>
+        <span className={`kind kind-${spec.kind}`} title={KIND_TEXT[spec.kind]}>
+          {KIND[spec.kind] ?? spec.kind}
+        </span>
+      </header>
+      {typeof def === 'object' && def !== null ? (
+        <dl className="info-values">
+          {Object.entries(def).map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd>{String(v)} m²</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <dl className="info-values">
+          <div>
+            <dt>Default</dt>
+            <dd>{format(spec, def)}</dd>
+          </div>
+          {JSON.stringify(value) !== JSON.stringify(def) && (
+            <div>
+              <dt>Now</dt>
+              <dd className="is-changed">{format(spec, value)}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+      <p className="info-kind">{KIND_TEXT[spec.kind]}</p>
+      {spec.source && (
+        <p>
+          <span className="info-label">Source</span>
+          {spec.source}
+        </p>
+      )}
+      {spec.note && <p className="info-note">{spec.note}</p>}
+    </InfoTip>
   );
 }
 
-function ParamInfo({ spec, defaults }: { spec: ParameterSpec; defaults: FactorParams }) {
-  const def = defaults[spec.key];
+function SectionTip({ section }: { section: Section }) {
   return (
-    <Info label={spec.labelEn ?? spec.label}>
-      <strong>{KIND[spec.kind] ?? spec.kind}</strong>
-      {typeof def !== 'object' && <span>Default: {format(spec, def)}</span>}
-      {typeof def === 'object' && def !== null && (
-        <span>
-          {Object.entries(def)
-            .map(([k, v]) => `${k} ${v}`)
-            .join(' · ')}
-        </span>
-      )}
-      {spec.source && <span>Source: {spec.source}</span>}
-      {spec.note && <span>{spec.note}</span>}
-    </Info>
+    <InfoTip label={section.title}>
+      <header className="info-card-head">
+        <span className="info-card-title">{section.title}</span>
+        <span className="info-label">Formula</span>
+      </header>
+      <div className="info-formula">
+        {section.tex.map((t) => (
+          <Tex key={t} tex={t} display />
+        ))}
+      </div>
+      <dl className="info-legend">
+        {section.legend.map(([sym, text]) => (
+          <div key={sym}>
+            <dt>
+              <Tex tex={sym} />
+            </dt>
+            <dd>{text}</dd>
+          </div>
+        ))}
+      </dl>
+      <p>
+        <span className="info-label">Data</span>
+        {section.data}
+      </p>
+      <p className="info-note">Details and validation: docs/factor-model.md</p>
+    </InfoTip>
   );
 }
 
@@ -127,12 +226,13 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
     const label = spec.labelEn ?? spec.label;
     const id = `param-${spec.key}`;
     const isDefault = JSON.stringify(value) === JSON.stringify(defaults[spec.key]);
+    const tip = <ParamTip spec={spec} value={value} defaults={defaults} />;
 
     if (spec.key === 'bevMode') {
       return (
         <div className="param" key={spec.key}>
           <span className="param-label">
-            {label} <ParamInfo spec={spec} defaults={defaults} />
+            {label} {tip}
           </span>
           <div className="segmented" role="radiogroup" aria-label={label}>
             {(['today', 'scenario'] as const).map((mode) => (
@@ -147,10 +247,10 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
     }
     if (typeof value === 'boolean') {
       return (
-        <label className="param param-check" key={spec.key}>
-          <input type="checkbox" checked={value} onChange={(e) => set(spec.key, e.target.checked as never)} />
-          <span>{label}</span> <ParamInfo spec={spec} defaults={defaults} />
-        </label>
+        <div className="param param-check" key={spec.key}>
+          <input id={id} type="checkbox" checked={value} onChange={(e) => set(spec.key, e.target.checked as never)} />
+          <label htmlFor={id}>{label}</label> {tip}
+        </div>
       );
     }
     if (typeof value === 'number' && spec.min !== undefined && spec.max !== undefined) {
@@ -159,9 +259,9 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
       const shown = calibrated ? totals.mfhPerDwelling : value;
       return (
         <div className={`param${disabled ? ' is-disabled' : ''}`} key={spec.key}>
-          <label htmlFor={id} className="param-label">
-            {label} <ParamInfo spec={spec} defaults={defaults} />
-          </label>
+          <span className="param-label">
+            <label htmlFor={id}>{label}</label> {tip}
+          </span>
           <div className="param-row">
             <input
               id={id}
@@ -175,7 +275,7 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
             />
             <output htmlFor={id} className={`num${isDefault ? '' : ' is-changed'}`}>
               {format(spec, shown)}
-              {calibrated ? ' (calibrated)' : ''}
+              {calibrated ? ' (cal.)' : ''}
             </output>
           </div>
         </div>
@@ -185,7 +285,7 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
     return (
       <div className="param param-fixed" key={spec.key}>
         <span className="param-label">
-          {label} <ParamInfo spec={spec} defaults={defaults} />
+          {label} {tip}
         </span>
         <span className="num">{typeof value === 'object' ? 'see info' : format(spec, value)}</span>
       </div>
@@ -207,13 +307,7 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
             {section.total && (
               <span className="num muted">{Math.round(totals[section.total]).toLocaleString('en-GB')} points</span>
             )}
-            <Info label={section.title}>
-              <strong>Formula</strong>
-              <span>{section.formula}</span>
-              <strong>Data</strong>
-              <span>{section.data}</span>
-              <span>Details: docs/factor-model.md</span>
-            </Info>
+            <SectionTip section={section} />
           </summary>
           <div className="factor-params">{specs.filter((s) => section.factors.includes(s.factor)).map(control)}</div>
         </details>

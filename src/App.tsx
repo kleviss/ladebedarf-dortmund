@@ -8,6 +8,8 @@ import { computeFactors, currentStreetDemand } from './lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from './lib/factorData';
 import type { FactorParams } from './lib/factors';
 import { quantileClasses } from './lib/metrics';
+import { PaneResizer, usePaneWidth } from './components/PaneResizer';
+import type { CSSProperties } from 'react';
 
 export default function App() {
   const [data, setData] = useState<AppData | null>(null);
@@ -37,6 +39,7 @@ function Dashboard({ data }: { data: AppData }) {
   const [showChargers, setShowChargers] = useState(true);
   // street-space demand from the factor model; districts missing there keep the ISME estimate
   const [params, setParams] = useState<FactorParams>(factorDefaults);
+  const pane = usePaneWidth();
   const run = useMemo(() => computeFactors(factorDistricts, factorDestinations, params), [params]);
   const factors = useMemo(() => new Map(run.results.map((r) => [r.ubz, r])), [run]);
   const totals = useMemo(
@@ -67,7 +70,10 @@ function Dashboard({ data }: { data: AppData }) {
           <h1>Dortmund Charging Demand</h1>
         </div>
       </header>
-      <main className={`current-layout${district ? ' has-selection' : ''}`}>
+      <main
+        className={`current-layout${district ? ' has-selection' : ''}`}
+        style={{ '--filters-w': `${pane.width}px` } as CSSProperties}
+      >
         <Legend
           districts={results}
           selected={selected}
@@ -76,6 +82,7 @@ function Dashboard({ data }: { data: AppData }) {
           onToggleChargers={setShowChargers}
           factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
         />
+        <PaneResizer width={pane.width} onWidth={pane.setWidth} onReset={pane.reset} />
         <div className="map-area">
           <MapView
             data={data}
