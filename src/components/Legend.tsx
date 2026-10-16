@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
+import type { ComponentProps } from 'react';
 import type { District } from '../lib/isme';
+import { FactorControls } from './FactorControls';
 
 interface Props {
   districts: District[];
@@ -7,9 +9,10 @@ interface Props {
   showChargers: boolean;
   onSelect: (ubz: string | null) => void;
   onToggleChargers: (visible: boolean) => void;
+  factorSettings: ComponentProps<typeof FactorControls>;
 }
 
-export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers }: Props) {
+export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings }: Props) {
   const subdistricts = useMemo(
     () => [...districts].sort((a, b) => a.name.localeCompare(b.name, 'en') || a.ubz.localeCompare(b.ubz)),
     [districts],
@@ -32,6 +35,7 @@ export function Legend({ districts, selected, showChargers, onSelect, onToggleCh
         <span className="dot" aria-hidden="true" />
         Show current charging points
       </label>
+      <FactorControls {...factorSettings} />
     </aside>
   );
 }

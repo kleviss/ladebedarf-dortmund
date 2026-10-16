@@ -89,7 +89,7 @@ Current demand is the street-space factor model ([`docs/factor-model.md`](docs/f
 with today's registered EVs: residents without a private charging option, in-commuters spread
 by estimated jobs and visitors by destinations and hotels, rounded up to whole points
 (`computeFactors` + `currentStreetDemand` in `src/lib/factors.ts`). The details panel shows
-the split by group. Car parks, customer parking and fast chargers are not included.
+the split by group. Under *Model settings* the filter pane groups every parameter into General, Residence, Work and Travel: sliders start at the defaults from `parameters.json`, info icons show the formula, data source and kind of each value, and *Reset to defaults* restores them. Car parks, customer parking and fast chargers are not included.
 Districts missing from the model fall back to the ISME public use cases:
 `ceil(totalEvs × (0.026 / 2.94 + 0.103 / 4.08 + 0.039 / 19.1 + 0.202 / 2.8))`.
 Missing points are `max(0, required − existing)`. This stock-only estimate excludes

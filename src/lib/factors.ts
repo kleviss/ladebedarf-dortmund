@@ -76,6 +76,8 @@ export interface ParameterSpec {
   key: keyof FactorParams;
   factor: string;
   label: string;
+  /** English UI label */
+  labelEn?: string;
   default: unknown;
   min?: number;
   max?: number;

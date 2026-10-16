@@ -5,7 +5,8 @@ import { DistrictPanel } from './components/DistrictPanel';
 import { loadData, type AppData } from './lib/data';
 import { computeCurrentDemand } from './lib/isme';
 import { computeFactors, currentStreetDemand } from './lib/factors';
-import { factorDefaults, factorDestinations, factorDistricts } from './lib/factorData';
+import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from './lib/factorData';
+import type { FactorParams } from './lib/factors';
 import { quantileClasses } from './lib/metrics';
 
 export default function App() {
@@ -34,11 +35,19 @@ export default function App() {
 function Dashboard({ data }: { data: AppData }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showChargers, setShowChargers] = useState(true);
-  // street-space demand today from the factor model; districts missing there keep the ISME estimate
-  const factors = useMemo(() => {
-    const run = computeFactors(factorDistricts, factorDestinations, { ...factorDefaults, bevMode: 'today' });
-    return new Map(run.results.map((r) => [r.ubz, r]));
-  }, []);
+  // street-space demand from the factor model; districts missing there keep the ISME estimate
+  const [params, setParams] = useState<FactorParams>(factorDefaults);
+  const run = useMemo(() => computeFactors(factorDistricts, factorDestinations, params), [params]);
+  const factors = useMemo(() => new Map(run.results.map((r) => [r.ubz, r])), [run]);
+  const totals = useMemo(
+    () => ({
+      residents: run.results.reduce((a, r) => a + r.residents, 0),
+      commuters: run.results.reduce((a, r) => a + r.commuters, 0),
+      tourists: run.results.reduce((a, r) => a + r.tourists, 0),
+      mfhPerDwelling: run.mfhPerDwelling,
+    }),
+    [run],
+  );
   const results = useMemo(
     () =>
       data.districts.features.map((f) => {
@@ -65,6 +74,7 @@ function Dashboard({ data }: { data: AppData }) {
           showChargers={showChargers}
           onSelect={setSelected}
           onToggleChargers={setShowChargers}
+          factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
         />
         <div className="map-area">
           <MapView
@@ -80,6 +90,7 @@ function Dashboard({ data }: { data: AppData }) {
           <DistrictPanel
             district={district}
             factors={factors.get(district.ubz)}
+            scenario={params.bevMode === 'scenario' ? params.bevShareScenario : null}
             fetchedAt={data.meta.fetchedAt}
             onClose={() => setSelected(null)}
           />

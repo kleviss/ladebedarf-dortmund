@@ -6,4 +6,5 @@ import { defaultFactorParams, parseCsv, toDestination, toFactorDistrict, type Pa
 
 export const factorDistricts = parseCsv(factorsCsv).map(toFactorDistrict);
 export const factorDestinations = parseCsv(destinationsCsv).map(toDestination);
-export const factorDefaults = defaultFactorParams(parametersJson as unknown as { parameters: ParameterSpec[] });
+export const factorSpecs = (parametersJson as unknown as { parameters: ParameterSpec[] }).parameters;
+export const factorDefaults = defaultFactorParams({ parameters: factorSpecs });

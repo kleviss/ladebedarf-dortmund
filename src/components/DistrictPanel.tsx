@@ -5,6 +5,8 @@ interface Props {
   district: DistrictResult;
   /** Street-space factor model for this district; without it the ISME estimate is shown */
   factors?: FactorResult;
+  /** EV share of the scenario, or null for today's registered EVs */
+  scenario?: number | null;
   fetchedAt: string;
   onClose: () => void;
 }
@@ -12,7 +14,7 @@ interface Props {
 const fmt = (value: number, digits = 0) =>
   value.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-export function DistrictPanel({ district, factors, fetchedAt, onClose }: Props) {
+export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose }: Props) {
   return (
     <aside className="current-district" aria-labelledby="district-title" aria-live="polite">
       <header className="district-head">
@@ -44,7 +46,10 @@ export function DistrictPanel({ district, factors, fetchedAt, onClose }: Props) 
             <div>
               <dt>Residents</dt>
               <dd className="num">{fmt(factors.residents, 1)}</dd>
-              <dd className="hint">{fmt(district.privateEvs)} private EVs, {fmt(factors.homeCoverage * 100)} % can charge at home</dd>
+              <dd className="hint">
+                {scenario === null ? `${fmt(district.privateEvs)} private EVs` : `${fmt(district.privateCars)} private cars × ${fmt(scenario * 100)} %`},{' '}
+                {fmt(factors.homeCoverage * 100)} % can charge at home
+              </dd>
             </div>
             <div>
               <dt>In-commuters</dt>
@@ -58,7 +63,8 @@ export function DistrictPanel({ district, factors, fetchedAt, onClose }: Props) 
             </div>
           </dl>
           <p className="hint">
-            Street-space factor model with today's registered electric cars, no forecast. Car parks, customer
+            Street-space factor model with{' '}
+            {scenario === null ? "today's registered electric cars, no forecast" : `a scenario of ${fmt(scenario * 100)} % electric cars`}. Car parks, customer
             parking and fast chargers are not included. Demand is rounded up to whole charging points.
           </p>
         </>
