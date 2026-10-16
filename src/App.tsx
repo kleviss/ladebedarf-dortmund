@@ -50,7 +50,7 @@ function Dashboard({ data }: { data: AppData }) {
   const sidebar = useSidebar();
 
   const districts = useMemo(() => data.districts.features.map((f) => f.properties), [data]);
-  const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
+  const { results, city, cityPoints, calibration } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
   const sites = useMemo(() => scoreSites(data.parking.features.map((f) => f.properties as SiteSpot), weights), [data, weights]);
   const sitesByUbz = useMemo(() => sitesByDistrict(sites), [sites]);
@@ -144,6 +144,7 @@ function Dashboard({ data }: { data: AppData }) {
             city={city}
             cityPoints={cityPoints}
             evShareToday={evShareToday}
+            calibration={calibration}
             onChange={setScenario}
             onReset={() => setScenario(defaultScenario)}
           />

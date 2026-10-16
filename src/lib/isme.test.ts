@@ -44,7 +44,8 @@ describe('pointsFor', () => {
   });
 });
 
-describe('computeAll per Unterbezirk', () => {
+describe('computeAll per Unterbezirk (city-wide ISME spread)', () => {
+  const ismeDefault: Scenario = { ...defaultScenario, model: 'isme' };
   const d = (ubz: string, privateCars: number, commercialCars: number, chargers: number): District => ({
     ubz,
     name: ubz,
@@ -62,13 +63,13 @@ describe('computeAll per Unterbezirk', () => {
   const districts = [d('001', 3000, 900, 2), d('002', 1000, 100, 0)];
 
   it('distributes exactly the city-wide BEV and charging points', () => {
-    const { results, city, cityPoints } = computeAll(districts, defaultScenario);
+    const { results, city, cityPoints } = computeAll(districts, ismeDefault);
     expect(results.reduce((a, r) => a + r.bev, 0)).toBeCloseTo(city.total, 6);
     expect(results.reduce((a, r) => a + r.needed, 0)).toBeCloseTo(cityPoints, 6);
   });
 
   it('falls back to commercial cars when land and POI data are missing', () => {
-    const { results, city } = computeAll(districts, defaultScenario);
+    const { results, city } = computeAll(districts, ismeDefault);
     expect(results[0].bevResidents).toBeCloseTo(city.residents * 0.75, 6);
     expect(results[0].bevCommuters).toBeCloseTo(city.commuters * 0.9, 6);
     expect(results[0].bevTourists).toBeCloseTo(city.tourists * 0.9, 6);
@@ -79,7 +80,7 @@ describe('computeAll per Unterbezirk', () => {
       { ...districts[0], commercialHa: 10, poisShopping: 1, poisLeisure: 0 },
       { ...districts[1], commercialHa: 30, poisShopping: 2, poisLeisure: 1 },
     ];
-    const { results, city } = computeAll(enriched, defaultScenario);
+    const { results, city } = computeAll(enriched, ismeDefault);
     expect(results[0].bevCommuters).toBeCloseTo(city.commuters * 0.25, 6);
     expect(results[0].bevTourists).toBeCloseTo(city.tourists * 0.25, 6);
     expect(results.reduce((a, r) => a + r.bev, 0)).toBeCloseTo(city.total, 6);
@@ -87,7 +88,7 @@ describe('computeAll per Unterbezirk', () => {
 
   it('subtracts existing points and never returns a negative gap', () => {
     // two test districts carry the whole city's demand, so the stock has to be huge
-    const { results } = computeAll(districts, { ...defaultScenario, pointsPerSite: 100000 });
+    const { results } = computeAll(districts, { ...ismeDefault, pointsPerSite: 100000 });
     expect(results[0].existing).toBe(200000);
     expect(results[0].gap).toBe(0);
     expect(results[1].gap).toBeCloseTo(results[1].needed, 6);

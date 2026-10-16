@@ -126,5 +126,27 @@
   "sites": {
     "candidates": 3446,
     "radiusMetres": 225
+  },
+  "bottomup": {
+    "fetchedAt": "2026-10-16T14:18:38.672Z",
+    "sources": [
+      "Open Data Dortmund: liegenschaftskataster-gebaude-bauwerke (ALKIS, Gebäudefunktion und Geschosse)",
+      "Open Data Dortmund: haltestellen (Stadtbahn)",
+      "OpenStreetMap: Bushaltestellen, Bahnhöfe, Straßenbahn",
+      "OpenStreetMap: Ladestationen ≥ 100 kW"
+    ],
+    "efhBuildings": 84682,
+    "mfhBuildings": 28778,
+    "dwellingsEfh": 110090,
+    "dwellingsMfh": 175031,
+    "garages": 67362,
+    "commerceBuildings": 11356,
+    "industryBuildings": 6980,
+    "railStops": 385,
+    "busStops": 1981,
+    "hpcPoints": 54,
+    "railMetres": 600,
+    "busMetres": 300,
+    "hpcKw": 100
   }
 }

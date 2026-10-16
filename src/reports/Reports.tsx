@@ -3,6 +3,7 @@ import { loadData, type AppData, type DistanceBand, type ParkingSpot } from '../
 import { computeAll, fmt, pct, ISME, useCasesFor, type DistrictResult, type Scenario } from '../lib/isme';
 import { readUrlState } from '../lib/urlState';
 import { PageTabs } from '../components/PageTabs';
+import { BottomUpReport } from './BottomUpReport';
 import { CriteriaTable, criteriaOf, scoredSites, SitesReport, type Criterion } from './SitesReport';
 
 // One page, several presentation-ready reports. Each report is a <section> with
@@ -13,6 +14,7 @@ const REPORTS = [
   { id: 'prioritaeten', title: 'Prioritäten je Unterbezirk' },
   { id: 'parken', title: 'Parken und Ladeinfrastruktur' },
   { id: 'abdeckung', title: 'Abdeckung nach Gehweite' },
+  { id: 'bottom-up', title: 'Von stadtweit zu Bottom-up' },
   { id: 'standorte', title: 'Standorte im Unterbezirk' },
   { id: 'methode', title: 'Methode und Kriterien' },
   { id: 'datenqualitaet', title: 'Datenqualität und offene Fragen' },
@@ -72,6 +74,7 @@ function ReportBody({ data }: { data: AppData }) {
       <Priorities results={results} />
       <Parking results={results} spots={data.parking.features.map((f) => f.properties)} data={data} />
       <Coverage results={results} data={data} />
+      <BottomUpReport data={data} scenario={scenario} />
       <SitesReport data={data} results={results} sites={sites} />
       <Method scenario={scenario} cityPoints={cityPoints} city={city} criteria={criteriaOf(data, results, city, sites)} />
       <DataQuality data={data} />

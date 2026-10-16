@@ -16,6 +16,8 @@
 //   tourists' BEV by shopping and leisure points of interest (OSM), as in the report.
 //   Commercial cars remain available as the earlier fallback for both.
 
+import { computeBottomUp, type Calibration } from './bottomup';
+
 export interface District {
   ubz: string;
   name: string;
@@ -49,6 +51,25 @@ export interface District {
   /** Development plans, all / in force since 2015 */
   bplans?: number;
   bplansRecent?: number;
+  // bottom-up factors (scripts/build-bottomup.mjs)
+  efhBuildings?: number;
+  mfhBuildings?: number;
+  /** Estimated dwellings in detached / semi-detached houses (≤ 2 storeys) */
+  dwellingsEfh?: number;
+  /** Estimated dwellings in apartment blocks and mixed-use buildings */
+  dwellingsMfh?: number;
+  garages?: number;
+  commerceBuildings?: number;
+  industryBuildings?: number;
+  residentialBuildings?: number;
+  /** Share of residential buildings ≤ 600 m from rail (Stadtbahn, tram, station) */
+  transitRail?: number;
+  /** Share with only a bus stop ≤ 300 m */
+  transitBus?: number;
+  /** transitRail + 0.3 × transitBus */
+  transitShare?: number;
+  hpcSites?: number;
+  hpcPoints?: number;
 }
 
 export type Year = 2030 | 2036;
@@ -57,8 +78,11 @@ export type Scope = 'street' | 'public';
 export type ResidentKey = 'cars' | 'evs';
 export type CommuterKey = 'commercialArea' | 'commercialCars';
 export type TouristKey = 'pois' | 'commercialCars';
+export type Model = 'bottomup' | 'isme';
 
 export interface Scenario {
+  /** bottomup: local factors per Unterbezirk; isme: city-wide ISME shares spread to districts */
+  model: Model;
   year: Year;
   /** BEV share of the car stock, 0–1 (Excel columns: 5–50 %) */
   bevShare: number;
@@ -79,6 +103,22 @@ export interface Scenario {
   touristKey: TouristKey;
   /** Charging points per location in the city's charger file */
   pointsPerSite: number;
+  // --- bottom-up model ---
+  /** Home-charging share for dwellings in detached / semi-detached houses */
+  homeEfh: number;
+  /** Home-charging share in apartment blocks (only used without calibration) */
+  homeMfh: number;
+  /** BEV per street point in the most residential / most commercial district */
+  sharingRes: number;
+  sharingCom: number;
+  /** Scale home shares and sharing factors so the city averages match ISME */
+  calibrate: boolean;
+  /** Existing HPC points relieve street demand (≤ 38 %) */
+  hpcLever: boolean;
+  /** Share of commercial-fleet BEV that needs public charging */
+  fleetPublic: number;
+  /** Car reduction in the best-served district (scaled by transit access) */
+  carReduction: number;
 }
 
 export interface UseCase {
@@ -118,6 +158,15 @@ export const defaultScenario: Scenario = {
   commuterKey: 'commercialArea',
   touristKey: 'pois',
   pointsPerSite: 1,
+  model: 'bottomup',
+  homeEfh: 0.9,
+  homeMfh: 0.45,
+  sharingRes: 1.5,
+  sharingCom: 5,
+  calibrate: true,
+  hpcLever: true,
+  fleetPublic: 0.3,
+  carReduction: 0,
 };
 
 export interface CityBev {
@@ -332,7 +381,11 @@ export function computeDistrict(d: District, s: Scenario, city: CityBev, t: Tota
   };
 }
 
-export function computeAll(districts: District[], s: Scenario): { results: DistrictResult[]; city: CityBev; cityPoints: number } {
+export function computeAll(
+  districts: District[],
+  s: Scenario,
+): { results: DistrictResult[]; city: CityBev; cityPoints: number; calibration?: Calibration } {
+  if (s.model === 'bottomup') return computeBottomUp(districts, s);
   const city = cityBev(s);
   const t = totalsOf(districts);
   return {

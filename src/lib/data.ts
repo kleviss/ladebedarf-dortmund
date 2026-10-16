@@ -28,6 +28,22 @@ export interface CityMeta {
       byKind: Record<ParkingSpot['kind'], DistanceBand>;
     };
   };
+  bottomup?: {
+    sources: string[];
+    efhBuildings: number;
+    mfhBuildings: number;
+    dwellingsEfh: number;
+    dwellingsMfh: number;
+    garages: number;
+    commerceBuildings: number;
+    industryBuildings: number;
+    railStops: number;
+    busStops: number;
+    hpcPoints: number;
+    railMetres: number;
+    busMetres: number;
+    hpcKw: number;
+  };
   enrichment?: {
     sources: string[];
     poisShopping: number;

@@ -1,6 +1,6 @@
 import { fmt, pct, type DistrictResult } from './isme';
 
-export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage' | 'parkingUncovered' | 'carDensity' | 'buildingsCoveredShare' | 'bplansRecent' | 'pois' | 'commercialHa';
+export type MetricKey = 'gap' | 'gapPer1000Cars' | 'needed' | 'existing' | 'evShareToday' | 'newEvsPer1000Cars' | 'coverage' | 'parkingUncovered' | 'carDensity' | 'buildingsCoveredShare' | 'bplansRecent' | 'pois' | 'commercialHa' | 'homeShare' | 'efhShare' | 'streetFactorLocal' | 'transit' | 'fleetBev' | 'hpcRelief';
 
 export interface Metric {
   key: MetricKey;
@@ -49,8 +49,37 @@ export const METRICS: Metric[] = [
   { key: 'pois', label: 'Einkaufs- und Freizeitziele (POIs)', short: 'POIs', value: (r) => (r.poisShopping ?? 0) + (r.poisLeisure ?? 0), format: (n) => fmt(n) },
   { key: 'commercialHa', label: 'Gewerbeflächen (ha)', short: 'Gewerbe', value: (r) => r.commercialHa ?? 0, format: (n) => `${fmt(n)} ha` },
   { key: 'bplansRecent', label: 'Bebauungspläne seit 2015 (Neubau-Indikator)', short: 'B-Pläne seit 2015', value: (r) => r.bplansRecent ?? 0, format: (n) => fmt(n) },
+  // bottom-up factors (0 when the city-wide ISME model is active)
+  { key: 'homeShare', label: 'Laden zu Hause (Bottom-up)', short: 'zu Hause', value: (r) => num(r, 'homeShare'), format: (n) => pct(n) },
+  {
+    key: 'efhShare',
+    label: 'Wohnungen in Ein-/Zweifamilienhäusern (ALKIS)',
+    short: 'EFH-Anteil',
+    value: (r) => {
+      const e = r.dwellingsEfh ?? 0;
+      const m = r.dwellingsMfh ?? 0;
+      return e + m > 0 ? e / (e + m) : 0;
+    },
+    format: (n) => pct(n),
+  },
+  {
+    key: 'streetFactorLocal',
+    label: 'BEV je Straßen-Ladepunkt (Bottom-up)',
+    short: 'BEV je LP',
+    value: (r) => num(r, 'streetFactorLocal'),
+    format: (n) => fmt(n, 2),
+  },
+  { key: 'transit', label: 'ÖPNV-Anbindung (Wohngebäude ≤ 600 m Schiene)', short: 'ÖPNV', value: (r) => r.transitRail ?? 0, format: (n) => pct(n) },
+  { key: 'fleetBev', label: 'BEV Gewerbeflotten (Bottom-up)', short: 'Flotten-BEV', value: (r) => num(r, 'fleetBev'), format: (n) => fmt(n) },
+  { key: 'hpcRelief', label: 'Entlastung durch HPC (BEV, Bottom-up)', short: 'HPC-Entlastung', value: (r) => num(r, 'hpcRelief'), format: (n) => fmt(n) },
   { key: 'evShareToday', label: 'E-Anteil am Pkw-Bestand heute', short: 'E-Anteil', value: (r) => r.evShareToday, format: (n) => pct(n, 1) },
 ];
+
+/** Bottom-up-only fields; 0 for the city-wide ISME model. */
+function num(r: DistrictResult, key: string): number {
+  const v = (r as unknown as Record<string, unknown>)[key];
+  return typeof v === 'number' ? v : 0;
+}
 
 export const metricByKey = (key: MetricKey) => METRICS.find((m) => m.key === key) ?? METRICS[0];
 

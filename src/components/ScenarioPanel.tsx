@@ -1,4 +1,5 @@
 import { fmt, pct, type CityBev, type Scenario } from '../lib/isme';
+import type { Calibration } from '../lib/bottomup';
 
 interface Props {
   scenario: Scenario;
@@ -7,6 +8,7 @@ interface Props {
   evShareToday: number;
   onChange: (s: Scenario) => void;
   onReset: () => void;
+  calibration?: Calibration;
 }
 
 interface Option<T> {
@@ -86,7 +88,8 @@ function Slider({
   );
 }
 
-export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onChange, onReset }: Props) {
+export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, calibration, onChange, onReset }: Props) {
+  const bottomUp = s.model === 'bottomup';
   const set = (patch: Partial<Scenario>) => onChange({ ...s, ...patch });
 
   return (
@@ -109,6 +112,22 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onC
           {fmt(city.residents)} Einwohner · {fmt(city.commuters)} Pendelnde · {fmt(city.tourists)} Tourismus
         </span>
       </div>
+
+      <Segmented<Scenario['model']>
+        name="model"
+        label="Modell"
+        value={s.model}
+        options={[
+          { value: 'bottomup', label: 'Bottom-up je Unterbezirk' },
+          { value: 'isme', label: 'ISME stadtweit' },
+        ]}
+        onChange={(model) => set({ model })}
+        hint={
+          bottomUp
+            ? 'ISME-Methode mit lokalen Daten: Wohnform, Gewerbemix, HPC, Flotten, ÖPNV'
+            : 'ISME-Tabelle unverändert, nur auf Unterbezirke verteilt (Vergleich)'
+        }
+      />
 
       <Segmented<Scenario['year']>
         name="year"
@@ -134,18 +153,20 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onC
         onChange={(v) => set({ bevShare: v / 100 })}
       />
 
-      <Segmented<Scenario['method']>
-        name="method"
-        label="Berechnung"
-        value={s.method}
-        options={[
-          { value: 'usecase', label: 'Lade-Use-Cases' },
-          { value: 'ratio', label: 'Verhältnis BEV : LP' },
-        ]}
-        onChange={(method) => set({ method })}
-      />
+      {!bottomUp && (
+        <Segmented<Scenario['method']>
+          name="method"
+          label="Berechnung"
+          value={s.method}
+          options={[
+            { value: 'usecase', label: 'Lade-Use-Cases' },
+            { value: 'ratio', label: 'Verhältnis BEV : LP' },
+          ]}
+          onChange={(method) => set({ method })}
+        />
+      )}
 
-      {s.method === 'ratio' ? (
+      {!bottomUp && s.method === 'ratio' ? (
         <Segmented<number>
           name="ratio"
           label="BEV je Ladepunkt"
@@ -169,7 +190,7 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onC
           />
           <Segmented<number>
             name="street-factor"
-            label="BEV je Ladepunkt im Straßenraum"
+            label={bottomUp ? 'Mittel BEV je Ladepunkt im Straßenraum' : 'BEV je Ladepunkt im Straßenraum'}
             value={s.streetFactor}
             options={[
               { value: 2.8, label: '2,8 (ISME)' },
@@ -193,16 +214,114 @@ export function ScenarioPanel({ scenario: s, city, cityPoints, evShareToday, onC
         </>
       )}
 
-      <Segmented<Scenario['residentKey']>
-        name="resident-key"
-        label="Einwohner-BEV verteilen nach"
-        value={s.residentKey}
-        options={[
-          { value: 'cars', label: 'Private Pkw' },
-          { value: 'evs', label: 'Private E-Pkw heute' },
-        ]}
-        onChange={(residentKey) => set({ residentKey })}
-      />
+      {bottomUp && (
+        <div className="subpanel">
+          <h3>Lokale Faktoren je Unterbezirk</h3>
+          <Slider
+            id="home-efh"
+            label="1 · Laden zu Hause im Ein-/Zweifamilienhaus"
+            hint={`Wohnform aus ALKIS (Gebäudefunktion, Geschosse). Mehrfamilienhaus: ${pct(calibration?.homeMfh ?? s.homeMfh)}${s.calibrate ? ', kalibriert auf ISME 52 %' : ''}`}
+            value={Math.round(s.homeEfh * 100)}
+            min={50}
+            max={89}
+            step={1}
+            display={pct(s.homeEfh)}
+            onChange={(v) => set({ homeEfh: v / 100 })}
+          />
+          {!s.calibrate && (
+            <Slider
+              id="home-mfh"
+              label="Laden zu Hause im Mehrfamilienhaus"
+              hint="Ohne Kalibrierung frei wählbar"
+              value={Math.round(s.homeMfh * 100)}
+              min={0}
+              max={80}
+              step={1}
+              display={pct(s.homeMfh)}
+              onChange={(v) => set({ homeMfh: v / 100 })}
+            />
+          )}
+          <Slider
+            id="sharing-res"
+            label="2 · BEV je Straßen-LP im Wohngebiet"
+            hint="Über Nacht parken: wenige Autos teilen sich einen Ladepunkt"
+            value={s.sharingRes}
+            min={1}
+            max={3}
+            step={0.1}
+            display={fmt(s.sharingRes, 1)}
+            onChange={(sharingRes) => set({ sharingRes })}
+          />
+          <Slider
+            id="sharing-com"
+            label="BEV je Straßen-LP im Gewerbegebiet"
+            hint={`Kurzes Parken: mehr Wechsel. Mischung aus ALKIS (Handel, Büro, Gewerbe)${s.calibrate ? `; skaliert ×${fmt(calibration?.sharingScale ?? 1, 2)} auf Mittel ${fmt(s.streetFactor, 1)}` : ''}`}
+            value={s.sharingCom}
+            min={3}
+            max={8}
+            step={0.5}
+            display={fmt(s.sharingCom, 1)}
+            onChange={(sharingCom) => set({ sharingCom })}
+          />
+          <Segmented<'on' | 'off'>
+            name="calibrate"
+            label="Auf ISME-Stadtmittel kalibrieren"
+            value={s.calibrate ? 'on' : 'off'}
+            options={[
+              { value: 'on', label: 'Ja (52 %, 2,8)' },
+              { value: 'off', label: 'Nein' },
+            ]}
+            onChange={(v) => set({ calibrate: v === 'on' })}
+            hint="Ja: lokale Faktoren verteilen den ISME-Bedarf um, ohne das Stadtmittel zu ändern"
+          />
+          <Segmented<'on' | 'off'>
+            name="hpc-lever"
+            label="3 · HPC-Entlastung"
+            value={s.hpcLever ? 'on' : 'off'}
+            options={[
+              { value: 'on', label: 'An' },
+              { value: 'off', label: 'Aus' },
+            ]}
+            onChange={(v) => set({ hpcLever: v === 'on' })}
+            hint="Vorhandene Schnelllader ≥ 100 kW (OSM) ersetzen bis zu 38 % des Straßenbedarfs im Bezirk"
+          />
+          <Slider
+            id="fleet-public"
+            label="4 · Gewerbeflotten: öffentlich ladend"
+            hint="Gewerbliche Pkw je Unterbezirk (Statistik Stadt), die ISME nicht zählt"
+            value={Math.round(s.fleetPublic * 100)}
+            min={0}
+            max={60}
+            step={5}
+            display={pct(s.fleetPublic)}
+            onChange={(v) => set({ fleetPublic: v / 100 })}
+          />
+          <Slider
+            id="car-reduction"
+            label="5 · Verkehrswende: weniger Pkw (max.)"
+            hint="Voll im bestangebundenen Bezirk, kaum am Stadtrand (Wohngebäude ≤ 600 m zur Schiene). ISME zeigt −20 %."
+            value={Math.round(s.carReduction * 100)}
+            min={0}
+            max={30}
+            step={5}
+            display={s.carReduction > 0 ? `−${pct(s.carReduction)}` : 'aus'}
+            onChange={(v) => set({ carReduction: v / 100 })}
+          />
+        </div>
+      )}
+
+      {!bottomUp && (
+        <Segmented<Scenario['residentKey']>
+          name="resident-key"
+          label="Einwohner-BEV verteilen nach"
+          value={s.residentKey}
+          options={[
+            { value: 'cars', label: 'Private Pkw' },
+            { value: 'evs', label: 'Private E-Pkw heute' },
+          ]}
+          onChange={(residentKey) => set({ residentKey })}
+        />
+      )}
 
       <Segmented<Scenario['commuterKey']>
         name="commuter-key"

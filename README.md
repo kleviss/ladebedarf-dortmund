@@ -126,6 +126,23 @@ As in the report, commuters are spread by workplaces and tourists by points of i
 
 **Defaults:** 2030, 15 % BEV, use-case method, all publicly accessible points, 2.8 BEV per street point, 10.3 % customer parking, 1 charging point per location. At these settings the city needs 7,465 points; 912 locations exist.
 
+### Bottom-up model (default)
+
+[`src/lib/bottomup.ts`](src/lib/bottomup.ts) keeps the ISME structure but replaces each city-wide average that really differs between neighbourhoods with that Unterbezirk's own data. The city-wide ISME spread stays one click away ("Modell: ISME stadtweit") for comparison; the report *Von stadtweit zu Bottom-up* shows both side by side.
+
+| ISME assumption | Bottom-up per Unterbezirk | Data |
+|---|---|---|
+| 52 % of BEV charge at home everywhere | Home share from the mix of dwellings in detached houses (≤ 2 storeys) vs apartment blocks: 20 % to 86 % | ALKIS buildings (function, storeys), Open Data |
+| 2.8 BEV per street charging point everywhere | 1.5 in purely residential to 5 in commercial districts (overnight vs short stays) | ALKIS: shops, offices, industry vs housing |
+| HPC can cut AC demand by up to 38 % (not located) | Existing HPC points (≥ 100 kW) absorb 19.1 BEV each from street demand in their district, max. 38 % | OpenStreetMap charging stations |
+| Private cars only | Commercial cars × BEV share, 30 % of them charge publicly | City statistics per Unterbezirk |
+| −20 % cars shown as a city-wide scenario | Reduction scaled by rail access: full in the best-served district, ~0 at the edge (off by default) | Open Data Stadtbahn stops + OSM rail/bus stops |
+| Visitors split like residents (Excel) | Tourists charge only in public, commuters ~88 % at the employer | ISME report, Sankey (chapter 5.6) |
+
+With calibration on (default), home shares and sharing factors are scaled so the city averages stay 52 % and 2.8: local data redistributes the demand rather than inventing a new total. At 2030 / 15 % BEV the bottom-up model needs 8,552 public points (ISME spread: 7,465) and moves about 1,460 points between districts; street points at 18 % BEV come to ~6,600 (ISME report: 5,567, Excel: 5,969). Datasets suggested elsewhere, such as branches by sector, employees at place of work, households or social indicators, exist only city-wide or per Stadtbezirk, so they cannot differentiate Unterbezirke.
+
+Data: [`scripts/build-bottomup.mjs`](scripts/build-bottomup.mjs) (part of `npm run data`). Tests: [`src/lib/bottomup.test.ts`](src/lib/bottomup.test.ts).
+
 **Open points in the city's material** (switchable in the app):
 
 - The Excel labels customer parking 10.3 % but its formula uses 1.3 % (`=C22*0.013`).

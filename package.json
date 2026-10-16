@@ -11,10 +11,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "data": "node scripts/build-city-data.mjs && node scripts/build-parking.mjs && node scripts/build-enrichment.mjs && node scripts/build-sites.mjs",
+    "data": "node scripts/build-city-data.mjs && node scripts/build-parking.mjs && node scripts/build-enrichment.mjs && node scripts/build-bottomup.mjs && node scripts/build-sites.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "data:refresh": "node scripts/build-city-data.mjs --refresh && node scripts/build-parking.mjs --refresh && node scripts/build-enrichment.mjs --refresh && node scripts/build-sites.mjs",
+    "data:refresh": "node scripts/build-city-data.mjs --refresh && node scripts/build-parking.mjs --refresh && node scripts/build-enrichment.mjs --refresh && node scripts/build-bottomup.mjs --refresh && node scripts/build-sites.mjs",
     "data:opendata": "node scripts/build-opendata.mjs"
   },
   "dependencies": {

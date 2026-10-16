@@ -934,3 +934,18 @@ a {
     background: transparent;
   }
 }
+
+/* bottom-up factor group in the scenario panel */
+.subpanel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.subpanel h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
