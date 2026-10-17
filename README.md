@@ -103,7 +103,7 @@ necessarily the source's observation date.
 
 ### Bonus scenarios (bonus tasks of the challenge)
 
-*Bonus scenarios* in the filter pane answer how the street-space demand per Unterbezirk
+*Bonus scenarios* at the bottom of the filter pane answer how the street-space demand per Unterbezirk
 changes if charging moves off the street. Each scenario can be switched on alone or together,
 shows the task's wording, a formula tooltip and its city-wide effect; the details panel shows
 the steps per district, and the map can be coloured by missing points after the scenarios or

@@ -40,9 +40,9 @@ export function Legend({ districts, selected, showChargers, onSelect, onToggleCh
         <span className="dot" aria-hidden="true" />
         Show charging stations
       </label>
-      <BonusControls {...bonus} />
       {sitePlan && <SitePlanControls {...sitePlan} />}
       <FactorControls {...factorSettings} />
+      <BonusControls {...bonus} />
     </aside>
   );
 }
