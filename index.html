@@ -119,10 +119,6 @@
         margin: 0;
         color: #74726c;
       }
-      #boot .boot-dots::after {
-        content: '';
-        animation: boot-dots 1.2s steps(4) infinite;
-      }
       @keyframes boot-flow {
         from { stroke-dashoffset: 48; }
         to { stroke-dashoffset: 0; }
@@ -145,12 +141,6 @@
       @keyframes boot-map-dark {
         from { opacity: 0; transform: scale(1.04); }
         to { opacity: 0.24; transform: scale(1); }
-      }
-      @keyframes boot-dots {
-        0% { content: ''; }
-        25% { content: '.'; }
-        50% { content: '..'; }
-        75% { content: '...'; }
       }
       @media (prefers-color-scheme: dark) {
         #boot {
@@ -175,8 +165,7 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        #boot *,
-        #boot *::after {
+        #boot * {
           animation: none !important;
         }
         #boot .boot-flow {
@@ -222,7 +211,7 @@
         <source srcset="/electricity-logo-dark.png" media="(prefers-color-scheme: dark)" />
         <img class="boot-logo" src="/electricity-logo.png" alt="ElectriCity" width="700" height="126" />
       </picture>
-      <p class="boot-sub">Powering up the map<span class="boot-dots"></span></p>
+      <p class="boot-sub">Powering up the map</p>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
