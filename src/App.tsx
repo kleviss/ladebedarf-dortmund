@@ -10,8 +10,7 @@ import { computeFactors, currentStreetDemand } from './lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from './lib/factorData';
 import type { FactorParams } from './lib/factors';
 import { quantileClasses } from './lib/metrics';
-import { PaneResizer, usePaneWidth } from './components/PaneResizer';
-import type { CSSProperties } from 'react';
+import { SidebarResizer, useSidebar } from './components/SidebarResizer';
 
 export default function App() {
   const [data, setData] = useState<AppData | null>(null);
@@ -67,7 +66,7 @@ function Dashboard({ data }: { data: AppData }) {
   const [showChargers, setShowChargers] = useState(true);
   // street-space demand from the factor model; districts missing there keep the ISME estimate
   const [params, setParams] = useState<FactorParams>(factorDefaults);
-  const pane = usePaneWidth();
+  const sidebar = useSidebar();
   const run = useMemo(() => computeFactors(factorDistricts, factorDestinations, params), [params]);
   const factors = useMemo(() => new Map(run.results.map((r) => [r.ubz, r])), [run]);
   const totals = useMemo(
@@ -132,34 +131,46 @@ function Dashboard({ data }: { data: AppData }) {
         </div>
       </header>
       <main
-        className={`current-layout${panel ? ' has-selection' : ''}${panel === 'sites' ? ' has-sites' : ''}`}
-        style={{ '--filters-w': `${pane.width}px` } as CSSProperties}
+        className={`current-layout${panel ? ' has-selection' : ''}${panel === 'sites' ? ' has-sites' : ''}${
+          sidebar.collapsed ? ' is-collapsed' : ''
+        }${sidebar.floating ? ' is-floating' : ''}`}
+        style={sidebar.style}
       >
-        <Legend
-          districts={results}
-          selected={selected}
-          showChargers={showChargers}
-          onSelect={setSelected}
-          onToggleChargers={setShowChargers}
-          factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
-          sitePlan={
-            plan && siteLevel
-              ? {
-                  levels: plan.levels,
-                  level: siteLevel.level,
-                  exact: siteLevel.exact && otherDefaults,
-                  stations: sites.length,
-                  points: sites.reduce((a, s) => a + s.points, 0),
-                  showSites,
-                  showList,
-                  onLevel: setLevel,
-                  onToggleSites: setShowSites,
-                  onToggleList: setShowList,
-                }
-              : undefined
-          }
+        <div className="filters-slot" hidden={sidebar.collapsed}>
+          <Legend
+            districts={results}
+            selected={selected}
+            showChargers={showChargers}
+            onSelect={setSelected}
+            onToggleChargers={setShowChargers}
+            factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
+            sitePlan={
+              plan && siteLevel
+                ? {
+                    levels: plan.levels,
+                    level: siteLevel.level,
+                    exact: siteLevel.exact && otherDefaults,
+                    stations: sites.length,
+                    points: sites.reduce((a, s) => a + s.points, 0),
+                    showSites,
+                    showList,
+                    onLevel: setLevel,
+                    onToggleSites: setShowSites,
+                    onToggleList: setShowList,
+                  }
+                : undefined
+            }
+          />
+        </div>
+        <SidebarResizer
+          width={sidebar.width}
+          collapsed={sidebar.collapsed}
+          floating={sidebar.floating}
+          onWidth={sidebar.setWidth}
+          onToggle={sidebar.toggle}
+          onToggleFloating={sidebar.toggleFloating}
+          onReset={sidebar.reset}
         />
-        <PaneResizer width={pane.width} onWidth={pane.setWidth} onReset={pane.reset} />
         <div className="map-area">
           <MapView
             data={data}

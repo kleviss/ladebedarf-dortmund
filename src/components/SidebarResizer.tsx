@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 
 const KEY = 'ladebedarf-sidebar';
-const MIN = 300;
-const DEFAULT = 420;
+const MIN = 240;
+const DEFAULT = 320;
 const STEP = 24;
 const maxWidth = () => Math.max(MIN, Math.round(window.innerWidth * 0.6));
 const clamp = (w: number) => Math.min(maxWidth(), Math.max(MIN, Math.round(w)));
@@ -92,9 +92,9 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
         type="button"
         className="sidebar-toggle"
         onClick={onToggle}
-        aria-label={collapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'}
+        aria-label={collapsed ? 'Show filters' : 'Hide filters'}
         aria-expanded={!collapsed}
-        title={collapsed ? 'Seitenleiste einblenden' : 'Seitenleiste ausblenden'}
+        title={collapsed ? 'Show filters' : 'Hide filters'}
       >
         {collapsed ? '›' : '‹'}
       </button>
@@ -103,8 +103,8 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
         className="sidebar-toggle sidebar-mode"
         onClick={onToggleFloating}
         aria-pressed={floating}
-        aria-label={floating ? 'Seitenleiste fest neben die Karte setzen' : 'Seitenleiste über der Karte schweben lassen'}
-        title={floating ? 'Fest neben der Karte anzeigen' : 'Über der Karte schweben lassen'}
+        aria-label={floating ? 'Dock the filters next to the map' : 'Float the filters over the map'}
+        title={floating ? 'Dock next to the map' : 'Float over the map'}
       >
         {floating ? '▣' : '▢'}
       </button>
@@ -113,12 +113,12 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
           className="sidebar-handle"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Breite der Seitenleiste (Pfeiltasten, Doppelklick setzt zurück)"
+          aria-label="Filter pane width (arrow keys; double-click resets)"
           aria-valuemin={MIN}
           aria-valuemax={maxWidth()}
           aria-valuenow={width}
           tabIndex={0}
-          title="Ziehen zum Ändern der Breite, Doppelklick setzt zurück"
+          title="Drag to resize, double-click to reset"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={stop}
