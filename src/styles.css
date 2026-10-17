@@ -1037,42 +1037,81 @@ a {
 }
 
 .current-layout {
+  --lead: var(--sidebar-w, 320px) 10px;
   position: relative;
   display: grid;
-  grid-template-columns: var(--filters-w, 320px) minmax(0, 1fr);
+  grid-template-columns: var(--lead) minmax(0, 1fr);
   min-height: 0;
 }
 
 .current-layout.has-selection {
-  grid-template-columns: var(--filters-w, 320px) minmax(0, 1fr) 340px;
+  grid-template-columns: var(--lead) minmax(0, 1fr) var(--panel-w, 340px);
 }
 
-.pane-resizer {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 5;
-  width: 10px;
-  margin-left: -5px;
+/* collapsed: the hidden filters take no grid cell, so only resizer + map remain */
+.current-layout.is-collapsed {
+  --lead: 10px;
+}
+
+.filters-slot {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+.filters-slot[hidden] {
+  display: none;
+}
+
+/* drag doesn't select text */
+.current-layout:has(.sidebar-resizer.is-dragging) {
+  user-select: none;
   cursor: col-resize;
-  touch-action: none;
 }
 
-.pane-resizer::after {
-  content: '';
+/* floating: the filters overlay the map, which keeps the full width */
+.current-layout.is-floating {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.current-layout.is-floating.has-selection {
+  grid-template-columns: minmax(0, 1fr) var(--panel-w, 340px);
+}
+
+.current-layout.is-floating .filters-slot {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 4px;
-  width: 2px;
-  background: transparent;
-  transition: background 0.15s;
+  left: 0;
+  z-index: 5;
+  width: var(--sidebar-w, 320px);
+  box-shadow: 4px 0 18px rgb(0 0 0 / 0.16);
 }
 
-.pane-resizer:hover::after,
-.pane-resizer:focus-visible::after,
-.pane-resizer.is-dragging::after {
-  background: #256abf;
+.current-layout.is-floating .sidebar-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-w, 320px);
+  width: 10px; /* the handle is absolute too, so it needs its own width */
+  z-index: 6;
+}
+
+.current-layout.is-floating.is-collapsed .sidebar-resizer {
+  left: 0;
+}
+
+/* keep the map legend and scale clear of the filter toggles and the floating filters */
+@media (min-width: 1001px) {
+  .current-layout .map-legend {
+    left: 30px;
+  }
+  .current-layout.is-floating:not(.is-collapsed) .map-legend {
+    left: calc(var(--sidebar-w, 320px) + 30px);
+  }
+  .current-layout.is-floating:not(.is-collapsed) .maplibregl-ctrl-bottom-left {
+    left: calc(var(--sidebar-w, 320px) + 10px);
+  }
 }
 
 .current-filters {
@@ -1182,7 +1221,8 @@ a {
 
 @media (max-width: 1000px) {
   .current-layout,
-  .current-layout.has-selection {
+  .current-layout.has-selection,
+  .current-layout.is-floating.has-selection {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(240px, 1fr);
     overflow-y: auto;
@@ -1196,8 +1236,18 @@ a {
     order: 0;
   }
 
-  .pane-resizer {
+  .current-layout .sidebar-resizer {
     display: none;
+  }
+
+  /* stacked on small screens: filters always shown in the flow */
+  .current-layout .filters-slot,
+  .current-layout.is-floating .filters-slot {
+    position: static;
+    display: grid;
+    width: auto;
+    min-height: auto;
+    box-shadow: none;
   }
 
   .current-filters {
@@ -1690,7 +1740,7 @@ a {
 }
 
 .current-layout.has-sites {
-  grid-template-columns: var(--filters-w, 320px) minmax(0, 1fr) 380px;
+  --panel-w: 380px;
 }
 
 .priority-panel {
