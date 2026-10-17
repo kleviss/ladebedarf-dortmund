@@ -18,6 +18,7 @@ import type { AppData, Station } from '../lib/data';
 import type { DistrictResult } from '../lib/isme';
 import { cityBoundary } from '../lib/cityBoundary';
 import { RAMP, ZERO_COLOR, type Classes } from '../lib/metrics';
+import type { Supermarket } from '../lib/bonus';
 import { GROUP_LABEL, TIER_COLOUR, TIER_LABEL, address, siteNotes, type PlannedSite } from '../lib/sitePlan';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
@@ -28,6 +29,10 @@ interface Props {
   results: Map<string, DistrictResult>;
   /** Colour classes of the missing charging points */
   classes: Classes;
+  /** what the districts are shaded by (default: missing charging points) */
+  shade?: { title: string; value: (r: DistrictResult) => number };
+  /** bonus scenario layers: supermarkets and the city's priority cells */
+  bonusLayers?: { supermarkets: Supermarket[]; priority: boolean } | null;
   selected: string | null;
   showChargers: boolean;
   onSelect: (ubz: string | null) => void;
@@ -59,6 +64,14 @@ interface StationHover {
 const STATION_KIND = (s: Station) =>
   s.type === 'DC' ? 'Fast charger (DC)' : s.streetAc ? 'Public AC' : s.access === 'customers' ? 'Customers only' : 'Car park / private site';
 
+const GAP_SHADE = { title: 'Missing charging points', value: (r: DistrictResult) => r.gap };
+const SUPERMARKET_COLOUR = '#c2410c';
+
+const supermarketsGeoJson = (list: Supermarket[]): GeoJSON.FeatureCollection<GeoJSON.Point> => ({
+  type: 'FeatureCollection',
+  features: list.map((s) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: s.pt }, properties: { parking: s.parking } })),
+});
+
 const sitesGeoJson = (sites: PlannedSite[]): GeoJSON.FeatureCollection<GeoJSON.Point> => ({
   type: 'FeatureCollection',
   features: sites.map((s) => ({
@@ -68,7 +81,7 @@ const sitesGeoJson = (sites: PlannedSite[]): GeoJSON.FeatureCollection<GeoJSON.P
   })),
 });
 
-export function MapView({ data, results, classes, selected, showChargers, onSelect, sites, showSites, focusId, onSiteClick }: Props) {
+export function MapView({ data, results, classes, shade = GAP_SHADE, bonusLayers = null, selected, showChargers, onSelect, sites, showSites, focusId, onSiteClick }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -249,6 +262,30 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
         },
         paint: { 'text-color': ['case', ['==', ['get', 'tier'], 2], '#0b0b0b', '#ffffff'] },
       });
+      // bonus scenarios: the city's priority cells and supermarkets (filled = own car park)
+      map.addSource('priority', { type: 'geojson', data: data.priority });
+      map.addSource('supermarkets', { type: 'geojson', data: supermarketsGeoJson([]) });
+      map.addLayer(
+        {
+          id: 'priority-cells',
+          type: 'fill',
+          source: 'priority',
+          layout: { visibility: 'none' },
+          paint: { 'fill-color': '#6250d6', 'fill-opacity': 0.35, 'fill-outline-color': '#6250d6' },
+        },
+        'sites',
+      );
+      map.addLayer({
+        id: 'supermarkets',
+        type: 'circle',
+        source: 'supermarkets',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 13.5, 5, 15, 7],
+          'circle-color': ['case', ['get', 'parking'], SUPERMARKET_COLOUR, '#ffffff'],
+          'circle-stroke-color': SUPERMARKET_COLOUR,
+          'circle-stroke-width': 1.5,
+        },
+      });
       map.on('mousemove', 'sites', (e: MapLayerMouseEvent) => {
         const id = e.features?.[0]?.properties.id;
         if (id == null) return;
@@ -360,9 +397,16 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
     for (const f of data.districts.features) {
       if (f.id == null) continue;
       const r = results.get(f.properties.ubz);
-      map.setFeatureState({ source: 'ubz', id: f.id }, { cls: r ? classes.classOf(r.gap) : -1 });
+      map.setFeatureState({ source: 'ubz', id: f.id }, { cls: r ? classes.classOf(shade.value(r)) : -1 });
     }
-  }, [ready, results, classes, data]);
+  }, [ready, results, classes, shade, data]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    (map.getSource('supermarkets') as GeoJSONSource | undefined)?.setData(supermarketsGeoJson(bonusLayers?.supermarkets ?? []));
+    map.setLayoutProperty('priority-cells', 'visibility', bonusLayers?.priority ? 'visible' : 'none');
+  }, [ready, bonusLayers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -408,7 +452,7 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
       <div ref={container} className="map-canvas" aria-label="Map of statistical subdistricts" role="region" />
       <div className="map-legend" aria-label="Map legend">
         <div className="map-legend-block">
-          <span className="map-legend-title">Missing charging points</span>
+          <span className="map-legend-title">{shade.title}</span>
           <div className="map-legend-bar">
             {[
               ...(classes.hasZero ? [{ colour: ZERO_COLOR, label: '0' }] : []),
@@ -433,6 +477,25 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
               <li title="Car park or customer parking"><span className="dot dot-offstreet" aria-hidden="true" />Private</li>
             </ul>
             <span className="station-key-note">size = points</span>
+          </div>
+        )}
+        {bonusLayers && (bonusLayers.supermarkets.length > 0 || bonusLayers.priority) && (
+          <div className="map-legend-block">
+            <span className="map-legend-title">Bonus scenarios</span>
+            <ul className="station-key">
+              {bonusLayers.supermarkets.length > 0 && (
+                <li title="Supermarket with its own car park (filled) or without (ring)">
+                  <span className="dot" style={{ background: SUPERMARKET_COLOUR }} aria-hidden="true" />
+                  Supermarket
+                </li>
+              )}
+              {bonusLayers.priority && (
+                <li title="Priority area for charging infrastructure (city of Dortmund)">
+                  <span className="map-legend-swatch" style={{ background: 'rgb(98 80 214 / 0.45)' }} aria-hidden="true" />
+                  Priority area
+                </li>
+              )}
+            </ul>
           </div>
         )}
         {showSites && sites.length > 0 && (
@@ -486,6 +549,9 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
           <strong>{hovered.name}</strong>
           <span className="muted">{hovered.stadtbezirk}</span>
           <span>Missing charging points: <b className="num">{hovered.gap.toLocaleString('en-GB')}</b></span>
+          {hovered.gapBefore !== undefined && hovered.gapBefore !== hovered.gap && (
+            <span className="muted">without bonus scenarios: {hovered.gapBefore.toLocaleString('en-GB')}</span>
+          )}
           <span>Existing: {hovered.existing.toLocaleString('en-GB')} · Required: {hovered.needed.toLocaleString('en-GB')}</span>
         </div>
       )}

@@ -248,6 +248,8 @@ export interface DistrictResult extends District {
   gapPer1000Cars: number;
   coverage: number;
   steps: Step[];
+  /** missing points before the bonus scenarios, when they are applied */
+  gapBefore?: number;
 }
 
 /** Stock-only estimate; no projected growth or additional visitor demand. */
