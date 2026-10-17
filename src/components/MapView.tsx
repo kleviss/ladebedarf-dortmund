@@ -95,7 +95,9 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
       attributionControl: { compact: true },
     });
     mapRef.current = map;
-    const resizeObserver = new ResizeObserver(() => map.resize());
+    // resizing clears the canvas, so draw again right away; otherwise the browser paints a blank frame
+    // on every step of a sidebar drag or window resize (MapLibre's own observer is throttled to 50 ms)
+    const resizeObserver = new ResizeObserver(() => map.resize().redraw());
     resizeObserver.observe(container.current);
     map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right');
     map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
