@@ -72,6 +72,7 @@ function Dashboard({ data }: { data: AppData }) {
   // street-space demand from the factor model; districts missing there keep the ISME estimate
   const [params, setParams] = useState<FactorParams>(factorDefaults);
   const sidebar = useSidebar();
+  const detail = useSidebar('ladebedarf-detail-panel', 360, '--panel-w');
   const run = useMemo(() => computeFactors(factorDistricts, factorDestinations, params), [params]);
   const factors = useMemo(() => new Map(run.results.map((r) => [r.ubz, r])), [run]);
   const totals = useMemo(
@@ -127,19 +128,36 @@ function Dashboard({ data }: { data: AppData }) {
     if (focusId && !sites.some((s) => s.id === focusId)) setFocusId(null);
   }, [sites, focusId]);
   const panel = showList && siteLevel ? 'sites' : district ? 'district' : null;
+  // picking something new on the map brings a collapsed detail panel back
+  const { expand } = detail;
+  useEffect(() => {
+    if (selected || showList) expand();
+  }, [selected, showList, expand]);
 
   return (
     <div className="app current-app">
       <header className="topbar">
         <div className="brand">
+          <picture>
+            <source srcSet={`${import.meta.env.BASE_URL}electricity-logo-dark.png`} media="(prefers-color-scheme: dark)" />
+            <img
+              className="brand-logo"
+              src={`${import.meta.env.BASE_URL}electricity-logo.png`}
+              alt="ElectriCity"
+              width="699"
+              height="125"
+            />
+          </picture>
           <h1>Dortmund Charging Demand</h1>
         </div>
       </header>
       <main
         className={`current-layout${panel ? ' has-selection' : ''}${panel === 'sites' ? ' has-sites' : ''}${
           sidebar.collapsed ? ' is-collapsed' : ''
-        }${sidebar.floating ? ' is-floating' : ''}`}
-        style={sidebar.style}
+        }${sidebar.floating ? ' is-floating' : ''}${detail.collapsed ? ' panel-collapsed' : ''}${
+          detail.floating ? ' panel-floating' : ''
+        }`}
+        style={{ ...sidebar.style, ...detail.style }}
       >
         <div className="filters-slot" hidden={sidebar.collapsed}>
           <Legend
@@ -191,44 +209,59 @@ function Dashboard({ data }: { data: AppData }) {
             onReady={hideBoot}
           />
         </div>
-        {panel === 'sites' && plan && siteLevel && (
-          <PriorityPanel
-            sites={sites}
-            level={siteLevel.level}
-            radius={plan.radius}
-            names={names}
-            district={district ? { ubz: district.ubz, name: district.name } : null}
-            focusId={focusId}
-            done={done}
-            onFocus={setFocusId}
-            onToggleCheck={toggleCheck}
-            onClearDistrict={() => setSelected(null)}
-            onClose={() => {
-              setShowList(false);
-              setFocusId(null);
-            }}
+        {panel && (
+          <SidebarResizer
+            side="right"
+            label="details"
+            width={detail.width}
+            collapsed={detail.collapsed}
+            floating={detail.floating}
+            onWidth={detail.setWidth}
+            onToggle={detail.toggle}
+            onToggleFloating={detail.toggleFloating}
+            onReset={detail.reset}
           />
         )}
-        {panel === 'district' && district && (
-          <DistrictPanel
-            district={district}
-            factors={factors.get(district.ubz)}
-            scenario={params.bevMode === 'scenario' ? params.bevShareScenario : null}
-            fetchedAt={data.meta.fetchedAt}
-            onClose={() => setSelected(null)}
-            plannedSites={
-              siteLevel
-                ? {
-                    level: siteLevel.level.label,
-                    stations: sites.filter((s) => s.ubz === district.ubz).length,
-                    points: sites.filter((s) => s.ubz === district.ubz).reduce((a, s) => a + s.points, 0),
-                    unplaced: siteLevel.level.unplaced[district.ubz] ?? 0,
-                    onShow: () => setShowList(true),
-                  }
-                : undefined
-            }
-          />
-        )}
+        <div className="detail-slot" hidden={!panel || detail.collapsed}>
+          {panel === 'sites' && plan && siteLevel && (
+            <PriorityPanel
+              sites={sites}
+              level={siteLevel.level}
+              radius={plan.radius}
+              names={names}
+              district={district ? { ubz: district.ubz, name: district.name } : null}
+              focusId={focusId}
+              done={done}
+              onFocus={setFocusId}
+              onToggleCheck={toggleCheck}
+              onClearDistrict={() => setSelected(null)}
+              onClose={() => {
+                setShowList(false);
+                setFocusId(null);
+              }}
+            />
+          )}
+          {panel === 'district' && district && (
+            <DistrictPanel
+              district={district}
+              factors={factors.get(district.ubz)}
+              scenario={params.bevMode === 'scenario' ? params.bevShareScenario : null}
+              fetchedAt={data.meta.fetchedAt}
+              onClose={() => setSelected(null)}
+              plannedSites={
+                siteLevel
+                  ? {
+                      level: siteLevel.level.label,
+                      stations: sites.filter((s) => s.ubz === district.ubz).length,
+                      points: sites.filter((s) => s.ubz === district.ubz).reduce((a, s) => a + s.points, 0),
+                      unplaced: siteLevel.level.unplaced[district.ubz] ?? 0,
+                      onShow: () => setShowList(true),
+                    }
+                  : undefined
+              }
+            />
+          )}
+        </div>
       </main>
     </div>
   );
