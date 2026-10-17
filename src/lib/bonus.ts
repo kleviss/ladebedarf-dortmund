@@ -1,4 +1,4 @@
-// Bonus tasks of the challenge: how street-space demand per Unterbezirk changes if …
+// Off-street charging: how street-space demand per Unterbezirk changes if …
 //   1 every supermarket car park gets 10 charging points (and takes a share of the demand),
 //   2 20 % of the parking at buildings in the city's priority area gets charging points,
 //   3 20 % of the parking in commercial areas gets charging points.
@@ -73,7 +73,7 @@ export const bonusDefaults: BonusParams = {
 export const anyBonus = (p: BonusParams) => p.supermarket || p.priority || p.commercial;
 
 export interface BonusEffect {
-  /** missing points without the scenarios */
+  /** missing points without off-street charging */
   before: number;
   priority: { points: number; evs: number; relief: number };
   commercial: { points: number; evs: number; relief: number; night: number };
@@ -85,7 +85,7 @@ export interface BonusEffect {
 
 const ZERO = { ubz: '', supermarkets: 0, supermarketsWithParking: 0, commercialHa: 0, commercialLots: 0, commercialSpaces: 0, priorityLots: 0, priorityGarages: 0, prioritySpaces: 0 };
 
-/** Street-space effect of the active bonus scenarios on one district. */
+/** Street-space effect of the active off-street charging features on one district. */
 export function bonusEffect(
   f: FactorResult,
   b: BonusDistrict | undefined,
@@ -124,7 +124,7 @@ export function bonusEffect(
   return { before, priority, commercial, middle, supermarket, after: middle - supermarket.takes };
 }
 
-/** A district result with the scenarios applied: missing points after them, demand reduced by the relief. */
+/** A district result with the features applied: missing points after them, demand reduced by the relief. */
 export function applyBonus(r: DistrictResult, e: BonusEffect): DistrictResult {
   const reduction = e.before - e.after;
   if (reduction === 0) return { ...r, gapBefore: e.before };

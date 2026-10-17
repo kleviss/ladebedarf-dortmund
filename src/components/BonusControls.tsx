@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react';
-import { bonusDefaults, type BonusData, type BonusParams } from '../lib/bonus';
+import { bonusDefaults, type BonusData, type BonusDistrict, type BonusEffect, type BonusParams } from '../lib/bonus';
 import { InfoTip, Tex } from './InfoTip';
 
 export interface BonusSummary {
-  /** missing points city-wide without and with the active scenarios */
+  /** missing points city-wide without and with the active features */
   before: number;
   after: number;
-  /** city-wide reduction of missing street points per scenario */
+  /** city-wide reduction of missing street points per feature */
   priority: number;
   commercial: number;
   supermarket: number;
-  /** new charging points the scenarios install off the street */
+  /** new charging points the features install off the street */
   newPoints: { priority: number; commercial: number; supermarket: number };
 }
 
@@ -27,6 +27,8 @@ interface Props {
   onChange: (params: BonusParams) => void;
   onMap: (map: BonusMap) => void;
   onToggleLayers: (visible: boolean) => void;
+  /** the selected subdistrict: features without sites there are switched off for it */
+  area?: { name: string; sites: BonusDistrict | undefined; effect: BonusEffect | undefined } | null;
 }
 
 const fmt = (n: number, digits = 0) => n.toLocaleString('en-GB', { maximumFractionDigits: digits, minimumFractionDigits: digits });
@@ -34,7 +36,6 @@ const pct = (n: number) => `${fmt(n * 100)} %`;
 
 interface Tip {
   title: string;
-  task: string;
   tex: string[];
   legend: [string, string][];
   data: string;
@@ -53,7 +54,6 @@ function ScenarioTip({ tip }: { tip: Tip }) {
         <span className="info-card-title">{tip.title}</span>
         <span className="info-label">Formula</span>
       </header>
-      <p className="bonus-task">„{tip.task}“</p>
       <div className="info-formula">
         {tip.tex.map((t) => (
           <Tex key={t} tex={t} display />
@@ -85,7 +85,7 @@ function ScenarioTip({ tip }: { tip: Tip }) {
   );
 }
 
-export function BonusControls({ data, params, summary, bevShare, map, showLayers, onChange, onMap, onToggleLayers }: Props) {
+export function BonusControls({ data, params, summary, bevShare, map, showLayers, onChange, onMap, onToggleLayers, area = null }: Props) {
   const set = <K extends keyof BonusParams>(key: K, value: BonusParams[K]) => onChange({ ...params, [key]: value });
   const active = params.supermarket || params.priority || params.commercial;
   const t = data?.totals;
@@ -94,8 +94,7 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
 
   const TIPS: Record<'supermarket' | 'priority' | 'commercial', Tip> = {
     supermarket: {
-      title: 'Bonus 1 · Supermarket car parks',
-      task: 'auf jeden Supermarktparkplatz im Unterbezirk 10 LP installiert sind',
+      title: 'Supermarket car parks',
       tex: [
         'L_u = \\lambda\\, S_u',
         '\\Delta^{S}_u = \\operatorname{round}\\!\\big(\\min(L_u,\\ \\alpha\\cdot \\text{missing}\'_u)\\big)',
@@ -105,7 +104,7 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
         ['S_u', 'supermarkets with their own car park'],
         ['\\lambda', 'charging points per supermarket (10)'],
         ['\\alpha', 'share of the missing points a supermarket can take'],
-        ['\\text{missing}\'_u', 'missing street points after bonus 2 and 3'],
+        ['\\text{missing}\'_u', 'missing street points after buildings and commercial areas'],
       ],
       data: `OpenStreetMap shop=supermarket: ${t ? fmt(t.supermarkets) : '…'} supermarkets, ${t ? fmt(t.supermarketsWithParking) : '…'} with an off-street car park within ${a?.supermarketMetres ?? 100} m.`,
       assumptions: [
@@ -115,8 +114,7 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
       ],
     },
     priority: {
-      title: 'Bonus 2 · Buildings in the priority area',
-      task: '20 % der Parkplätze an Gebäuden in der Fläche mit Priorität für den Ladeinfrastruktur-Ausbau mit Ladepunkten ausgerüstet werden',
+      title: 'Buildings in priority areas',
       tex: [
         'p_u = \\operatorname{round}(\\beta\\, B_u)',
         'n_u = \\min(p_u,\\ e\\, B_u)',
@@ -138,8 +136,7 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
       ],
     },
     commercial: {
-      title: 'Bonus 3 · Commercial areas',
-      task: '20 % der Parkplätze in Gewerbegebieten mit Ladepunkten ausgerüstet werden',
+      title: 'Commercial areas',
       tex: [
         'p_u = \\operatorname{round}(\\gamma\\, C_u),\\quad n_u = \\min(p_u,\\ e\\, C_u)',
         '\\Delta^{C}_u = \\min\\!\\left(W_u,\\ \\dfrac{n_u\\, r_W}{k}\\right)',
@@ -161,25 +158,62 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
     },
   };
 
-  const scenario = (key: 'supermarket' | 'priority' | 'commercial', label: string, reduction: number, points: number, body: ReactNode) => (
-    <div className={`bonus-card${params[key] ? ' is-on' : ''}`}>
-      <div className="bonus-card-head">
-        <input id={`bonus-${key}`} type="checkbox" checked={params[key]} disabled={!data} onChange={(e) => set(key, e.target.checked)} />
-        <label htmlFor={`bonus-${key}`}>{label}</label>
-        <ScenarioTip tip={TIPS[key]} />
+  const t0 = data?.totals;
+  // sites per feature in the selected subdistrict, or city-wide
+  const sites = area ? area.sites : undefined;
+  const where = area ? area.name : 'Dortmund';
+  const AVAILABLE: Record<'supermarket' | 'priority' | 'commercial', { count: number; text: string }> = {
+    supermarket: (() => {
+      const n = area ? (sites?.supermarketsWithParking ?? 0) : (t0?.supermarketsWithParking ?? 0);
+      return { count: n, text: n ? `${fmt(n)} supermarket${n === 1 ? '' : 's'} with a car park in ${where}` : `No supermarket with a car park in ${where}` };
+    })(),
+    priority: (() => {
+      const n = area ? (sites?.prioritySpaces ?? 0) : (t0?.prioritySpaces ?? 0);
+      return { count: n, text: n ? `${fmt(n)} parking spaces at buildings in priority areas of ${where}` : `No building parking in a priority area of ${where}` };
+    })(),
+    commercial: (() => {
+      const n = area ? (sites?.commercialSpaces ?? 0) : (t0?.commercialSpaces ?? 0);
+      const lots = area ? (sites?.commercialLots ?? 0) : (t0?.commercialLots ?? 0);
+      return { count: n, text: n ? `${fmt(n)} spaces in ${fmt(lots)} commercial car park${lots === 1 ? '' : 's'} in ${where}` : `No commercial car park in ${where}` };
+    })(),
+  };
+  const e = area?.effect;
+  // whole missing points, split between buildings and commercial areas by their relief, as city-wide
+  const reliefOnly = e ? e.before - e.middle : 0;
+  const pr = e?.priority.relief ?? 0;
+  const cr = (e?.commercial.relief ?? 0) + (e?.commercial.night ?? 0);
+  const prCut = pr + cr > 0 ? Math.round((reliefOnly * pr) / (pr + cr)) : 0;
+  const local = {
+    supermarket: { points: e?.supermarket.points ?? 0, reduction: e?.supermarket.takes ?? 0 },
+    priority: { points: e?.priority.points ?? 0, reduction: prCut },
+    commercial: { points: e?.commercial.points ?? 0, reduction: reliefOnly - prCut },
+  };
+
+  const scenario = (key: 'supermarket' | 'priority' | 'commercial', reduction: number, points: number, body: ReactNode) => {
+    const available = AVAILABLE[key].count > 0;
+    const on = params[key] && available;
+    const shown = area ? local[key] : { points, reduction };
+    return (
+      <div className={`bonus-card${on ? ' is-on' : ''}${available ? '' : ' is-unavailable'}`}>
+        <div className="bonus-card-head">
+          <input id={`bonus-${key}`} type="checkbox" checked={on} disabled={!data || !available} onChange={(ev) => set(key, ev.target.checked)} />
+          <label htmlFor={`bonus-${key}`}>{TIPS[key].title}</label>
+          <ScenarioTip tip={TIPS[key]} />
+        </div>
+        <p className="bonus-sites">{AVAILABLE[key].text}</p>
+        {on && (
+          <>
+            {body}
+            <p className="bonus-effect">
+              {area ? `In ${area.name}: ` : ''}
+              <b className="num">{fmt(shown.points)}</b> new points off the street ·{' '}
+              <b className="num">{shown.reduction > 0 ? "−" : ""}{fmt(shown.reduction)}</b> missing in street space
+            </p>
+          </>
+        )}
       </div>
-      <p className="bonus-task">„{TIPS[key].task}“</p>
-      {params[key] && (
-        <>
-          {body}
-          <p className="bonus-effect">
-            <b className="num">{fmt(points)}</b> new points off the street ·{' '}
-            <b className="num">−{fmt(reduction)}</b> missing in street space
-          </p>
-        </>
-      )}
-    </div>
-  );
+    );
+  };
 
   const slider = (key: 'absorbShare' | 'priorityShare' | 'commercialShare' | 'pointsPerSupermarket', label: string, min: number, max: number, step: number, show: (v: number) => string) => (
     <div className="param">
@@ -198,19 +232,18 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
   return (
     <section className="bonus-controls" aria-labelledby="bonus-title">
       <div className="factor-controls-head">
-        <h2 id="bonus-title">
-          Bonus scenarios <span className="bonus-badge">Bonus tasks</span>
-        </h2>
+        <h2 id="bonus-title">Off-street charging</h2>
         <button type="button" className="link-button" onClick={() => onChange(bonusDefaults)} disabled={!active}>
           Reset
         </button>
       </div>
-      <p className="hint">How does the street-space demand per subdistrict change if charging moves to private and semi-public car parks?</p>
-      {!data && <p className="hint site-warning">Scenario data is missing: run npm run data to build public/data/city/bonus.json.</p>}
+      <p className="hint">
+        {area ? `Features with sites in ${area.name}. ` : ''}Move charging from the kerb to supermarkets, buildings and commercial car parks.
+      </p>
+      {!data && <p className="hint site-warning">Site data is missing: run npm run data to build public/data/city/bonus.json.</p>}
 
       {scenario(
         'supermarket',
-        '1 · Supermarket car parks',
         summary.supermarket,
         summary.newPoints.supermarket,
         <>
@@ -220,14 +253,12 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
       )}
       {scenario(
         'priority',
-        '2 · Buildings in the priority area',
         summary.priority,
         summary.newPoints.priority,
         slider('priorityShare', 'Parking spaces with a charging point', 0.05, 1, 0.05, pct),
       )}
       {scenario(
         'commercial',
-        '3 · Commercial areas',
         summary.commercial,
         summary.newPoints.commercial,
         <>
@@ -241,17 +272,22 @@ export function BonusControls({ data, params, summary, bevShare, map, showLayers
 
       {active && (
         <div className="bonus-result" aria-live="polite">
+          {area?.effect && (
+            <p>
+              Missing in street space in {area.name}: <b className="num">{fmt(area.effect.before)}</b> → <b className="num">{fmt(area.effect.after)}</b>
+            </p>
+          )}
           <p>
             Missing in street space, city-wide: <b className="num">{fmt(summary.before)}</b> → <b className="num">{fmt(summary.after)}</b>{' '}
             <span className="bonus-delta num">(−{fmt(summary.before - summary.after)}, −{summary.before > 0 ? fmt(((summary.before - summary.after) / summary.before) * 100) : 0} %)</span>
           </p>
-          <p className="hint">EV basis: {pct(bevShare)} of cars. Raise it under Model settings to see the scenarios grow with the fleet.</p>
+          <p className="hint">EV basis: {pct(bevShare)} of cars. Raise it under Model settings to see the effect grow with the fleet.</p>
           <div className="param">
             <span className="param-label">Map colour</span>
             <div className="segmented" role="radiogroup" aria-label="Map colour">
               <label>
                 <input type="radio" name="bonus-map" checked={map === 'after'} onChange={() => onMap('after')} />
-                Missing after scenarios
+                Missing with these features
               </label>
               <label>
                 <input type="radio" name="bonus-map" checked={map === 'reduction'} onChange={() => onMap('reduction')} />

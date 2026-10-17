@@ -86,7 +86,7 @@ function Dashboard({ data }: { data: AppData }) {
     }),
     [run],
   );
-  // bonus scenarios: charging points at supermarkets, buildings in the priority area and commercial car parks
+  // off-street charging: charging points at supermarkets, buildings in the priority area and commercial car parks
   const [bonusData, setBonusData] = useState<BonusData | null>(null);
   const [bonus, setBonus] = useState<BonusParams>(bonusDefaults);
   const [bonusMap, setBonusMap] = useState<BonusMap>('after');
@@ -141,8 +141,8 @@ function Dashboard({ data }: { data: AppData }) {
   const shade = useMemo(
     () =>
       showReduction
-        ? { title: 'Fewer missing points (bonus scenarios)', value: (r: DistrictResult) => (r.gapBefore ?? r.gap) - r.gap }
-        : { title: bonusOn ? 'Missing charging points (with scenarios)' : 'Missing charging points', value: (r: DistrictResult) => r.gap },
+        ? { title: 'Fewer missing points (off-street charging)', value: (r: DistrictResult) => (r.gapBefore ?? r.gap) - r.gap }
+        : { title: bonusOn ? 'Missing charging points (with off-street charging)' : 'Missing charging points', value: (r: DistrictResult) => r.gap },
     [showReduction, bonusOn],
   );
   const classes = useMemo(() => quantileClasses(results.map(shade.value)), [results, shade]);
@@ -227,6 +227,14 @@ function Dashboard({ data }: { data: AppData }) {
               onChange: setBonus,
               onMap: setBonusMap,
               onToggleLayers: setShowBonusLayers,
+              area:
+                selected && bonusData
+                  ? {
+                      name: district?.name ?? selected,
+                      sites: bonusData.districts.find((d) => d.ubz === selected),
+                      effect: effects.get(selected),
+                    }
+                  : null,
             }}
             factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
             sitePlan={

@@ -32,7 +32,7 @@ interface Props {
   classes: Classes;
   /** what the districts are shaded by (default: missing charging points) */
   shade?: { title: string; value: (r: DistrictResult) => number };
-  /** bonus scenario layers: supermarkets and the city's priority cells */
+  /** off-street charging layers: supermarkets and the city's priority cells */
   bonusLayers?: { supermarkets: Supermarket[]; priority: boolean } | null;
   selected: string | null;
   showChargers: boolean;
@@ -277,7 +277,7 @@ export function MapView({ data, results, classes, shade = GAP_SHADE, bonusLayers
         },
         paint: { 'text-color': ['case', ['==', ['get', 'tier'], 2], '#0b0b0b', '#ffffff'] },
       });
-      // bonus scenarios: the city's priority cells and supermarkets (filled = own car park)
+      // off-street charging: the city's priority cells and supermarkets (filled = own car park)
       map.addSource('priority', { type: 'geojson', data: data.priority });
       map.addSource('supermarkets', { type: 'geojson', data: supermarketsGeoJson([]) });
       map.addLayer(
@@ -529,7 +529,7 @@ export function MapView({ data, results, classes, shade = GAP_SHADE, bonusLayers
         )}
         {bonusLayers && (bonusLayers.supermarkets.length > 0 || bonusLayers.priority) && (
           <div className="map-legend-block">
-            <span className="map-legend-title">Bonus scenarios</span>
+            <span className="map-legend-title">Off-street sites</span>
             <ul className="station-key">
               {bonusLayers.supermarkets.length > 0 && (
                 <li title="Supermarket with its own car park (filled) or without (ring)">
@@ -598,7 +598,7 @@ export function MapView({ data, results, classes, shade = GAP_SHADE, bonusLayers
           <span className="muted">{hovered.stadtbezirk}</span>
           <span>Missing charging points: <b className="num">{hovered.gap.toLocaleString('en-GB')}</b></span>
           {hovered.gapBefore !== undefined && hovered.gapBefore !== hovered.gap && (
-            <span className="muted">without bonus scenarios: {hovered.gapBefore.toLocaleString('en-GB')}</span>
+            <span className="muted">without off-street charging: {hovered.gapBefore.toLocaleString('en-GB')}</span>
           )}
           <span>Existing: {hovered.existing.toLocaleString('en-GB')} · Required: {hovered.needed.toLocaleString('en-GB')}</span>
         </div>

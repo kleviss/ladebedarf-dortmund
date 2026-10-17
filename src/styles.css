@@ -1792,17 +1792,6 @@ a {
   margin: 0;
 }
 
-.bonus-badge {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--chip-assumption);
-  color: var(--ink);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
 .bonus-card {
   display: grid;
   gap: 6px;
@@ -1829,11 +1818,18 @@ a {
   cursor: pointer;
 }
 
-.bonus-task {
+.bonus-card.is-unavailable {
+  opacity: 0.55;
+}
+
+.bonus-card.is-unavailable .bonus-card-head label {
+  cursor: default;
+}
+
+.bonus-sites {
   margin: 0;
   color: var(--muted);
   font-size: 0.75rem;
-  font-style: italic;
 }
 
 .bonus-effect {
