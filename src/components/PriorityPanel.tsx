@@ -28,13 +28,16 @@ interface Props {
   onFocus: (id: string | null) => void;
   onToggleCheck: (siteId: string, checkId: string) => void;
   onClearDistrict: () => void;
+  /** back to the subdistrict the list was opened from (absent at city level) */
+  onBack?: () => void;
+  /** closes the whole details panel */
   onClose: () => void;
 }
 
 const PAGE = 100;
 const fmt = (n: number, digits = 0) => n.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-export function PriorityPanel({ sites, level, radius, names, district, focusId, done, onFocus, onToggleCheck, onClearDistrict, onClose }: Props) {
+export function PriorityPanel({ sites, level, radius, names, district, focusId, done, onFocus, onToggleCheck, onClearDistrict, onBack, onClose }: Props) {
   const [shown, setShown] = useState(PAGE);
   const list = useMemo(() => (district ? sites.filter((s) => s.ubz === district.ubz) : sites), [sites, district]);
   const points = list.reduce((a, s) => a + s.points, 0);
@@ -66,10 +69,15 @@ export function PriorityPanel({ sites, level, radius, names, district, focusId, 
     <aside className="current-district priority-panel" aria-labelledby="priority-title">
       <header className="district-head">
         <div>
+          {onBack && district && (
+            <button type="button" className="link-button panel-back" onClick={onBack} title={`Back to ${district.name}`}>
+              ‹ {district.name}
+            </button>
+          )}
           <p className="eyebrow">{level.today ? "Today's electric cars" : `Scenario ${level.label} electric cars`}</p>
           <h2 id="priority-title">Priority list</h2>
         </div>
-        <button type="button" className="icon-button" onClick={onClose} aria-label="Close priority list" title="Close priority list">
+        <button type="button" className="icon-button panel-close" onClick={onClose} aria-label="Close details and return to city view" title="Close">
           ×
         </button>
       </header>

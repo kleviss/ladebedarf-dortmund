@@ -28,7 +28,7 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <p className="eyebrow">Subdistrict {district.ubz} · {district.stadtbezirk}</p>
           <h2 id="district-title">{district.name}</h2>
         </div>
-        <button type="button" className="icon-button" onClick={onClose} aria-label="Close details and return to city view" title="Return to city view">
+        <button type="button" className="icon-button panel-close" onClick={onClose} aria-label="Close details and return to city view" title="Close">
           ×
         </button>
       </header>
