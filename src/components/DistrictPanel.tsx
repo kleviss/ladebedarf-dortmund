@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
   /** planned stations in this district at the current demand level */
   plannedSites?: { level: string; stations: number; points: number; unplaced: number; onShow: () => void };
-  /** effect of the active bonus scenarios on this district */
+  /** effect of the active off-street charging features on this district */
   bonus?: BonusEffect;
   bonusParams?: BonusParams;
 }
@@ -46,7 +46,7 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <dd className="num">{fmt(district.gap)}</dd>
         </div>
       </dl>
-      {bonus && bonusParams && <BonusSteps e={bonus} p={bonusParams} />}
+      {bonus && bonusParams && bonus.before !== bonus.after && <BonusSteps e={bonus} p={bonusParams} />}
       {plannedSites && (
         <div className="district-sites">
           <p>
@@ -115,18 +115,18 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
 
 const minus = (n: number, digits = 0) => (n > 0 ? `−${fmt(n, digits)}` : fmt(0, digits));
 
-/** How the bonus scenarios change the missing street points, step by step. */
+/** How the off-street charging features change the missing street points, step by step. */
 function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
   const kerb = e.priority.relief + e.commercial.relief + e.commercial.night > 0;
   return (
-    <div className="bonus-steps" aria-label="Bonus scenarios in this subdistrict">
-      <p className="eyebrow">Bonus scenarios</p>
+    <div className="bonus-steps" aria-label="Off-street charging in this subdistrict">
+      <p className="eyebrow">Off-street charging</p>
       <dl>
         <div>
-          <dt>Missing without scenarios</dt>
+          <dt>Missing without off-street charging</dt>
           <dd className="num">{fmt(e.before)}</dd>
         </div>
-        {p.priority && (
+        {p.priority && e.priority.points > 0 && (
           <div className="is-step">
             <dt>
               Buildings in the priority area
@@ -137,7 +137,7 @@ function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
             <dd className="num">{minus(e.priority.relief, 1)}</dd>
           </div>
         )}
-        {p.commercial && (
+        {p.commercial && e.commercial.points > 0 && (
           <div className="is-step">
             <dt>
               Commercial car parks
@@ -149,20 +149,18 @@ function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
             <dd className="num">{minus(e.commercial.relief + e.commercial.night, 1)}</dd>
           </div>
         )}
-        {kerb && p.supermarket && (
+        {kerb && p.supermarket && e.supermarket.count > 0 && (
           <div>
             <dt>Missing after buildings and commercial car parks</dt>
             <dd className="num">{fmt(e.middle)}</dd>
           </div>
         )}
-        {p.supermarket && (
+        {p.supermarket && e.supermarket.count > 0 && (
           <div className="is-step">
             <dt>
               Supermarkets
               <span className="hint">
-                {e.supermarket.count === 0
-                  ? 'no supermarket with its own car park here'
-                  : `${fmt(e.supermarket.count)} with a car park × ${fmt(p.pointsPerSupermarket)} = ${fmt(e.supermarket.points)} points; they take ${fmt(p.absorbShare * 100)} % of ${fmt(e.middle)}`}
+                {`${fmt(e.supermarket.count)} with a car park × ${fmt(p.pointsPerSupermarket)} = ${fmt(e.supermarket.points)} points; they take ${fmt(p.absorbShare * 100)} % of ${fmt(e.middle)}`}
               </span>
             </dt>
             <dd className="num">{minus(e.supermarket.takes)}</dd>

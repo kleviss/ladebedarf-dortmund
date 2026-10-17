@@ -101,13 +101,15 @@ connector counts; existing points assume one point per location, and do not mean
 currently unoccupied or operational chargers. The displayed retrieval date is not
 necessarily the source's observation date.
 
-### Bonus scenarios (bonus tasks of the challenge)
+### Off-street charging
 
-*Bonus scenarios* at the bottom of the filter pane answer how the street-space demand per Unterbezirk
-changes if charging moves off the street. Each scenario can be switched on alone or together,
-shows the task's wording, a formula tooltip and its city-wide effect; the details panel shows
-the steps per district, and the map can be coloured by missing points after the scenarios or
-by the reduction (`src/lib/bonus.ts`, inputs from `scripts/build-bonus.mjs`, OpenStreetMap):
+*Off-street charging* at the bottom of the filter pane shows how the street-space demand per
+Unterbezirk changes if charging moves to private and semi-public car parks. Each feature can be
+switched on alone or together and has a formula tooltip. Without a selected subdistrict all three
+are available and show the city-wide effect; with one selected, each feature shows how many sites
+the subdistrict has and is disabled when it has none. The details panel shows the steps per
+district, and the map can be coloured by missing points with these features or by the reduction
+(`src/lib/bonus.ts`, inputs from `scripts/build-bonus.mjs`, OpenStreetMap):
 
 1. **Supermarket car parks**: every supermarket with its own car park gets 10 points
    (adjustable). Because they open only by day for short stays, a supermarket takes at most
@@ -119,7 +121,7 @@ by the reduction (`src/lib/bonus.ts`, inputs from `scripts/build-bonus.mjs`, Ope
    points; they relieve the in-commuters (`r_W ÷ k` per EV) and, if opened overnight, residents.
 
 Supermarkets are applied last, to what the other two leave. Raising the EV share under
-*Model settings* shows how the scenarios grow with the fleet.
+*Model settings* shows how the effect grows with the fleet.
 
 Scenario controls, ranking, reports navigation, extra map layers and detailed
 calculation panels are not mounted in this view. Their components and the original
