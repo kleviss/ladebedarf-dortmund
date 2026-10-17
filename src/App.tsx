@@ -137,19 +137,18 @@ function Dashboard({ data }: { data: AppData }) {
   return (
     <div className="app current-app">
       <header className="topbar">
-        <div className="brand">
+        <h1 className="brand">
           <picture>
             <source srcSet={`${import.meta.env.BASE_URL}electricity-logo-dark.png`} media="(prefers-color-scheme: dark)" />
             <img
               className="brand-logo"
               src={`${import.meta.env.BASE_URL}electricity-logo.png`}
-              alt="ElectriCity"
+              alt="ElectriCity: Dortmund charging demand"
               width="699"
               height="125"
             />
           </picture>
-          <h1>Dortmund Charging Demand</h1>
-        </div>
+        </h1>
       </header>
       <main
         className={`current-layout${panel ? ' has-selection' : ''}${panel === 'sites' ? ' has-sites' : ''}${
