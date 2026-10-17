@@ -187,7 +187,7 @@ function Dashboard({ data }: { data: AppData }) {
   }, [selected, showList, expand]);
 
   return (
-    <div className="app current-app">
+    <div className={`app current-app${sidebar.floating || detail.floating ? ' is-immersive' : ''}`}>
       <header className="topbar">
         <h1 className="brand">
           <picture>

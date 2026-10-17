@@ -2237,12 +2237,17 @@ a {
 }
 
 /* Glossy top bar with the logo centred (map page only; the reports keep their own bar) */
+.current-app {
+  --topbar-h: 52px;
+}
+
 .current-app .topbar {
   position: relative;
   z-index: 10;
   justify-content: center;
   padding: 10px 16px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.92), rgb(246 246 243 / 0.7));
+  height: var(--topbar-h);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.78), rgb(246 246 243 / 0.55));
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid rgb(0 0 0 / 0.06);
@@ -2261,7 +2266,7 @@ a {
 
 @media (prefers-color-scheme: dark) {
   .current-app .topbar {
-    background: linear-gradient(180deg, rgb(34 34 32 / 0.92), rgb(17 17 16 / 0.7));
+    background: linear-gradient(180deg, rgb(34 34 32 / 0.78), rgb(17 17 16 / 0.55));
     border-bottom-color: rgb(255 255 255 / 0.06);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.07),
@@ -2340,5 +2345,107 @@ a {
 
   .current-layout.panel-floating.panel-collapsed .sidebar-resizer.is-right {
     right: 0;
+  }
+}
+
+/* Panel buttons sit inside the top corner of their card; once a card is hidden they return to its edge */
+@media (min-width: 1001px) {
+  .current-layout .sidebar-resizer:not(.is-collapsed) .sidebar-toggle {
+    top: 12px;
+    width: 28px;
+    height: 28px;
+    background: var(--surface-2);
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .current-layout .sidebar-resizer:not(.is-collapsed):not(.is-right) .sidebar-toggle {
+    left: -44px;
+  }
+
+  .current-layout .sidebar-resizer:not(.is-collapsed):not(.is-right) .sidebar-mode {
+    left: -76px;
+  }
+
+  .current-layout .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-toggle {
+    left: calc(var(--panel-w, 360px) - 32px);
+  }
+
+  .current-layout .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-mode {
+    left: calc(var(--panel-w, 360px) - 64px);
+  }
+
+  .current-layout .sidebar-resizer:not(.is-collapsed) .sidebar-toggle:hover {
+    background: var(--line);
+  }
+
+  /* room for the two buttons beside the close button */
+  .current-layout .detail-slot .district-head {
+    padding-right: 66px;
+  }
+
+  .current-layout #filters-title {
+    padding-right: 72px;
+  }
+
+  /* Immersive: with a floating panel the map fills the window, under the glossy header too */
+  .current-app.is-immersive .topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  /* the header leaves the grid, so the layout takes both rows */
+  .current-app.is-immersive .current-layout {
+    grid-row: 1 / -1;
+    padding: 0;
+  }
+
+  .current-app.is-immersive .current-layout .map-area {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .current-app.is-immersive .current-layout .map-legend {
+    top: calc(var(--topbar-h) + 10px);
+  }
+
+  .current-app.is-immersive .current-layout .sidebar-resizer {
+    margin-top: var(--topbar-h);
+  }
+
+  .current-app.is-immersive .current-layout.is-floating .sidebar-resizer:not(.is-right),
+  .current-app.is-immersive .current-layout.panel-floating .sidebar-resizer.is-right {
+    top: var(--topbar-h);
+    margin-top: 0;
+  }
+
+  .current-app.is-immersive .current-layout.is-floating .filters-slot,
+  .current-app.is-immersive .current-layout.panel-floating .detail-slot {
+    top: calc(var(--topbar-h) + 10px);
+  }
+
+  /* the cards start 10px below the header */
+  .current-app.is-immersive .current-layout .sidebar-resizer:not(.is-collapsed) .sidebar-toggle {
+    top: 22px;
+  }
+
+  .current-app.is-immersive .current-layout:not(.panel-floating) .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-toggle {
+    left: calc(var(--panel-w, 360px) - 42px);
+  }
+
+  .current-app.is-immersive .current-layout:not(.panel-floating) .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-mode {
+    left: calc(var(--panel-w, 360px) - 74px);
+  }
+
+  /* a docked card keeps its inset below the header and from the window edge */
+  .current-app.is-immersive .current-layout:not(.is-floating) .filters-slot {
+    margin: calc(var(--topbar-h) + 10px) 0 10px 10px;
+  }
+
+  .current-app.is-immersive .current-layout:not(.panel-floating) .detail-slot {
+    margin: calc(var(--topbar-h) + 10px) 10px 10px 0;
   }
 }
