@@ -1973,6 +1973,13 @@ a {
   margin-bottom: 0;
 }
 
+.panel-back {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -2344,20 +2351,43 @@ a {
   }
 
   .current-layout .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-toggle {
-    left: calc(var(--panel-w, 360px) - 32px);
+    left: calc(var(--panel-w, 360px) - 64px);
   }
 
   .current-layout .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-mode {
-    left: calc(var(--panel-w, 360px) - 64px);
+    left: calc(var(--panel-w, 360px) - 96px);
   }
 
   .current-layout .sidebar-resizer:not(.is-collapsed) .sidebar-toggle:hover {
     background: var(--line);
   }
 
-  /* room for the two buttons beside the close button */
+  /* the close button sits in the card's top corner, after the float and hide buttons */
+  .current-layout .detail-slot {
+    position: relative;
+  }
+
   .current-layout .detail-slot .district-head {
-    padding-right: 66px;
+    padding-right: 100px;
+  }
+
+  .current-layout .detail-slot .panel-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 8px;
+    background: var(--surface-2);
+    font-size: 1.1rem;
+  }
+
+  .current-layout .detail-slot .panel-close:hover {
+    background: var(--line);
   }
 
   .current-layout #filters-title {
@@ -2409,11 +2439,11 @@ a {
   }
 
   .current-app.is-immersive .current-layout:not(.panel-floating) .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-toggle {
-    left: calc(var(--panel-w, 360px) - 42px);
+    left: calc(var(--panel-w, 360px) - 74px);
   }
 
   .current-app.is-immersive .current-layout:not(.panel-floating) .sidebar-resizer.is-right:not(.is-collapsed) .sidebar-mode {
-    left: calc(var(--panel-w, 360px) - 74px);
+    left: calc(var(--panel-w, 360px) - 106px);
   }
 
   /* a docked card keeps its inset below the header and from the window edge */

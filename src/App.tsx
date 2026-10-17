@@ -311,9 +311,18 @@ function Dashboard({ data }: { data: AppData }) {
               onFocus={setFocusId}
               onToggleCheck={toggleCheck}
               onClearDistrict={() => setSelected(null)}
+              onBack={
+                district
+                  ? () => {
+                      setShowList(false);
+                      setFocusId(null);
+                    }
+                  : undefined
+              }
               onClose={() => {
                 setShowList(false);
                 setFocusId(null);
+                setSelected(null);
               }}
             />
           )}
