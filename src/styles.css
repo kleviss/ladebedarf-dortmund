@@ -1633,3 +1633,268 @@ a {
 .segmented {
   flex-wrap: wrap;
 }
+
+/* --- site planning ----------------------------------------------------------- */
+
+.site-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.site-controls h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.current-filters .site-controls label.toggle {
+  margin: 0;
+}
+
+.site-controls input[type='range'] {
+  width: 100%;
+  accent-color: #166534;
+}
+
+.site-level-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.site-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.site-warning {
+  color: #9a3412;
+}
+
+.site-list-button {
+  justify-self: start;
+  background: #166534;
+  color: #fff;
+}
+
+.site-list-button.is-active {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.current-layout.has-sites {
+  grid-template-columns: var(--filters-w, 320px) minmax(0, 1fr) 380px;
+}
+
+.priority-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.priority-panel .district-head {
+  margin-bottom: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.site-list {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-item {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.site-item.is-open {
+  border-color: #166534;
+  box-shadow: 0 0 0 1px #166534;
+}
+
+.site-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.site-rank {
+  min-width: 30px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.site-main {
+  display: grid;
+  min-width: 0;
+}
+
+.site-address {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.site-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.site-progress {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.site-progress.is-done {
+  color: #166534;
+  font-weight: 700;
+}
+
+.site-detail {
+  padding: 2px 10px 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+}
+
+.site-detail h3 {
+  margin: 10px 0 4px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.site-coords {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+}
+
+.checklist {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist li {
+  display: flex;
+  gap: 6px;
+}
+
+.checklist li > span {
+  flex: none;
+  width: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.checklist .check-ok > span {
+  color: #166534;
+}
+
+.checklist .check-note > span {
+  color: #9a3412;
+}
+
+.checklist .check-option > span {
+  color: #256abf;
+}
+
+.checklist label {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.checklist input {
+  margin: 2px 0 0;
+  accent-color: #166534;
+}
+
+.site-list-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.site-list-foot .button {
+  margin-left: auto;
+}
+
+.map-tooltip .tip-note {
+  color: #9a3412;
+  font-size: 0.78rem;
+}
+
+.map-tooltip .tip-option {
+  color: #256abf;
+  font-size: 0.78rem;
+}
+
+.district-sites {
+  display: grid;
+  gap: 2px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  border-left: 3px solid #166534;
+  background: var(--surface-2);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
+}
+
+.district-sites p {
+  margin: 0;
+}
+
+.district-sites .link-button {
+  justify-self: start;
+}
+
+@media (max-width: 1000px) {
+  .current-layout.has-sites {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

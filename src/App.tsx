@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MapView } from './components/MapView';
 import { Legend } from './components/Legend';
 import { DistrictPanel } from './components/DistrictPanel';
-import { loadData, type AppData } from './lib/data';
+import { PriorityPanel } from './components/PriorityPanel';
+import { loadData, loadSitePlan, type AppData } from './lib/data';
+import { levelFor, paramsForLevel, sitesOf, type SiteLevel, type SitePlan } from './lib/sitePlan';
 import { computeCurrentDemand } from './lib/isme';
 import { computeFactors, currentStreetDemand } from './lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from './lib/factorData';
@@ -34,6 +36,32 @@ export default function App() {
   return <Dashboard data={data} />;
 }
 
+const CHECKS_KEY = 'ladebedarf-site-checks';
+
+/** On-site checks ticked per planned site, remembered in this browser only. */
+function useSiteChecks() {
+  const [done, setDone] = useState<Record<string, string[]>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CHECKS_KEY) ?? '{}') as Record<string, string[]>;
+    } catch {
+      return {};
+    }
+  });
+  const toggle = useCallback((siteId: string, checkId: string) => {
+    setDone((prev) => {
+      const items = prev[siteId] ?? [];
+      const next = { ...prev, [siteId]: items.includes(checkId) ? items.filter((c) => c !== checkId) : [...items, checkId] };
+      try {
+        localStorage.setItem(CHECKS_KEY, JSON.stringify(next));
+      } catch {
+        // storage blocked: keep the ticks for this session only
+      }
+      return next;
+    });
+  }, []);
+  return [done, toggle] as const;
+}
+
 function Dashboard({ data }: { data: AppData }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showChargers, setShowChargers] = useState(true);
@@ -63,6 +91,39 @@ function Dashboard({ data }: { data: AppData }) {
   const classes = useMemo(() => quantileClasses(results.map((r) => r.gap)), [results]);
   const district = selected ? byUbz.get(selected) : undefined;
 
+  // site planning: precomputed stations for the level that matches the model's EV basis
+  const [plan, setPlan] = useState<SitePlan | null>(null);
+  const [showSites, setShowSites] = useState(true);
+  const [showList, setShowList] = useState(false);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [done, toggleCheck] = useSiteChecks();
+  useEffect(() => {
+    loadSitePlan().then(setPlan);
+  }, []);
+  const siteLevel = useMemo(
+    () => (plan ? levelFor(plan, { bevMode: params.bevMode, bevShareScenario: params.bevShareScenario }) : null),
+    [plan, params.bevMode, params.bevShareScenario],
+  );
+  const sites = useMemo(() => (plan && siteLevel ? sitesOf(plan, siteLevel.level) : []), [plan, siteLevel]);
+  const otherDefaults = useMemo(
+    () =>
+      (Object.keys(factorDefaults) as (keyof FactorParams)[]).every(
+        (k) => k === 'bevMode' || k === 'bevShareScenario' || JSON.stringify(params[k]) === JSON.stringify(factorDefaults[k]),
+      ),
+    [params],
+  );
+  const names = useMemo(() => new Map(results.map((r) => [r.ubz, r.name])), [results]);
+  const setLevel = useCallback((level: SiteLevel) => setParams((p) => ({ ...p, ...paramsForLevel(level) })), []);
+  const openSite = useCallback((id: string) => {
+    setFocusId(id);
+    setShowList(true);
+    setShowSites(true);
+  }, []);
+  useEffect(() => {
+    if (focusId && !sites.some((s) => s.id === focusId)) setFocusId(null);
+  }, [sites, focusId]);
+  const panel = showList && siteLevel ? 'sites' : district ? 'district' : null;
+
   return (
     <div className="app current-app">
       <header className="topbar">
@@ -71,7 +132,7 @@ function Dashboard({ data }: { data: AppData }) {
         </div>
       </header>
       <main
-        className={`current-layout${district ? ' has-selection' : ''}`}
+        className={`current-layout${panel ? ' has-selection' : ''}${panel === 'sites' ? ' has-sites' : ''}`}
         style={{ '--filters-w': `${pane.width}px` } as CSSProperties}
       >
         <Legend
@@ -81,6 +142,22 @@ function Dashboard({ data }: { data: AppData }) {
           onSelect={setSelected}
           onToggleChargers={setShowChargers}
           factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
+          sitePlan={
+            plan && siteLevel
+              ? {
+                  levels: plan.levels,
+                  level: siteLevel.level,
+                  exact: siteLevel.exact && otherDefaults,
+                  stations: sites.length,
+                  points: sites.reduce((a, s) => a + s.points, 0),
+                  showSites,
+                  showList,
+                  onLevel: setLevel,
+                  onToggleSites: setShowSites,
+                  onToggleList: setShowList,
+                }
+              : undefined
+          }
         />
         <PaneResizer width={pane.width} onWidth={pane.setWidth} onReset={pane.reset} />
         <div className="map-area">
@@ -91,15 +168,48 @@ function Dashboard({ data }: { data: AppData }) {
             selected={selected}
             showChargers={showChargers}
             onSelect={setSelected}
+            sites={sites}
+            showSites={showSites}
+            focusId={focusId}
+            onSiteClick={openSite}
           />
         </div>
-        {district && (
+        {panel === 'sites' && plan && siteLevel && (
+          <PriorityPanel
+            sites={sites}
+            level={siteLevel.level}
+            radius={plan.radius}
+            names={names}
+            district={district ? { ubz: district.ubz, name: district.name } : null}
+            focusId={focusId}
+            done={done}
+            onFocus={setFocusId}
+            onToggleCheck={toggleCheck}
+            onClearDistrict={() => setSelected(null)}
+            onClose={() => {
+              setShowList(false);
+              setFocusId(null);
+            }}
+          />
+        )}
+        {panel === 'district' && district && (
           <DistrictPanel
             district={district}
             factors={factors.get(district.ubz)}
             scenario={params.bevMode === 'scenario' ? params.bevShareScenario : null}
             fetchedAt={data.meta.fetchedAt}
             onClose={() => setSelected(null)}
+            plannedSites={
+              siteLevel
+                ? {
+                    level: siteLevel.level.label,
+                    stations: sites.filter((s) => s.ubz === district.ubz).length,
+                    points: sites.filter((s) => s.ubz === district.ubz).reduce((a, s) => a + s.points, 0),
+                    unplaced: siteLevel.level.unplaced[district.ubz] ?? 0,
+                    onShow: () => setShowList(true),
+                  }
+                : undefined
+            }
           />
         )}
       </main>

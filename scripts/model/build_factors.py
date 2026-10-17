@@ -266,45 +266,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 dest.sort_values(["ubz", "name"]).to_csv(OUT / "destinations.csv", index=False)
 
 
-# --- model (same formulas as src/lib/factors.ts) ---------------------------------------------
-def destination_weight(d, p):
-    return np.where(d.event & (not p["includeEvents"]), 0.0, d.visitors.fillna(p["defaultVisitors"]))
+# --- model (scripts/model/factor_model.py, same formulas as src/lib/factors.ts) ----------------
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from factor_model import compute, destination_weight  # noqa: E402
 
 
 def run(inputs, p, mode):
     """Street-space charging points per Unterbezirk for one parameter set."""
-    f = inputs.copy()
-    mfh_osm = f.dwellingsMfh * (f.osmFactor if p["useOsmFactor"] else 1)
-    cars = f.privateCars.clip(lower=0)
-
-    def coverage(s):
-        return np.minimum(1, (f.garagesCarports + p["drivewayPerDwelling"] * f.dwellingsEfhZfh + s * mfh_osm)
-                          / f.dwellings.where(f.dwellings > 0))
-
-    s = p["mfhPerDwelling"]
-    if p["calibrate"]:
-        lo, hi = 0.0, 5.0
-        for _ in range(60):
-            s = (lo + hi) / 2
-            lo, hi = (s, hi) if np.average(coverage(s).fillna(0), weights=cars) < p["homeShareCity"] else (lo, s)
-    cov = coverage(s).fillna(0)
-    share = p["bevShareToday"] if mode == "today" else p["bevShareScenario"]
-    bev_res = f.privateEvs if mode == "today" else cars * share
-    lp_res = bev_res * (1 - cov) * p["residentsStreetShare"] / p["evsPerStreetPoint"]
-
-    jobs = f.jobsEstimate / f.jobsEstimate.sum()
-    lp_com = p["inCommuters"] * p["commuterCarShare"] * share * p["commuterStreetShare"] / p["evsPerStreetPoint"] * jobs
-
-    per_car = p["touristCarShare"] / p["personsPerCar"] * share * p["chargeAtDestinationShare"] * p["touristStreetShare"] / p["evsPerStreetPoint"]
-    dw = pd.Series(destination_weight(dest, p), index=dest.index).groupby(dest.ubz).sum().reindex(f.index, fill_value=0)
-    day = p["dayVisitorsPerYear"] / 365 * per_car * dw / dw.sum()
-    night = p["overnightStaysPerYear"] / 365 * per_car * f.hotelWeight / f.hotelWeight.sum()
-    lp_tour = day + night
-
-    needed = lp_res + lp_com + lp_tour
-    existing = {"streetAc": f.streetAcPoints, "allPoints": f.chargingPoints, "sites": f.chargerSites}[p["existingSupply"]]
-    return s, cov, pd.DataFrame({"residents": lp_res, "commuters": lp_com, "tourists": lp_tour, "needed": needed,
-                                 "gap": (needed - existing).clip(lower=0)})
+    s, cov, r = compute(inputs, dest, p, mode)
+    return s, cov, r[["residents", "commuters", "tourists", "needed", "gap"]]
 
 
 f = ub.drop(columns="geometry").set_index("ubz").join(z).fillna({"hotels": 0, "hotelWeight": 0})

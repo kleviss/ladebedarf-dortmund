@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { ComponentProps } from 'react';
 import type { District } from '../lib/isme';
 import { FactorControls } from './FactorControls';
+import { SitePlanControls } from './SitePlanControls';
 
 interface Props {
   districts: District[];
@@ -10,9 +11,11 @@ interface Props {
   onSelect: (ubz: string | null) => void;
   onToggleChargers: (visible: boolean) => void;
   factorSettings: ComponentProps<typeof FactorControls>;
+  /** missing while sites.json loads or if it is not built */
+  sitePlan?: ComponentProps<typeof SitePlanControls>;
 }
 
-export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings }: Props) {
+export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings, sitePlan }: Props) {
   const subdistricts = useMemo(
     () => [...districts].sort((a, b) => a.name.localeCompare(b.name, 'en') || a.ubz.localeCompare(b.ubz)),
     [districts],
@@ -35,6 +38,7 @@ export function Legend({ districts, selected, showChargers, onSelect, onToggleCh
         <span className="dot" aria-hidden="true" />
         Show charging stations
       </label>
+      {sitePlan && <SitePlanControls {...sitePlan} />}
       <FactorControls {...factorSettings} />
     </aside>
   );

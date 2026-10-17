@@ -1,4 +1,5 @@
 import type { District } from './isme';
+import { parseSitePlan, type RawSitePlan, type SitePlan } from './sitePlan';
 
 export interface CityMeta {
   fetchedAt: string;
@@ -143,4 +144,13 @@ export async function loadData(): Promise<AppData> {
     getJson<AppData['stations']>(`${import.meta.env.BASE_URL}data/model/chargers.json`).catch(() => empty),
   ]);
   return { districts, chargers, priority, parking, ziele, meta, stations };
+}
+
+/** Planned charging sites per demand level (scripts/model/build_sites.py); null if the file is missing. */
+export async function loadSitePlan(): Promise<SitePlan | null> {
+  try {
+    return parseSitePlan(await getJson<RawSitePlan>(`${import.meta.env.BASE_URL}data/model/sites.json`));
+  } catch {
+    return null;
+  }
 }

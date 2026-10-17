@@ -9,12 +9,14 @@ interface Props {
   scenario?: number | null;
   fetchedAt: string;
   onClose: () => void;
+  /** planned stations in this district at the current demand level */
+  plannedSites?: { level: string; stations: number; points: number; unplaced: number; onShow: () => void };
 }
 
 const fmt = (value: number, digits = 0) =>
   value.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose }: Props) {
+export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose, plannedSites }: Props) {
   return (
     <aside className="current-district" aria-labelledby="district-title" aria-live="polite">
       <header className="district-head">
@@ -40,6 +42,20 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <dd className="num">{fmt(district.gap)}</dd>
         </div>
       </dl>
+      {plannedSites && (
+        <div className="district-sites">
+          <p>
+            <b className="num">{fmt(plannedSites.stations)}</b> planned station{plannedSites.stations === 1 ? '' : 's'} with{' '}
+            <b className="num">{fmt(plannedSites.points)}</b> new point{plannedSites.points === 1 ? '' : 's'}
+            {plannedSites.unplaced > 0 && <span className="site-warning"> · {fmt(plannedSites.unplaced)} without a free kerb</span>}
+          </p>
+          {plannedSites.stations > 0 && (
+            <button type="button" className="link-button" onClick={plannedSites.onShow}>
+              Show sites and checklist
+            </button>
+          )}
+        </div>
+      )}
       {factors && (
         <p className="hint station-summary">
           {fmt(factors.stations.sites)} charging stations with {fmt(factors.stations.points)} points: {fmt(factors.stations.streetAc)} public
