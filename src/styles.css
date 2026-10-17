@@ -1948,3 +1948,41 @@ a {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Power flow played over the map while it updates (see lib/powerFlow.ts) */
+.power-flow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.power-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent 0%, #1ea7ff 40%, #e9f8ff 50%, #1ea7ff 60%, transparent 100%) 0 0 / 40% 100% no-repeat;
+  filter: drop-shadow(0 0 4px #1ea7ff);
+  transition: opacity 0.25s ease;
+}
+
+.power-bar.is-flowing {
+  opacity: 1;
+  animation: power-bar 0.9s linear infinite;
+}
+
+@keyframes power-bar {
+  from {
+    background-position: -70% 0;
+  }
+  to {
+    background-position: 170% 0;
+  }
+}

@@ -19,6 +19,7 @@ import type { DistrictResult } from '../lib/isme';
 import { cityBoundary } from '../lib/cityBoundary';
 import { RAMP, ZERO_COLOR, type Classes } from '../lib/metrics';
 import { GROUP_LABEL, TIER_COLOUR, TIER_LABEL, address, siteNotes, type PlannedSite } from '../lib/sitePlan';
+import { buildGrid, createPowerFlow, type PowerFlow } from '../lib/powerFlow';
 
 // Official German basemap (BKG), free to use with attribution, no API key.
 const BASEMAP = 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json';
@@ -36,6 +37,8 @@ interface Props {
   showSites: boolean;
   focusId: string | null;
   onSiteClick: (id: string) => void;
+  /** called once the map has drawn its data for the first time; may return a delay before the map is uncovered */
+  onReady?: () => number | void;
 }
 
 interface Hover {
@@ -68,7 +71,21 @@ const sitesGeoJson = (sites: PlannedSite[]): GeoJSON.FeatureCollection<GeoJSON.P
   })),
 });
 
-export function MapView({ data, results, classes, selected, showChargers, onSelect, sites, showSites, focusId, onSiteClick }: Props) {
+const districtCentre = (g: GeoJSON.MultiPolygon): [number, number] => {
+  const b = new LngLatBounds();
+  for (const polygon of g.coordinates) for (const [lon, lat] of polygon[0]) b.extend([lon, lat]);
+  const c = b.getCenter();
+  return [c.lng, c.lat];
+};
+
+/** The largest outer ring of a subdistrict */
+const outline = (g: GeoJSON.MultiPolygon): [number, number][] => {
+  let ring = g.coordinates[0][0];
+  for (const polygon of g.coordinates) if (polygon[0].length > ring.length) ring = polygon[0];
+  return ring.map(([lon, lat]) => [lon, lat]);
+};
+
+export function MapView({ data, results, classes, selected, showChargers, onSelect, sites, showSites, focusId, onSiteClick, onReady }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -81,6 +98,11 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
   onSiteClickRef.current = onSiteClick;
   const siteById = useRef(new Map<string, PlannedSite>());
   siteById.current = new Map(sites.map((s) => [s.id, s]));
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  const flowCanvas = useRef<HTMLCanvasElement>(null);
+  const flowRef = useRef<PowerFlow | null>(null);
+  const [flowing, setFlowing] = useState(false);
 
   // Create the map once.
   useEffect(() => {
@@ -312,9 +334,26 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
       });
 
       setReady(true);
+      map.once('idle', uncover);
     });
+    // don't keep the boot screen up forever if the basemap never loads
+    let powerUp = 0;
+    let uncovered = false;
+    // lift the boot screen, then power up the grid once it has faded away
+    const uncover = () => {
+      if (uncovered) return;
+      uncovered = true;
+      const wait = onReadyRef.current?.() || 0;
+      powerUp = window.setTimeout(() => flowRef.current?.play(), wait + 350);
+    };
+    const bootTimeout = window.setTimeout(uncover, 10000);
+    if (flowCanvas.current) flowRef.current = createPowerFlow(map, flowCanvas.current, buildGrid(data.districts), setFlowing);
 
     return () => {
+      window.clearTimeout(bootTimeout);
+      window.clearTimeout(powerUp);
+      flowRef.current?.dispose();
+      flowRef.current = null;
       resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
@@ -400,12 +439,28 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
     });
   }, [ready, focusId]);
 
+  // Send a short pulse of current across the map whenever a filter or setting changes what it shows,
+  // starting at the selected subdistrict (and running round its border), or at the city centre.
+  const settled = useRef(false);
+  useEffect(() => {
+    if (!ready) return;
+    // the first run is the initial load: the power-up after the boot screen covers that
+    if (!settled.current) {
+      settled.current = true;
+      return;
+    }
+    const district = data.districts.features.find((f) => f.properties.ubz === selected);
+    flowRef.current?.play(district ? districtCentre(district.geometry) : undefined, district ? outline(district.geometry) : undefined);
+  }, [ready, data, results, classes, selected, showChargers, showSites, sites]);
+
   const hovered = hover ? results.get(hover.ubz) : undefined;
   const hoveredSite = siteHover ? siteById.current.get(siteHover.id) : undefined;
 
   return (
     <div className="map">
       <div ref={container} className="map-canvas" aria-label="Map of statistical subdistricts" role="region" />
+      <canvas ref={flowCanvas} className="power-flow" aria-hidden="true" />
+      <div className={`power-bar${flowing ? ' is-flowing' : ''}`} aria-hidden="true" />
       <div className="map-legend" aria-label="Map legend">
         <div className="map-legend-block">
           <span className="map-legend-title">Missing charging points</span>
