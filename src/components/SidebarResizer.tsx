@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 
-const KEY = 'ladebedarf-sidebar';
 const MIN = 240;
-const DEFAULT = 320;
 const STEP = 24;
 const maxWidth = () => Math.max(MIN, Math.round(window.innerWidth * 0.6));
 const clamp = (w: number) => Math.min(maxWidth(), Math.max(MIN, Math.round(w)));
@@ -14,42 +12,50 @@ interface Saved {
   floating: boolean;
 }
 
-function load(): Saved {
+function load(key: string, initial: number): Saved {
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    const s = JSON.parse(localStorage.getItem(key) ?? '{}');
     return {
-      width: typeof s.width === 'number' ? s.width : DEFAULT,
+      width: typeof s.width === 'number' ? s.width : initial,
       collapsed: s.collapsed === true,
       floating: s.floating === true,
     };
   } catch {
-    return { width: DEFAULT, collapsed: false, floating: false };
+    return { width: initial, collapsed: false, floating: false };
   }
 }
 
-/** Sidebar width and collapsed state, remembered per browser. */
-export function useSidebar() {
+/**
+ * Sidebar width and collapsed state, remembered per browser.
+ * `cssVar` carries the width to the layout; the left filters use --sidebar-w, the right panel --panel-w.
+ */
+export function useSidebar(key = 'ladebedarf-sidebar', initial = 320, cssVar = '--sidebar-w') {
   const [state, setState] = useState<Saved>(() => {
-    const s = load();
+    const s = load(key, initial);
     return { ...s, width: clamp(s.width) };
   });
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(key, JSON.stringify(state));
     } catch {
       /* private mode: just don't remember */
     }
-  }, [state]);
+  }, [key, state]);
 
   const setWidth = useCallback((w: number) => setState((s) => ({ ...s, width: clamp(w), collapsed: false })), []);
   const toggle = useCallback(() => setState((s) => ({ ...s, collapsed: !s.collapsed })), []);
   const toggleFloating = useCallback(() => setState((s) => ({ ...s, floating: !s.floating })), []);
-  const reset = useCallback(() => setState((s) => ({ ...s, width: DEFAULT, collapsed: false })), []);
-  const style = { '--sidebar-w': `${state.width}px` } as CSSProperties;
-  return { ...state, setWidth, toggle, toggleFloating, reset, style };
+  const expand = useCallback(() => setState((s) => (s.collapsed ? { ...s, collapsed: false } : s)), []);
+  const reset = useCallback(() => setState((s) => ({ ...s, width: initial, collapsed: false })), [initial]);
+  const style = { [cssVar]: `${state.width}px` } as CSSProperties;
+  return { ...state, setWidth, toggle, expand, toggleFloating, reset, style };
 }
 
 interface Props {
+  /** which edge of the map the pane sits on; a right pane grows when dragged left */
+  side?: 'left' | 'right';
+  /** what the pane holds, for the button labels */
+  label?: string;
   width: number;
   collapsed: boolean;
   floating: boolean;
@@ -60,7 +66,18 @@ interface Props {
 }
 
 /** Drag handle between sidebar and map, with a collapse button. */
-export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, onToggleFloating, onReset }: Props) {
+export function SidebarResizer({
+  side = 'left',
+  label = 'filters',
+  width,
+  collapsed,
+  floating,
+  onWidth,
+  onToggle,
+  onToggleFloating,
+  onReset,
+}: Props) {
+  const dir = side === 'left' ? 1 : -1;
   const drag = useRef<{ x: number; w: number } | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -71,15 +88,15 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
     setDragging(true);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (drag.current) onWidth(drag.current.w + e.clientX - drag.current.x);
+    if (drag.current) onWidth(drag.current.w + dir * (e.clientX - drag.current.x));
   };
   const stop = () => {
     drag.current = null;
     setDragging(false);
   };
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') onWidth(width - STEP);
-    else if (e.key === 'ArrowRight') onWidth(width + STEP);
+    if (e.key === 'ArrowLeft') onWidth(width - dir * STEP);
+    else if (e.key === 'ArrowRight') onWidth(width + dir * STEP);
     else if (e.key === 'Home') onWidth(MIN);
     else if (e.key === 'End') onWidth(maxWidth());
     else return;
@@ -87,23 +104,27 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
   };
 
   return (
-    <div className={`sidebar-resizer${dragging ? ' is-dragging' : ''}${collapsed ? ' is-collapsed' : ''}`}>
+    <div
+      className={`sidebar-resizer${side === 'right' ? ' is-right' : ''}${dragging ? ' is-dragging' : ''}${
+        collapsed ? ' is-collapsed' : ''
+      }`}
+    >
       <button
         type="button"
         className="sidebar-toggle"
         onClick={onToggle}
-        aria-label={collapsed ? 'Show filters' : 'Hide filters'}
+        aria-label={collapsed ? `Show ${label}` : `Hide ${label}`}
         aria-expanded={!collapsed}
-        title={collapsed ? 'Show filters' : 'Hide filters'}
+        title={collapsed ? `Show ${label}` : `Hide ${label}`}
       >
-        {collapsed ? '›' : '‹'}
+        {collapsed === (side === 'left') ? '›' : '‹'}
       </button>
       <button
         type="button"
         className="sidebar-toggle sidebar-mode"
         onClick={onToggleFloating}
         aria-pressed={floating}
-        aria-label={floating ? 'Dock the filters next to the map' : 'Float the filters over the map'}
+        aria-label={floating ? `Dock the ${label} next to the map` : `Float the ${label} over the map`}
         title={floating ? 'Dock next to the map' : 'Float over the map'}
       >
         {floating ? '▣' : '▢'}
@@ -113,7 +134,7 @@ export function SidebarResizer({ width, collapsed, floating, onWidth, onToggle, 
           className="sidebar-handle"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Filter pane width (arrow keys; double-click resets)"
+          aria-label={`${label[0].toUpperCase()}${label.slice(1)} pane width (arrow keys; double-click resets)`}
           aria-valuemin={MIN}
           aria-valuemax={maxWidth()}
           aria-valuenow={width}

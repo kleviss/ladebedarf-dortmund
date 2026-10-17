@@ -123,7 +123,20 @@ a {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-right: auto;
+}
+
+.brand picture {
+  display: contents;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 26px;
 }
 
 .kpis {
@@ -1038,6 +1051,7 @@ a {
 
 .current-layout {
   --lead: var(--sidebar-w, 320px) 10px;
+  --trail: 10px var(--panel-w, 360px);
   position: relative;
   display: grid;
   grid-template-columns: var(--lead) minmax(0, 1fr);
@@ -1045,7 +1059,36 @@ a {
 }
 
 .current-layout.has-selection {
-  grid-template-columns: var(--lead) minmax(0, 1fr) var(--panel-w, 340px);
+  grid-template-columns: var(--lead) minmax(0, 1fr) var(--trail);
+}
+
+/* collapsed details: only their resizer stays, with the button to bring them back */
+.current-layout.panel-collapsed {
+  --trail: 10px;
+}
+
+.detail-slot {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+.detail-slot[hidden] {
+  display: none;
+}
+
+.sidebar-resizer.is-right {
+  border-right: 0;
+  border-left: 1px solid var(--line);
+}
+
+.sidebar-resizer.is-right .sidebar-toggle {
+  left: auto;
+  right: 0;
+  border: 1px solid var(--line);
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  box-shadow: -2px 1px 4px rgb(0 0 0 / 0.08);
 }
 
 /* collapsed: the hidden filters take no grid cell, so only resizer + map remain */
@@ -1075,7 +1118,39 @@ a {
 }
 
 .current-layout.is-floating.has-selection {
-  grid-template-columns: minmax(0, 1fr) var(--panel-w, 340px);
+  grid-template-columns: minmax(0, 1fr) var(--trail);
+}
+
+/* floating details: they overlay the map from the right */
+.current-layout.has-selection.panel-floating {
+  grid-template-columns: var(--lead) minmax(0, 1fr);
+}
+
+.current-layout.is-floating.has-selection.panel-floating {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.current-layout.panel-floating .detail-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 5;
+  width: var(--panel-w, 360px);
+  box-shadow: -4px 0 18px rgb(0 0 0 / 0.16);
+}
+
+.current-layout.panel-floating .sidebar-resizer.is-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--panel-w, 360px);
+  width: 10px;
+  z-index: 6;
+}
+
+.current-layout.panel-floating.panel-collapsed .sidebar-resizer.is-right {
+  right: 0;
 }
 
 .current-layout.is-floating .filters-slot {
@@ -1111,6 +1186,13 @@ a {
   }
   .current-layout.is-floating:not(.is-collapsed) .maplibregl-ctrl-bottom-left {
     left: calc(var(--sidebar-w, 320px) + 10px);
+  }
+  /* zoom buttons clear of the detail toggles and the floating details */
+  .current-layout.has-selection .maplibregl-ctrl-bottom-right {
+    right: 14px;
+  }
+  .current-layout.has-selection.panel-floating:not(.panel-collapsed) .maplibregl-ctrl-bottom-right {
+    right: calc(var(--panel-w, 360px) + 10px);
   }
 }
 
@@ -1222,7 +1304,9 @@ a {
 @media (max-width: 1000px) {
   .current-layout,
   .current-layout.has-selection,
-  .current-layout.is-floating.has-selection {
+  .current-layout.is-floating.has-selection,
+  .current-layout.has-selection.panel-floating,
+  .current-layout.is-floating.has-selection.panel-floating {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(240px, 1fr);
     overflow-y: auto;
@@ -1242,7 +1326,9 @@ a {
 
   /* stacked on small screens: filters always shown in the flow */
   .current-layout .filters-slot,
-  .current-layout.is-floating .filters-slot {
+  .current-layout.is-floating .filters-slot,
+  .current-layout .detail-slot,
+  .current-layout.panel-floating .detail-slot {
     position: static;
     display: grid;
     width: auto;
@@ -1737,10 +1823,6 @@ a {
 .site-list-button.is-active {
   background: var(--surface-2);
   color: var(--ink);
-}
-
-.current-layout.has-sites {
-  --panel-w: 380px;
 }
 
 .priority-panel {
