@@ -1,5 +1,6 @@
 import type { FactorResult } from '../lib/factors';
 import type { DistrictResult } from '../lib/isme';
+import type { BonusEffect, BonusParams } from '../lib/bonus';
 
 interface Props {
   district: DistrictResult;
@@ -11,12 +12,15 @@ interface Props {
   onClose: () => void;
   /** planned stations in this district at the current demand level */
   plannedSites?: { level: string; stations: number; points: number; unplaced: number; onShow: () => void };
+  /** effect of the active bonus scenarios on this district */
+  bonus?: BonusEffect;
+  bonusParams?: BonusParams;
 }
 
 const fmt = (value: number, digits = 0) =>
   value.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose, plannedSites }: Props) {
+export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose, plannedSites, bonus, bonusParams }: Props) {
   return (
     <aside className="current-district" aria-labelledby="district-title" aria-live="polite">
       <header className="district-head">
@@ -42,6 +46,7 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <dd className="num">{fmt(district.gap)}</dd>
         </div>
       </dl>
+      {bonus && bonusParams && <BonusSteps e={bonus} p={bonusParams} />}
       {plannedSites && (
         <div className="district-sites">
           <p>
@@ -105,5 +110,69 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
         Live availability is not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')}.
       </p>
     </aside>
+  );
+}
+
+const minus = (n: number, digits = 0) => (n > 0 ? `−${fmt(n, digits)}` : fmt(0, digits));
+
+/** How the bonus scenarios change the missing street points, step by step. */
+function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
+  const kerb = e.priority.relief + e.commercial.relief + e.commercial.night > 0;
+  return (
+    <div className="bonus-steps" aria-label="Bonus scenarios in this subdistrict">
+      <p className="eyebrow">Bonus scenarios</p>
+      <dl>
+        <div>
+          <dt>Missing without scenarios</dt>
+          <dd className="num">{fmt(e.before)}</dd>
+        </div>
+        {p.priority && (
+          <div className="is-step">
+            <dt>
+              Buildings in the priority area
+              <span className="hint">
+                {fmt(e.priority.points)} new private points, {fmt(e.priority.evs, 1)} EVs charge at home
+              </span>
+            </dt>
+            <dd className="num">{minus(e.priority.relief, 1)}</dd>
+          </div>
+        )}
+        {p.commercial && (
+          <div className="is-step">
+            <dt>
+              Commercial car parks
+              <span className="hint">
+                {fmt(e.commercial.points)} new points, {fmt(e.commercial.evs, 1)} EVs charge at work
+                {p.commercialNight ? `, residents use them at night (−${fmt(e.commercial.night, 1)})` : ''}
+              </span>
+            </dt>
+            <dd className="num">{minus(e.commercial.relief + e.commercial.night, 1)}</dd>
+          </div>
+        )}
+        {kerb && p.supermarket && (
+          <div>
+            <dt>Missing after buildings and commercial car parks</dt>
+            <dd className="num">{fmt(e.middle)}</dd>
+          </div>
+        )}
+        {p.supermarket && (
+          <div className="is-step">
+            <dt>
+              Supermarkets
+              <span className="hint">
+                {e.supermarket.count === 0
+                  ? 'no supermarket with its own car park here'
+                  : `${fmt(e.supermarket.count)} with a car park × ${fmt(p.pointsPerSupermarket)} = ${fmt(e.supermarket.points)} points; they take ${fmt(p.absorbShare * 100)} % of ${fmt(e.middle)}`}
+              </span>
+            </dt>
+            <dd className="num">{minus(e.supermarket.takes)}</dd>
+          </div>
+        )}
+        <div className="is-total">
+          <dt>Remaining in street space</dt>
+          <dd className="num">{fmt(e.after)}</dd>
+        </div>
+      </dl>
+    </div>
   );
 }

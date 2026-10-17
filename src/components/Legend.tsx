@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react';
 import type { District } from '../lib/isme';
 import { FactorControls } from './FactorControls';
 import { SitePlanControls } from './SitePlanControls';
+import { BonusControls } from './BonusControls';
 
 interface Props {
   districts: District[];
@@ -13,9 +14,10 @@ interface Props {
   factorSettings: ComponentProps<typeof FactorControls>;
   /** missing while sites.json loads or if it is not built */
   sitePlan?: ComponentProps<typeof SitePlanControls>;
+  bonus: ComponentProps<typeof BonusControls>;
 }
 
-export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings, sitePlan }: Props) {
+export function Legend({ districts, selected, showChargers, onSelect, onToggleChargers, factorSettings, sitePlan, bonus }: Props) {
   const subdistricts = useMemo(
     () => [...districts].sort((a, b) => a.name.localeCompare(b.name, 'en') || a.ubz.localeCompare(b.ubz)),
     [districts],
@@ -40,6 +42,7 @@ export function Legend({ districts, selected, showChargers, onSelect, onToggleCh
       </label>
       {sitePlan && <SitePlanControls {...sitePlan} />}
       <FactorControls {...factorSettings} />
+      <BonusControls {...bonus} />
     </aside>
   );
 }

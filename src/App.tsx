@@ -3,9 +3,11 @@ import { MapView } from './components/MapView';
 import { Legend } from './components/Legend';
 import { DistrictPanel } from './components/DistrictPanel';
 import { PriorityPanel } from './components/PriorityPanel';
-import { loadData, loadSitePlan, type AppData } from './lib/data';
+import { loadBonus, loadData, loadSitePlan, type AppData } from './lib/data';
+import { anyBonus, applyBonus, bonusDefaults, bonusEffect, type BonusData, type BonusEffect, type BonusParams } from './lib/bonus';
+import type { BonusMap, BonusSummary } from './components/BonusControls';
 import { levelFor, paramsForLevel, sitesOf, type SiteLevel, type SitePlan } from './lib/sitePlan';
-import { computeCurrentDemand } from './lib/isme';
+import { computeCurrentDemand, type DistrictResult } from './lib/isme';
 import { computeFactors, currentStreetDemand } from './lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from './lib/factorData';
 import type { FactorParams } from './lib/factors';
@@ -84,16 +86,66 @@ function Dashboard({ data }: { data: AppData }) {
     }),
     [run],
   );
+  // bonus scenarios: charging points at supermarkets, buildings in the priority area and commercial car parks
+  const [bonusData, setBonusData] = useState<BonusData | null>(null);
+  const [bonus, setBonus] = useState<BonusParams>(bonusDefaults);
+  const [bonusMap, setBonusMap] = useState<BonusMap>('after');
+  const [showBonusLayers, setShowBonusLayers] = useState(true);
+  useEffect(() => {
+    loadBonus().then(setBonusData);
+  }, []);
+  const bonusOn = anyBonus(bonus) && bonusData !== null;
+  const effects = useMemo(() => {
+    const out = new Map<string, BonusEffect>();
+    if (!bonusOn || !bonusData) return out;
+    const byUbz = new Map(bonusData.districts.map((d) => [d.ubz, d]));
+    for (const r of run.results) out.set(r.ubz, bonusEffect(r, byUbz.get(r.ubz), bonus, params, run.bevShare));
+    return out;
+  }, [bonusOn, bonusData, bonus, run, params]);
   const results = useMemo(
     () =>
       data.districts.features.map((f) => {
         const fr = factors.get(f.properties.ubz);
-        return fr ? currentStreetDemand(f.properties, fr) : computeCurrentDemand(f.properties);
+        if (!fr) return computeCurrentDemand(f.properties);
+        const r = currentStreetDemand(f.properties, fr);
+        const e = effects.get(r.ubz);
+        return e ? applyBonus(r, e) : r;
       }),
-    [data, factors],
+    [data, factors, effects],
   );
+  const bonusSummary = useMemo<BonusSummary>(() => {
+    const s: BonusSummary = { before: 0, after: 0, priority: 0, commercial: 0, supermarket: 0, newPoints: { priority: 0, commercial: 0, supermarket: 0 } };
+    for (const r of results) {
+      s.before += r.gapBefore ?? r.gap;
+      s.after += r.gap;
+    }
+    // per-scenario reductions in the order they are applied, so they add up to the total
+    for (const e of effects.values()) {
+      s.supermarket += e.supermarket.takes;
+      s.newPoints.priority += e.priority.points;
+      s.newPoints.commercial += e.commercial.points;
+      s.newPoints.supermarket += e.supermarket.points;
+    }
+    const reliefOnly = s.before - s.after - s.supermarket;
+    const relief = [...effects.values()].reduce(
+      (a, e) => [a[0] + e.priority.relief, a[1] + e.commercial.relief + e.commercial.night],
+      [0, 0],
+    );
+    const total = relief[0] + relief[1];
+    s.priority = total > 0 ? Math.round((reliefOnly * relief[0]) / total) : 0;
+    s.commercial = reliefOnly - s.priority;
+    return s;
+  }, [results, effects]);
   const byUbz = useMemo(() => new Map(results.map((r) => [r.ubz, r])), [results]);
-  const classes = useMemo(() => quantileClasses(results.map((r) => r.gap)), [results]);
+  const showReduction = bonusOn && bonusMap === 'reduction';
+  const shade = useMemo(
+    () =>
+      showReduction
+        ? { title: 'Fewer missing points (bonus scenarios)', value: (r: DistrictResult) => (r.gapBefore ?? r.gap) - r.gap }
+        : { title: bonusOn ? 'Missing charging points (with scenarios)' : 'Missing charging points', value: (r: DistrictResult) => r.gap },
+    [showReduction, bonusOn],
+  );
+  const classes = useMemo(() => quantileClasses(results.map(shade.value)), [results, shade]);
   const district = selected ? byUbz.get(selected) : undefined;
 
   // site planning: precomputed stations for the level that matches the model's EV basis
@@ -166,6 +218,17 @@ function Dashboard({ data }: { data: AppData }) {
             showChargers={showChargers}
             onSelect={setSelected}
             onToggleChargers={setShowChargers}
+            bonus={{
+              data: bonusData,
+              params: bonus,
+              summary: bonusSummary,
+              bevShare: run.bevShare,
+              map: bonusMap,
+              showLayers: showBonusLayers,
+              onChange: setBonus,
+              onMap: setBonusMap,
+              onToggleLayers: setShowBonusLayers,
+            }}
             factorSettings={{ specs: factorSpecs, params, defaults: factorDefaults, totals, onChange: setParams }}
             sitePlan={
               plan && siteLevel
@@ -199,6 +262,12 @@ function Dashboard({ data }: { data: AppData }) {
             data={data}
             results={byUbz}
             classes={classes}
+            shade={shade}
+            bonusLayers={
+              bonusOn && showBonusLayers && bonusData
+                ? { supermarkets: bonus.supermarket ? bonusData.supermarkets : [], priority: bonus.priority }
+                : null
+            }
             selected={selected}
             showChargers={showChargers}
             onSelect={setSelected}
@@ -245,6 +314,8 @@ function Dashboard({ data }: { data: AppData }) {
             <DistrictPanel
               district={district}
               factors={factors.get(district.ubz)}
+              bonus={effects.get(district.ubz)}
+              bonusParams={bonus}
               scenario={params.bevMode === 'scenario' ? params.bevShareScenario : null}
               fetchedAt={data.meta.fetchedAt}
               onClose={() => setSelected(null)}
