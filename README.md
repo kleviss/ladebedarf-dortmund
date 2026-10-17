@@ -19,6 +19,8 @@ Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktu
 
 ## Team resources
 
+_Git check: this line was added on 2026-10-17 to test the push workflow and can be removed._
+
 Challenge material shared via Sciebo (TU Dortmund):
 
 | Folder | Contents |
