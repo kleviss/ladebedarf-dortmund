@@ -334,6 +334,16 @@ Then open <http://localhost:5173>.
 | `npm run build` | Type-checks and builds to `dist/` |
 | `npm run preview` | Serves the built app locally |
 
+### Street View (optional)
+
+Each planned site in the priority list has a Street View button. Set a Google Maps API key with the **Maps Embed API** enabled to show Street View inside the card, loaded only when someone clicks it:
+
+```bash
+cp .env.example .env.local   # then fill in VITE_GOOGLE_MAPS_API_KEY
+```
+
+Restrict the key to your HTTP referrers (for example `localhost:5173/*` and the Vercel domain) in the Google Cloud console, since it ships in the browser bundle. Never commit `.env.local`. Without a key the button opens Google Street View in a new tab instead.
+
 The generated files in `public/data/city/` are committed, so the app builds without network access. Run `npm run data:refresh` when the city updates the Sciebo folder and commit the result.
 
 ---
@@ -341,7 +351,7 @@ The generated files in `public/data/city/` are committed, so the app builds with
 ## Deploy to Vercel
 
 1. Push this repository to GitHub (see below).
-2. On <https://vercel.com/new>, import the repository. Vercel detects Vite: build command `npm run build`, output directory `dist`. No environment variables are needed.
+2. On <https://vercel.com/new>, import the repository. Vercel detects Vite: build command `npm run build`, output directory `dist`. No environment variables are needed; add `VITE_GOOGLE_MAPS_API_KEY` under Settings → Environment Variables for the embedded Street View.
 3. Every push to `main` redeploys; every pull request gets a preview URL.
 
 Or from the terminal:
