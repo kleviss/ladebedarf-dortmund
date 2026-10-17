@@ -101,6 +101,26 @@ connector counts; existing points assume one point per location, and do not mean
 currently unoccupied or operational chargers. The displayed retrieval date is not
 necessarily the source's observation date.
 
+### Bonus scenarios (bonus tasks of the challenge)
+
+*Bonus scenarios* in the filter pane answer how the street-space demand per Unterbezirk
+changes if charging moves off the street. Each scenario can be switched on alone or together,
+shows the task's wording, a formula tooltip and its city-wide effect; the details panel shows
+the steps per district, and the map can be coloured by missing points after the scenarios or
+by the reduction (`src/lib/bonus.ts`, inputs from `scripts/build-bonus.mjs`, OpenStreetMap):
+
+1. **Supermarket car parks**: every supermarket with its own car park gets 10 points
+   (adjustable). Because they open only by day for short stays, a supermarket takes at most
+   α of the missing points (default 20 %): 10 missing → 2 at the supermarket, 8 at the kerb.
+2. **Buildings in the priority area**: 20 % of the parking spaces at buildings inside the
+   city's priority cells get points. Only EV drivers use them (`min(points, spaces × EV share)`),
+   and each EV that charges at home frees `r_R ÷ k` street points of the residents' demand.
+3. **Commercial areas**: 20 % of the parking spaces in `landuse=commercial|industrial` get
+   points; they relieve the in-commuters (`r_W ÷ k` per EV) and, if opened overnight, residents.
+
+Supermarkets are applied last, to what the other two leave. Raising the EV share under
+*Model settings* shows how the scenarios grow with the fleet.
+
 Scenario controls, ranking, reports navigation, extra map layers and detailed
 calculation panels are not mounted in this view. Their components and the original
 forecast calculations remain in the repository for future use. Old scenario URL

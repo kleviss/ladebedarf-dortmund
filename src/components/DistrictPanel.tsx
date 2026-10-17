@@ -113,6 +113,8 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
   );
 }
 
+const minus = (n: number, digits = 0) => (n > 0 ? `−${fmt(n, digits)}` : fmt(0, digits));
+
 /** How the bonus scenarios change the missing street points, step by step. */
 function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
   const kerb = e.priority.relief + e.commercial.relief + e.commercial.night > 0;
@@ -132,7 +134,7 @@ function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
                 {fmt(e.priority.points)} new private points, {fmt(e.priority.evs, 1)} EVs charge at home
               </span>
             </dt>
-            <dd className="num">−{fmt(e.priority.relief, 1)}</dd>
+            <dd className="num">{minus(e.priority.relief, 1)}</dd>
           </div>
         )}
         {p.commercial && (
@@ -144,7 +146,7 @@ function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
                 {p.commercialNight ? `, residents use them at night (−${fmt(e.commercial.night, 1)})` : ''}
               </span>
             </dt>
-            <dd className="num">−{fmt(e.commercial.relief + e.commercial.night, 1)}</dd>
+            <dd className="num">{minus(e.commercial.relief + e.commercial.night, 1)}</dd>
           </div>
         )}
         {kerb && p.supermarket && (
@@ -163,7 +165,7 @@ function BonusSteps({ e, p }: { e: BonusEffect; p: BonusParams }) {
                   : `${fmt(e.supermarket.count)} with a car park × ${fmt(p.pointsPerSupermarket)} = ${fmt(e.supermarket.points)} points; they take ${fmt(p.absorbShare * 100)} % of ${fmt(e.middle)}`}
               </span>
             </dt>
-            <dd className="num">−{fmt(e.supermarket.takes)}</dd>
+            <dd className="num">{minus(e.supermarket.takes)}</dd>
           </div>
         )}
         <div className="is-total">
