@@ -43,6 +43,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "model"
 CITY = ROOT / "public" / "data" / "city"
 OUT = ROOT / "public" / "data" / "model"
+MODEL = ROOT / "src" / "data" / "model"  # bundled into the app, see src/lib/factorData.ts
 REFRESH = "--refresh" in sys.argv
 OPEN_DATA = "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets"
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
@@ -97,9 +98,9 @@ def overpass(name, query):
     return json.loads(cached(name, load).read_text(encoding="utf-8"))
 
 
-P = {p["key"]: p["default"] for p in json.loads((OUT / "parameters.json").read_text(encoding="utf-8"))["parameters"]}
-f = pd.read_csv(OUT / "factors.csv", dtype={"ubz": str}).set_index("ubz")
-dest = pd.read_csv(OUT / "destinations.csv", dtype={"ubz": str})
+P = {p["key"]: p["default"] for p in json.loads((MODEL / "parameters.json").read_text(encoding="utf-8"))["parameters"]}
+f = pd.read_csv(MODEL / "factors.csv", dtype={"ubz": str}).set_index("ubz")
+dest = pd.read_csv(MODEL / "destinations.csv", dtype={"ubz": str})
 ub = gpd.read_file(CITY / "unterbezirke.geojson")[["ubz", "name", "geometry"]].to_crs(3035)
 X0, Y0, X1, Y1 = ub.total_bounds
 

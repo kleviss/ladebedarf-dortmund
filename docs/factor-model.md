@@ -6,9 +6,9 @@ Status: data and a tested reference implementation are in the repo; the UI does 
 
 | File | Content |
 |---|---|
-| [`public/data/model/parameters.json`](../public/data/model/parameters.json) | Every parameter with default, range, kind and source. Single source of truth for Python and TypeScript. |
-| [`public/data/model/factors.csv`](../public/data/model/factors.csv) | 145 Unterbezirke: inputs (city statistics, Zensus, ALKIS, OSM) and reference results |
-| [`public/data/model/destinations.csv`](../public/data/model/destinations.csv) | 99 tourist destinations with visitors per year where a public figure exists |
+| [`src/data/model/parameters.json`](../src/data/model/parameters.json) | Every parameter with default, range, kind and source. Single source of truth for Python and TypeScript. |
+| [`src/data/model/factors.csv`](../src/data/model/factors.csv) | 145 Unterbezirke: inputs (city statistics, Zensus, ALKIS, OSM) and reference results |
+| [`src/data/model/destinations.csv`](../src/data/model/destinations.csv) | 99 tourist destinations with visitors per year where a public figure exists |
 | [`public/data/model/chargers.json`](../public/data/model/chargers.json) | 912 charging stations from the Bundesnetzagentur register: charging points, kW, AC/DC, access, operator, start date |
 | [`src/lib/factors.ts`](../src/lib/factors.ts) | Reference implementation with calculation steps for the UI; tests in [`factors.test.ts`](../src/lib/factors.test.ts) |
 | [`scripts/model/build_factors.py`](../scripts/model/build_factors.py) | Builds the two CSV files; `--validate` prints the tests below |
@@ -174,7 +174,7 @@ Checked against Open Data Dortmund.
 | Tourists | every guest = one car, all charge publicly; key 50 % attractions + 50 % POIs | `personsPerCar`, `chargeAtDestinationShare`; key = visitor numbers | add both parameters |
 | Existing | `pointsPerSite` 1 (locations) | register: public AC points | switch the app to the register |
 
-To use it in the UI: load the three files from `public/data/model/`, build the parameters with `defaultFactorParams`, and call `computeFactors`; each result carries `steps` in the same format as `isme.ts`.
+To use it in the UI: load the three files from `src/data/model/`, build the parameters with `defaultFactorParams`, and call `computeFactors`; each result carries `steps` in the same format as `isme.ts`.
 
 ## Rebuild
 

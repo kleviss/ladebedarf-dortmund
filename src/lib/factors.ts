@@ -1,6 +1,6 @@
 // Street-space factor model (docs/factor-model.md): charging points in street space per
 // Unterbezirk for residents, commuters and tourists, from measured local data instead of
-// city-wide shares. Not wired into the UI yet. Inputs: public/data/model/factors.csv,
+// city-wide shares. Not wired into the UI yet. Inputs: src/data/model/factors.csv,
 // destinations.csv and parameters.json (built by scripts/model/build_factors.py, which
 // uses the same formulas and writes reference results the tests compare against).
 //
@@ -101,7 +101,7 @@ export interface ParameterSpec {
   note?: string;
 }
 
-/** Defaults from public/data/model/parameters.json. */
+/** Defaults from src/data/model/parameters.json. */
 export function defaultFactorParams(json: { parameters: ParameterSpec[] }): FactorParams {
   return Object.fromEntries(json.parameters.map((p) => [p.key, p.default])) as unknown as FactorParams;
 }

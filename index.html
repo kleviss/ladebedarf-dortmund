@@ -20,8 +20,199 @@
     <meta name="twitter:description" content="Estimated current public-charging demand by Dortmund subdistrict, based on recorded electric cars and ISME public-charging use cases." />
     <meta name="twitter:image" content="https://ladebedarf-dortmund.vercel.app/og-image.jpg" />
     <title>Dortmund Charging Demand</title>
+    <style>
+      /* Boot screen: shown from the first paint until the map has drawn, then faded out by the app. */
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        background: #f6f6f3;
+        color: #0b0b0b;
+        font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        transition: opacity 0.45s ease, visibility 0.45s;
+        --boot-accent: #1c5cab;
+        --boot-spark: #2bb3ff;
+        --boot-wire: #d5d9df;
+      }
+      /* the city map, faded out, behind the animation */
+      #boot .boot-map {
+        position: absolute;
+        inset: -4%;
+        z-index: -1;
+        background: url('/boot-map.jpg') center / cover no-repeat;
+        opacity: 0.2;
+        filter: saturate(0.7);
+        animation: boot-map 6s ease-out both;
+      }
+      #boot .boot-map::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #f6f6f3 72%);
+      }
+      #boot.boot-done {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #boot svg {
+        width: 168px;
+        height: 168px;
+        overflow: visible;
+      }
+      #boot .boot-wire {
+        fill: none;
+        stroke: var(--boot-wire);
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      #boot .boot-flow {
+        fill: none;
+        stroke: var(--boot-spark);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 8 40;
+        filter: drop-shadow(0 0 3px var(--boot-spark));
+        animation: boot-flow 1.1s linear infinite;
+        animation-delay: calc(var(--i) * -0.14s);
+      }
+      #boot .boot-node {
+        fill: #fff;
+        stroke: var(--boot-accent);
+        stroke-width: 2;
+        animation: boot-node 1.1s ease-in-out infinite;
+        animation-delay: calc(var(--i) * -0.14s);
+      }
+      #boot .boot-ring {
+        fill: none;
+        stroke: var(--boot-wire);
+        stroke-width: 4;
+      }
+      #boot .boot-charge {
+        fill: none;
+        stroke: var(--boot-spark);
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 60 229;
+        transform-origin: 100px 100px;
+        filter: drop-shadow(0 0 4px var(--boot-spark));
+        animation: boot-spin 1.4s cubic-bezier(0.6, 0.1, 0.4, 0.9) infinite;
+      }
+      #boot .boot-core {
+        fill: var(--boot-accent);
+        animation: boot-core 1.1s ease-in-out infinite;
+        transform-origin: 100px 100px;
+      }
+      #boot .boot-bolt {
+        fill: #fff;
+      }
+      #boot .boot-logo {
+        display: block;
+        width: min(320px, 72vw);
+        height: auto;
+        margin-top: 8px;
+      }
+      #boot .boot-sub {
+        margin: 0;
+        color: #74726c;
+      }
+      @keyframes boot-flow {
+        from { stroke-dashoffset: 48; }
+        to { stroke-dashoffset: 0; }
+      }
+      @keyframes boot-node {
+        0%, 100% { fill: #fff; }
+        50% { fill: var(--boot-spark); }
+      }
+      @keyframes boot-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes boot-core {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+      @keyframes boot-map {
+        from { opacity: 0; transform: scale(1.04); }
+        to { opacity: 0.2; transform: scale(1); }
+      }
+      @keyframes boot-map-dark {
+        from { opacity: 0; transform: scale(1.04); }
+        to { opacity: 0.24; transform: scale(1); }
+      }
+      @media (prefers-color-scheme: dark) {
+        #boot {
+          background: #111110;
+          color: #f0efec;
+          --boot-accent: #3987e5;
+          --boot-wire: #2f3338;
+        }
+        #boot .boot-node {
+          fill: #1a1a19;
+        }
+        #boot .boot-map {
+          opacity: 0.24;
+          filter: saturate(0.7) brightness(0.75);
+          animation-name: boot-map-dark;
+        }
+        #boot .boot-map::after {
+          background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #111110 72%);
+        }
+        #boot .boot-sub {
+          color: #9a988f;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot * {
+          animation: none !important;
+        }
+        #boot .boot-flow {
+          stroke-dasharray: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" role="status" aria-live="polite">
+      <div class="boot-map" aria-hidden="true"></div>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <path class="boot-wire" d="M134.4 16.9L121.4 48.3" />
+        <path class="boot-wire" d="M183.1 65.6L151.7 78.6" />
+        <path class="boot-wire" d="M183.1 134.4L151.7 121.4" />
+        <path class="boot-wire" d="M134.4 183.1L121.4 151.7" />
+        <path class="boot-wire" d="M65.6 183.1L78.6 151.7" />
+        <path class="boot-wire" d="M16.9 134.4L48.3 121.4" />
+        <path class="boot-wire" d="M16.9 65.6L48.3 78.6" />
+        <path class="boot-wire" d="M65.6 16.9L78.6 48.3" />
+        <path class="boot-flow" style="--i: 0" d="M134.4 16.9L121.4 48.3" />
+        <path class="boot-flow" style="--i: 1" d="M183.1 65.6L151.7 78.6" />
+        <path class="boot-flow" style="--i: 2" d="M183.1 134.4L151.7 121.4" />
+        <path class="boot-flow" style="--i: 3" d="M134.4 183.1L121.4 151.7" />
+        <path class="boot-flow" style="--i: 4" d="M65.6 183.1L78.6 151.7" />
+        <path class="boot-flow" style="--i: 5" d="M16.9 134.4L48.3 121.4" />
+        <path class="boot-flow" style="--i: 6" d="M16.9 65.6L48.3 78.6" />
+        <path class="boot-flow" style="--i: 7" d="M65.6 16.9L78.6 48.3" />
+        <circle class="boot-node" style="--i: 0" cx="134.4" cy="16.9" r="4.5" />
+        <circle class="boot-node" style="--i: 1" cx="183.1" cy="65.6" r="4.5" />
+        <circle class="boot-node" style="--i: 2" cx="183.1" cy="134.4" r="4.5" />
+        <circle class="boot-node" style="--i: 3" cx="134.4" cy="183.1" r="4.5" />
+        <circle class="boot-node" style="--i: 4" cx="65.6" cy="183.1" r="4.5" />
+        <circle class="boot-node" style="--i: 5" cx="16.9" cy="134.4" r="4.5" />
+        <circle class="boot-node" style="--i: 6" cx="16.9" cy="65.6" r="4.5" />
+        <circle class="boot-node" style="--i: 7" cx="65.6" cy="16.9" r="4.5" />
+        <circle class="boot-ring" cx="100" cy="100" r="46" />
+        <circle class="boot-charge" cx="100" cy="100" r="46" />
+        <circle class="boot-core" cx="100" cy="100" r="34" />
+        <path class="boot-bolt" d="M105 76 86 103h12l-4 21 19-28h-12z" />
+      </svg>
+      <picture>
+        <source srcset="/electricity-logo-dark.png" media="(prefers-color-scheme: dark)" />
+        <img class="boot-logo" src="/electricity-logo.png" alt="ElectriCity" width="700" height="126" />
+      </picture>
+      <p class="boot-sub">Powering up the map</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

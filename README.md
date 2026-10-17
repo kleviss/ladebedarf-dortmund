@@ -212,7 +212,7 @@ Data: [`scripts/build-bottomup.mjs`](scripts/build-bottomup.mjs) (part of `npm r
 
 ### Street-space factor model (data ready, not in the UI yet)
 
-[`docs/factor-model.md`](docs/factor-model.md) computes street-space points per Unterbezirk for residents, commuters and tourists from Zensus 2022 dwellings, ALKIS garages and workplaces, OSM parking and visitor numbers. Each factor's formula, parameters, defaults and sources are documented there and in [`public/data/model/parameters.json`](public/data/model/parameters.json). The model was validated against real per-district data, and the doc includes a plausibility check of the ISME report. Inputs and reference results: `public/data/model/*.csv` (built by `scripts/model/build_factors.py`); implementation: [`src/lib/factors.ts`](src/lib/factors.ts).
+[`docs/factor-model.md`](docs/factor-model.md) computes street-space points per Unterbezirk for residents, commuters and tourists from Zensus 2022 dwellings, ALKIS garages and workplaces, OSM parking and visitor numbers. Each factor's formula, parameters, defaults and sources are documented there and in [`src/data/model/parameters.json`](src/data/model/parameters.json). The model was validated against real per-district data, and the doc includes a plausibility check of the ISME report. Inputs and reference results: `src/data/model/*.csv` (built by `scripts/model/build_factors.py`); implementation: [`src/lib/factors.ts`](src/lib/factors.ts).
 
 **Open points in the city's material** (switchable in the app):
 
@@ -392,7 +392,7 @@ Pick a task, open an issue or a branch with its name, and update this list in yo
 - [x] Public parking layer with distance to the nearest charger
 - [x] Reports page for the presentation
 - [x] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister (identical stations; 1,370 points)
-- [x] Use Zensus 2022 grid for population and building type per Unterbezirk (`public/data/model/factors.csv`)
+- [x] Use Zensus 2022 grid for population and building type per Unterbezirk (`src/data/model/factors.csv`)
 - [ ] Wire the street-space factor model (`src/lib/factors.ts`) into the UI
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district
 - [ ] Add points of interest (schools, hospitals, supermarkets via OSM) as destination-charging factor

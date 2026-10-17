@@ -13,13 +13,17 @@ import { factorDefaults, factorDestinations, factorDistricts, factorSpecs } from
 import type { FactorParams } from './lib/factors';
 import { quantileClasses } from './lib/metrics';
 import { SidebarResizer, useSidebar } from './components/SidebarResizer';
+import { hideBoot } from './lib/boot';
 
 export default function App() {
   const [data, setData] = useState<AppData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData().then(setData, (e: Error) => setError(e.message));
+    loadData().then(setData, (e: Error) => {
+      setError(e.message);
+      hideBoot();
+    });
   }, []);
 
   if (error) {
@@ -33,7 +37,8 @@ export default function App() {
       </div>
     );
   }
-  if (!data) return <div className="state">Loading data …</div>;
+  // the boot screen from index.html stays up until the map has drawn
+  if (!data) return null;
   return <Dashboard data={data} />;
 }
 
@@ -252,6 +257,7 @@ function Dashboard({ data }: { data: AppData }) {
             showSites={showSites}
             focusId={focusId}
             onSiteClick={openSite}
+            onReady={hideBoot}
           />
         </div>
         {panel === 'sites' && plan && siteLevel && (
