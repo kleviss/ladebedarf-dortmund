@@ -1684,6 +1684,148 @@ a {
   flex-wrap: wrap;
 }
 
+/* --- bonus scenarios --------------------------------------------------------- */
+
+.bonus-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.bonus-controls h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.bonus-controls .hint {
+  margin: 0;
+}
+
+.bonus-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--chip-assumption);
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.bonus-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.bonus-card.is-on {
+  border-color: #c2410c;
+  box-shadow: inset 3px 0 0 #c2410c;
+}
+
+.bonus-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.bonus-card-head label {
+  flex: 1;
+  cursor: pointer;
+}
+
+.bonus-task {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.bonus-effect {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.bonus-result {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.bonus-result p {
+  margin: 0;
+}
+
+.bonus-delta {
+  color: #166534;
+  font-weight: 700;
+}
+
+.current-filters .bonus-result label.toggle {
+  margin: 0;
+}
+
+.toggle .dot-supermarket {
+  background: #c2410c;
+}
+
+.bonus-steps {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-left: 3px solid #c2410c;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.bonus-steps .eyebrow {
+  margin: 0 0 6px;
+}
+
+.bonus-steps dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.bonus-steps dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.bonus-steps dt .hint {
+  display: block;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.bonus-steps dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.bonus-steps .is-step dd {
+  color: #166534;
+}
+
+.bonus-steps .is-total {
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
 /* --- site planning ----------------------------------------------------------- */
 
 .site-controls {
@@ -1947,146 +2089,4 @@ a {
   .current-layout.has-sites {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* --- bonus scenarios --------------------------------------------------------- */
-
-.bonus-controls {
-  display: grid;
-  gap: 8px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-
-.bonus-controls h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 1rem;
-}
-
-.bonus-controls .hint {
-  margin: 0;
-}
-
-.bonus-badge {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--chip-assumption);
-  color: var(--ink);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.bonus-card {
-  display: grid;
-  gap: 6px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
-}
-
-.bonus-card.is-on {
-  border-color: #c2410c;
-  box-shadow: inset 3px 0 0 #c2410c;
-}
-
-.bonus-card-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-}
-
-.bonus-card-head label {
-  flex: 1;
-  cursor: pointer;
-}
-
-.bonus-task {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-style: italic;
-}
-
-.bonus-effect {
-  margin: 0;
-  font-size: 0.8rem;
-}
-
-.bonus-result {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 6px;
-  background: var(--surface-2);
-}
-
-.bonus-result p {
-  margin: 0;
-}
-
-.bonus-delta {
-  color: #166534;
-  font-weight: 700;
-}
-
-.current-filters .bonus-result label.toggle {
-  margin: 0;
-}
-
-.toggle .dot-supermarket {
-  background: #c2410c;
-}
-
-.bonus-steps {
-  margin: 12px 0;
-  padding: 10px 12px;
-  border-left: 3px solid #c2410c;
-  border-radius: 6px;
-  background: var(--surface-2);
-}
-
-.bonus-steps .eyebrow {
-  margin: 0 0 6px;
-}
-
-.bonus-steps dl {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-}
-
-.bonus-steps dl > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  font-size: 0.85rem;
-}
-
-.bonus-steps dt .hint {
-  display: block;
-  margin: 0;
-  font-size: 0.75rem;
-}
-
-.bonus-steps dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.bonus-steps .is-step dd {
-  color: #166534;
-}
-
-.bonus-steps .is-total {
-  padding-top: 6px;
-  border-top: 1px solid var(--line);
-  font-weight: 700;
 }
