@@ -71,13 +71,6 @@ const sitesGeoJson = (sites: PlannedSite[]): GeoJSON.FeatureCollection<GeoJSON.P
   })),
 });
 
-const districtCentre = (g: GeoJSON.MultiPolygon): [number, number] => {
-  const b = new LngLatBounds();
-  for (const polygon of g.coordinates) for (const [lon, lat] of polygon[0]) b.extend([lon, lat]);
-  const c = b.getCenter();
-  return [c.lng, c.lat];
-};
-
 /** The largest outer ring of a subdistrict */
 const outline = (g: GeoJSON.MultiPolygon): [number, number][] => {
   let ring = g.coordinates[0][0];
@@ -440,7 +433,7 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
   }, [ready, focusId]);
 
   // Send a short pulse of current across the map whenever a filter or setting changes what it shows,
-  // starting at the selected subdistrict (and running round its border), or at the city centre.
+  // from the city centre; with a subdistrict selected, current only runs round its border.
   const settled = useRef(false);
   useEffect(() => {
     if (!ready) return;
@@ -450,7 +443,7 @@ export function MapView({ data, results, classes, selected, showChargers, onSele
       return;
     }
     const district = data.districts.features.find((f) => f.properties.ubz === selected);
-    flowRef.current?.play(district ? districtCentre(district.geometry) : undefined, district ? outline(district.geometry) : undefined);
+    flowRef.current?.play(undefined, district ? outline(district.geometry) : undefined);
   }, [ready, data, results, classes, selected, showChargers, showSites, sites]);
 
   const hovered = hover ? results.get(hover.ubz) : undefined;

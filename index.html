@@ -38,6 +38,22 @@
         --boot-spark: #2bb3ff;
         --boot-wire: #d5d9df;
       }
+      /* the city map, faded out, behind the animation */
+      #boot .boot-map {
+        position: absolute;
+        inset: -4%;
+        z-index: -1;
+        background: url('/boot-map.jpg') center / cover no-repeat;
+        opacity: 0.2;
+        filter: saturate(0.7);
+        animation: boot-map 6s ease-out both;
+      }
+      #boot .boot-map::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #f6f6f3 72%);
+      }
       #boot.boot-done {
         opacity: 0;
         visibility: hidden;
@@ -93,10 +109,11 @@
       #boot .boot-bolt {
         fill: #fff;
       }
-      #boot .boot-title {
-        margin: 6px 0 0;
-        font-size: 18px;
-        font-weight: 700;
+      #boot .boot-logo {
+        display: block;
+        width: min(320px, 72vw);
+        height: auto;
+        margin-top: 8px;
       }
       #boot .boot-sub {
         margin: 0;
@@ -121,6 +138,14 @@
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.06); }
       }
+      @keyframes boot-map {
+        from { opacity: 0; transform: scale(1.04); }
+        to { opacity: 0.2; transform: scale(1); }
+      }
+      @keyframes boot-map-dark {
+        from { opacity: 0; transform: scale(1.04); }
+        to { opacity: 0.24; transform: scale(1); }
+      }
       @keyframes boot-dots {
         0% { content: ''; }
         25% { content: '.'; }
@@ -136,6 +161,14 @@
         }
         #boot .boot-node {
           fill: #1a1a19;
+        }
+        #boot .boot-map {
+          opacity: 0.24;
+          filter: saturate(0.7) brightness(0.75);
+          animation-name: boot-map-dark;
+        }
+        #boot .boot-map::after {
+          background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #111110 72%);
         }
         #boot .boot-sub {
           color: #9a988f;
@@ -154,6 +187,7 @@
   </head>
   <body>
     <div id="boot" role="status" aria-live="polite">
+      <div class="boot-map" aria-hidden="true"></div>
       <svg viewBox="0 0 200 200" aria-hidden="true">
         <path class="boot-wire" d="M134.4 16.9L121.4 48.3" />
         <path class="boot-wire" d="M183.1 65.6L151.7 78.6" />
@@ -184,7 +218,10 @@
         <circle class="boot-core" cx="100" cy="100" r="34" />
         <path class="boot-bolt" d="M105 76 86 103h12l-4 21 19-28h-12z" />
       </svg>
-      <p class="boot-title">Dortmund Charging Demand</p>
+      <picture>
+        <source srcset="/electricity-logo-dark.png" media="(prefers-color-scheme: dark)" />
+        <img class="boot-logo" src="/electricity-logo.png" alt="ElectriCity" width="700" height="126" />
+      </picture>
       <p class="boot-sub">Powering up the map<span class="boot-dots"></span></p>
     </div>
     <div id="root"></div>

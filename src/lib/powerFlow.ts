@@ -90,8 +90,8 @@ function flowTree(grid: Grid, origin: LngLat) {
 
 export interface PowerFlow {
   /**
-   * Play once from `origin` (the city centre when omitted), tracing `outline` too when given;
-   * a call while the current is still spreading is ignored.
+   * Play once: current spreads over the grid from `origin` (the city centre when omitted), or, when `outline`
+   * is given, only runs round that border. A call while the current is still spreading is ignored.
    */
   play(origin?: LngLat, outline?: LngLat[]): void;
   dispose(): void;
@@ -107,6 +107,8 @@ export function createPowerFlow(map: MapLibreMap, canvas: HTMLCanvasElement, gri
   let started = 0;
   let tree: ReturnType<typeof flowTree> | null = null;
   let ring: LngLat[] = [];
+  /** distance along the ring up to each vertex */
+  let ringLength: number[] = [];
 
   const stop = () => {
     cancelAnimationFrame(frame);
@@ -178,9 +180,11 @@ export function createPowerFlow(map: MapLibreMap, canvas: HTMLCanvasElement, gri
     if (ring.length > 1) {
       const e = Math.min(1, t / FLOW_MS);
       const p = ring.map((c) => map.project(c));
-      const upto = e * (p.length - 1);
-      const n = Math.floor(upto);
-      const frac = upto - n;
+      // move along the border at an even speed, however unevenly its vertices are spaced
+      const target = e * ringLength[ringLength.length - 1];
+      let n = 0;
+      while (n < p.length - 2 && ringLength[n + 1] < target) n++;
+      const frac = Math.min(1, (target - ringLength[n]) / Math.max(1e-12, ringLength[n + 1] - ringLength[n]));
       const head = n + 1 < p.length ? { x: p[n].x + (p[n + 1].x - p[n].x) * frac, y: p[n].y + (p[n + 1].y - p[n].y) * frac } : p[n];
       const trace = () => {
         ctx.beginPath();
@@ -239,8 +243,11 @@ export function createPowerFlow(map: MapLibreMap, canvas: HTMLCanvasElement, gri
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !ctx) return;
       if (tree && performance.now() - started < FLOW_MS) return;
       cancelAnimationFrame(frame);
-      tree = flowTree(grid, origin ?? centre);
+      // a subdistrict only gets its border traced; the grid flow is for city-wide changes
+      tree = outline ? { root: -1, parent: grid.nodes.map(() => -1), at: grid.nodes.map(() => Infinity) } : flowTree(grid, origin ?? centre);
       ring = outline ?? [];
+      ringLength = [0];
+      for (let i = 1; i < ring.length; i++) ringLength.push(ringLength[i - 1] + dist(ring[i - 1], ring[i]));
       started = performance.now();
       onRunning(true);
       frame = requestAnimationFrame(draw);
