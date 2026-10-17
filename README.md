@@ -195,7 +195,7 @@ Data: [`scripts/build-bottomup.mjs`](scripts/build-bottomup.mjs) (part of `npm r
 **Open points in the city's material** (switchable in the app):
 
 - The Excel labels customer parking 10.3 % but its formula uses 1.3 % (`=C22*0.013`).
-- The charger file has 912 *locations*; whether these are stations or charging points is unclear (setting "Ladepunkte je Bestandsstandort").
+- The charger file has 912 *locations*. They are the 912 stations of the Bundesnetzagentur register, with 1,370 charging points in total; the factor model counts points from the register (`public/data/model/chargers.json`).
 - The shapefile gives *Kirchhörde-West/ Schanze* the duplicate ID 697; the statistics use 698. The import fixes this by name.
 - One charging location lies outside all 145 Unterbezirke.
 
@@ -284,7 +284,7 @@ curl "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets/fb62-gebae
 | No employee counts per Unterbezirk | Commuters spread by commercial land area | Employee counts from the city |
 | No power-grid data | Not modelled (out of scope per the brief) | Ask the city / DEW21 |
 | No residents in the city's statistics | Residents' BEV spread by private cars | Open Data population (62 districts) or Zensus 2022 grid |
-| Unclear whether the 912 entries are locations or charging points | Setting "Ladepunkte je Bestandsstandort", default 1 | Ask the city |
+| The 912 entries are stations, not charging points | Factor model and map use the Bundesnetzagentur register (1,370 points, AC/DC, access) | – |
 | ISME coverage step (walking distances 225 / 500 / 100 / 375 m) not built yet | Not shown | Buffers around the 912 locations per Unterbezirk |
 | Meaning of the priority grid's point count | Shown as a map layer only | Ask the city |
 | Land-use plan has no data rows | Not used | Overlay as WMS layer |
@@ -369,7 +369,7 @@ Pick a task, open an issue or a branch with its name, and update this list in yo
 - [x] Spread commuters by commercial land and tourists by points of interest
 - [x] Public parking layer with distance to the nearest charger
 - [x] Reports page for the presentation
-- [ ] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister
+- [x] Compare the city's 912 locations with the Bundesnetzagentur Ladesäulenregister (identical stations; 1,370 points)
 - [x] Use Zensus 2022 grid for population and building type per Unterbezirk (`public/data/model/factors.csv`)
 - [ ] Wire the street-space factor model (`src/lib/factors.ts`) into the UI
 - [ ] Snapshot `parkplatzsensoren` and compute occupancy per charging point and district

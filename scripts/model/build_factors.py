@@ -3,9 +3,11 @@
 
 Reads   public/data/city/unterbezirke.geojson and ziele.geojson (from `npm run data`)
         public/data/model/parameters.json (defaults for all factors)
-Adds    Zensus 2022 100 m grid, ALKIS buildings (Open Data Dortmund), OpenStreetMap parking
+Adds    Zensus 2022 100 m grid, ALKIS buildings (Open Data Dortmund), OpenStreetMap parking,
+        Bundesnetzagentur charging register (charging points per station)
 Writes  public/data/model/factors.csv       one row per Unterbezirk: inputs + reference results
         public/data/model/destinations.csv  tourist destinations with visitor numbers
+        public/data/model/chargers.json     charging stations with points, power, type and access
 
 Downloads are cached in data/raw/model/ (git-ignored). Run from the repo root:
     pip install -r scripts/model/requirements.txt
@@ -33,6 +35,12 @@ REFRESH = "--refresh" in sys.argv
 OPEN_DATA = "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets"
 ZENSUS = "https://www.destatis.de/static/DE/zensus/gitterdaten"
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
+# Ladesäulenregister, Bundesnetzagentur (CC BY 4.0); newer files are listed on
+# https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/start.html
+BNETZA = ("https://data.bundesnetzagentur.de/Bundesnetzagentur/DE/Fachthemen/ElektrizitaetundGas/E-Mobilitaet/"
+          "Ladesaeulenregister_BNetzA_2026-09-01.csv")
+# station names that point to car parks or customer parking rather than street space
+OFF_STREET = "Parkhaus|Tiefgarage|Parkdeck|Parkplatz Kunden|Kunden|Center|Markt|Autohaus|Niederlassung|Hotel"
 
 # ALKIS building functions that hold workplaces, grouped by typical floor area per job
 WORK_CLASSES = {
@@ -195,6 +203,55 @@ op = gpd.GeoDataFrame(geometry=gpd.points_from_xy(*zip(*rows)), crs=4326)
 z["osmPrivateParking"] = join_points(op).groupby("ubz").size()
 z = z.fillna(0)
 
+# --- charging stations: Bundesnetzagentur register ----------------------------------------
+print("Ladesäulenregister …")
+reg = pd.read_csv(cached(BNETZA.rsplit("/", 1)[1], lambda: http(BNETZA), binary=True), sep=";", skiprows=10,
+                  encoding="utf-8-sig", dtype=str, low_memory=False)
+reg = reg[reg["Kreis/kreisfreie Stadt"].eq("Kreisfreie Stadt Dortmund")].copy()
+num = lambda s: pd.to_numeric(s.str.replace(",", ".", regex=False), errors="coerce")
+reg["points"] = num(reg["Anzahl Ladepunkte"]).fillna(1).astype(int)
+reg["kw"] = num(reg["Nennleistung Ladeeinrichtung [kW]"])
+reg["chargeType"] = np.where(reg["Art der Ladeeinrichtung"].eq("Schnellladeeinrichtung"), "DC", "AC")
+reg["customers"] = reg["Informationen zum Parkraum"].eq("Nur für Kunden/Besucher")
+reg["offStreet"] = reg.Standortbezeichnung.str.contains(OFF_STREET, case=False, na=False)
+reg["streetAc"] = reg.chargeType.eq("AC") & ~reg.customers & ~reg.offStreet
+stations = gpd.GeoDataFrame(reg, geometry=gpd.points_from_xy(num(reg["Längengrad"]), num(reg["Breitengrad"])), crs=4326)
+stations = stations.join(join_points(stations)[["ubz"]])
+lp = stations.points
+z["chargerSites"] = stations.groupby("ubz").size()
+z["chargingPoints"] = lp.groupby(stations.ubz).sum()
+z["streetAcPoints"] = lp[stations.streetAc].groupby(stations.ubz[stations.streetAc]).sum()
+dc = stations.chargeType.eq("DC")
+z["dcPoints"] = lp[dc].groupby(stations.ubz[dc]).sum()
+z = z.fillna(0)
+since = pd.to_datetime(reg["Inbetriebnahmedatum"], format="%d.%m.%Y", errors="coerce").dt.strftime("%Y-%m-%d")
+features = [
+    {
+        "type": "Feature",
+        "id": int(r["Ladeeinrichtungs-ID"]),
+        "geometry": {"type": "Point", "coordinates": [round(r.geometry.x, 5), round(r.geometry.y, 5)]},
+        "properties": {
+            "ubz": r.ubz if isinstance(r.ubz, str) else None,
+            "points": int(r.points),
+            "kw": None if pd.isna(r.kw) else float(r.kw),
+            "type": r.chargeType,
+            "streetAc": bool(r.streetAc),
+            "access": "customers" if r.customers else "public",
+            "operator": r.Betreiber,
+            "name": r.Standortbezeichnung if isinstance(r.Standortbezeichnung, str) else None,
+            "address": f"{r['Straße']} {r.Hausnummer if isinstance(r.Hausnummer, str) else ''}".strip(),
+            "since": since[i] if isinstance(since[i], str) else None,
+        },
+    }
+    for i, r in stations.iterrows()
+]
+OUT.mkdir(parents=True, exist_ok=True)
+(OUT / "chargers.json").write_text(json.dumps({
+    "type": "FeatureCollection",
+    "source": "Bundesnetzagentur, Ladesäulenregister, Stand 01.09.2026, CC BY 4.0",
+    "features": features,
+}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
 # --- tourist destinations --------------------------------------------------------------
 ziele = gpd.read_file(CITY / "ziele.geojson")
 dest = ziele[["name", "kind", "type", "ubz"]].copy()
@@ -209,45 +266,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 dest.sort_values(["ubz", "name"]).to_csv(OUT / "destinations.csv", index=False)
 
 
-# --- model (same formulas as src/lib/factors.ts) ---------------------------------------------
-def destination_weight(d, p):
-    return np.where(d.event & (not p["includeEvents"]), 0.0, d.visitors.fillna(p["defaultVisitors"]))
+# --- model (scripts/model/factor_model.py, same formulas as src/lib/factors.ts) ----------------
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from factor_model import compute, destination_weight  # noqa: E402
 
 
 def run(inputs, p, mode):
     """Street-space charging points per Unterbezirk for one parameter set."""
-    f = inputs.copy()
-    mfh_osm = f.dwellingsMfh * (f.osmFactor if p["useOsmFactor"] else 1)
-    cars = f.privateCars.clip(lower=0)
-
-    def coverage(s):
-        return np.minimum(1, (f.garagesCarports + p["drivewayPerDwelling"] * f.dwellingsEfhZfh + s * mfh_osm)
-                          / f.dwellings.where(f.dwellings > 0))
-
-    s = p["mfhPerDwelling"]
-    if p["calibrate"]:
-        lo, hi = 0.0, 5.0
-        for _ in range(60):
-            s = (lo + hi) / 2
-            lo, hi = (s, hi) if np.average(coverage(s).fillna(0), weights=cars) < p["homeShareCity"] else (lo, s)
-    cov = coverage(s).fillna(0)
-    share = p["bevShareToday"] if mode == "today" else p["bevShareScenario"]
-    bev_res = f.privateEvs if mode == "today" else cars * share
-    lp_res = bev_res * (1 - cov) * p["residentsStreetShare"] / p["evsPerStreetPoint"]
-
-    jobs = f.jobsEstimate / f.jobsEstimate.sum()
-    lp_com = p["inCommuters"] * p["commuterCarShare"] * share * p["commuterStreetShare"] / p["evsPerStreetPoint"] * jobs
-
-    per_car = p["touristCarShare"] / p["personsPerCar"] * share * p["chargeAtDestinationShare"] * p["touristStreetShare"] / p["evsPerStreetPoint"]
-    dw = pd.Series(destination_weight(dest, p), index=dest.index).groupby(dest.ubz).sum().reindex(f.index, fill_value=0)
-    day = p["dayVisitorsPerYear"] / 365 * per_car * dw / dw.sum()
-    night = p["overnightStaysPerYear"] / 365 * per_car * f.hotelWeight / f.hotelWeight.sum()
-    lp_tour = day + night
-
-    needed = lp_res + lp_com + lp_tour
-    existing = f.chargers * p["pointsPerSite"]
-    return s, cov, pd.DataFrame({"residents": lp_res, "commuters": lp_com, "tourists": lp_tour, "needed": needed,
-                                 "gap": (needed - existing).clip(lower=0)})
+    s, cov, r = compute(inputs, dest, p, mode)
+    return s, cov, r[["residents", "commuters", "tourists", "needed", "gap"]]
 
 
 f = ub.drop(columns="geometry").set_index("ubz").join(z).fillna({"hotels": 0, "hotelWeight": 0})
@@ -264,7 +291,8 @@ for k in today:
     f[f"{k}Scenario"] = scen[k].round(2)
 
 counts = ["residentsZensus", "dwellings", "dwellingsEfhZfh", "dwellingsMfh", "dwellingsOther", "garagesCarports",
-          "osmPrivateParking", "jobsEstimate", "destinationVisitors"] + [c for c in f if c.startswith("floor_")]
+          "osmPrivateParking", "jobsEstimate", "destinationVisitors", "chargerSites", "chargingPoints",
+          "streetAcPoints", "dcPoints"] + [c for c in f if c.startswith("floor_")]
 f[counts] = f[counts].round(0).astype(int)
 f["ownerRate"] = f.ownerRate.round(3)
 f["rentPerM2"] = f.rentPerM2.round(2)
@@ -276,6 +304,8 @@ for mode, r in (("today", today), ("scenario", scen)):
     print(f"{mode:9s} residents {r.residents.sum():7.1f} | commuters {r.commuters.sum():6.1f} | tourists {r.tourists.sum():6.1f}"
           f" | needed {r.needed.sum():7.1f} | gap {r.gap.sum():7.1f} street points")
 print(f"jobs estimate {f.jobsEstimate.sum():,} (employees at place of work 2024: 264,322)")
+print(f"charging register: {int(f.chargerSites.sum())} stations, {int(f.chargingPoints.sum())} points, "
+      f"{int(f.streetAcPoints.sum())} public AC in street space, {int(f.dcPoints.sum())} DC")
 print("wrote", OUT / "factors.csv", "and", OUT / "destinations.csv")
 
 

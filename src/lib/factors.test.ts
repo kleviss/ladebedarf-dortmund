@@ -85,6 +85,23 @@ describe('currentStreetDemand', () => {
   });
 });
 
+describe('existing points from the Bundesnetzagentur register', () => {
+  it('counts public AC points in street space by default and can switch to all points or stations', () => {
+    const run = (existingSupply: FactorParams['existingSupply']) =>
+      sum(computeFactors(districts, destinations, { ...defaults, existingSupply }).results.map((r) => r.existing));
+    expect(run('streetAc')).toBe(sum(districts.map((d) => d.streetAcPoints)));
+    expect(run('allPoints')).toBe(sum(districts.map((d) => d.chargingPoints)));
+    expect(run('sites')).toBe(sum(districts.map((d) => d.chargerSites)));
+    expect(run('allPoints')).toBeGreaterThan(run('sites'));
+    expect(run('streetAc')).toBeLessThan(run('allPoints'));
+  });
+
+  it('keeps the register totals: about 1,370 points at 912 stations', () => {
+    expect(sum(districts.map((d) => d.chargerSites))).toBeGreaterThan(900);
+    expect(sum(districts.map((d) => d.chargingPoints))).toBeGreaterThan(1350);
+  });
+});
+
 describe('parameters', () => {
   const p: FactorParams = { ...defaults, calibrate: false };
 

@@ -12,6 +12,8 @@
 //   tourists   (day visitors + overnight stays) ÷ 365 × touristCarShare ÷ personsPerCar × BEV share
 //              × chargeAtDestinationShare × touristStreetShare ÷ evsPerStreetPoint
 //              × district share of visits (day) or of hotel weight (overnight)
+//   existing   charging points from the Bundesnetzagentur register: public AC points in street
+//              space (default), all points, or one per station
 
 import { fmt, pct, type District, type DistrictResult, type Step } from './isme';
 
@@ -22,6 +24,11 @@ export interface FactorDistrict {
   privateCars: number;
   privateEvs: number;
   chargers: number;
+  /** Bundesnetzagentur register: stations, all charging points, public AC points in street space, DC points */
+  chargerSites: number;
+  chargingPoints: number;
+  streetAcPoints: number;
+  dcPoints: number;
   hotelWeight: number;
   dwellings: number;
   dwellingsEfhZfh: number;
@@ -69,8 +76,11 @@ export interface FactorParams {
   touristStreetShare: number;
   defaultVisitors: number;
   includeEvents: boolean;
-  pointsPerSite: number;
+  existingSupply: ExistingSupply;
 }
+
+/** Which existing charging points count against street-space demand. */
+export type ExistingSupply = 'streetAc' | 'allPoints' | 'sites';
 
 export interface ParameterSpec {
   key: keyof FactorParams;
@@ -83,6 +93,9 @@ export interface ParameterSpec {
   max?: number;
   step?: number;
   unit?: string;
+  /** choices for text parameters, with UI labels */
+  options?: string[];
+  optionLabels?: Record<string, string>;
   kind: string;
   source?: string;
   note?: string;
@@ -104,8 +117,19 @@ export interface FactorResult {
   needed: number;
   existing: number;
   gap: number;
+  /** stations and charging points in the district (register), whatever counts as existing */
+  stations: { sites: number; points: number; streetAc: number; dc: number };
   steps: Step[];
 }
+
+export const existingOf = (d: FactorDistrict, supply: ExistingSupply) =>
+  supply === 'streetAc' ? d.streetAcPoints : supply === 'allPoints' ? d.chargingPoints : d.chargerSites;
+
+const SUPPLY_LABEL: Record<ExistingSupply, string> = {
+  streetAc: 'öffentliche AC-Ladepunkte (ohne Parkhaus, Kunden, Schnelllader)',
+  allPoints: 'alle Ladepunkte',
+  sites: 'Ladesäulen (1 LP je Säule)',
+};
 
 export const jobsOf = (d: FactorDistrict, m2: Record<JobClass, number>) =>
   d.floorOffice / m2.office +
@@ -176,7 +200,7 @@ export function computeFactors(
     const nightShare = hotelTotal > 0 ? d.hotelWeight / hotelTotal : 0;
     const tourists = touristPerGuest * (dayGuests * dayShare + nightGuests * nightShare);
     const needed = residents + commuters + tourists;
-    const existing = d.chargers * p.pointsPerSite;
+    const existing = existingOf(d, p.existingSupply);
     const gap = Math.max(0, needed - existing);
     const ev = p.bevMode === 'today' ? `${fmt(d.privateEvs)} private E-Pkw` : `${fmt(d.privateCars)} private Pkw × ${pct(bevShare)}`;
 
@@ -222,13 +246,14 @@ export function computeFactors(
         label: 'Vorhandene Ladepunkte',
         value: existing,
         unit: 'LP',
-        formula: `${fmt(d.chargers)} Standorte × ${fmt(p.pointsPerSite)} LP`,
-        source: p.pointsPerSite === 1 ? 'city-data' : 'assumption',
+        formula: `${fmt(existing)} ${SUPPLY_LABEL[p.existingSupply]}; ${fmt(d.chargerSites)} Säulen mit ${fmt(d.chargingPoints)} LP (BNetzA)`,
+        source: 'city-data',
       },
       { key: 'gap', label: 'Fehlende Ladepunkte', value: gap, unit: 'LP', formula: 'Bedarf − Bestand, mindestens 0', source: 'result' },
     ];
 
-    return { ubz: d.ubz, name: d.name, homeCoverage: cov, jobs: jobs[i], residents, commuters, tourists, needed, existing, gap, steps };
+    const stations = { sites: d.chargerSites, points: d.chargingPoints, streetAc: d.streetAcPoints, dc: d.dcPoints };
+    return { ubz: d.ubz, name: d.name, homeCoverage: cov, jobs: jobs[i], residents, commuters, tourists, needed, existing, gap, stations, steps };
   });
 
   return { results, mfhPerDwelling, bevShare };
@@ -292,6 +317,10 @@ export const toFactorDistrict = (r: Record<string, string>): FactorDistrict => (
   privateCars: num(r.privateCars),
   privateEvs: num(r.privateEvs),
   chargers: num(r.chargers),
+  chargerSites: num(r.chargerSites),
+  chargingPoints: num(r.chargingPoints),
+  streetAcPoints: num(r.streetAcPoints),
+  dcPoints: num(r.dcPoints),
   hotelWeight: num(r.hotelWeight),
   dwellings: num(r.dwellings),
   dwellingsEfhZfh: num(r.dwellingsEfhZfh),

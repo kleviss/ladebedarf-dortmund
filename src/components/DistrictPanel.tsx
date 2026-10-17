@@ -9,12 +9,14 @@ interface Props {
   scenario?: number | null;
   fetchedAt: string;
   onClose: () => void;
+  /** planned stations in this district at the current demand level */
+  plannedSites?: { level: string; stations: number; points: number; unplaced: number; onShow: () => void };
 }
 
 const fmt = (value: number, digits = 0) =>
   value.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose }: Props) {
+export function DistrictPanel({ district, factors, scenario = null, fetchedAt, onClose, plannedSites }: Props) {
   return (
     <aside className="current-district" aria-labelledby="district-title" aria-live="polite">
       <header className="district-head">
@@ -40,6 +42,27 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
           <dd className="num">{fmt(district.gap)}</dd>
         </div>
       </dl>
+      {plannedSites && (
+        <div className="district-sites">
+          <p>
+            <b className="num">{fmt(plannedSites.stations)}</b> planned station{plannedSites.stations === 1 ? '' : 's'} with{' '}
+            <b className="num">{fmt(plannedSites.points)}</b> new point{plannedSites.points === 1 ? '' : 's'}
+            {plannedSites.unplaced > 0 && <span className="site-warning"> · {fmt(plannedSites.unplaced)} without a free kerb</span>}
+          </p>
+          {plannedSites.stations > 0 && (
+            <button type="button" className="link-button" onClick={plannedSites.onShow}>
+              Show sites and checklist
+            </button>
+          )}
+        </div>
+      )}
+      {factors && (
+        <p className="hint station-summary">
+          {fmt(factors.stations.sites)} charging stations with {fmt(factors.stations.points)} points: {fmt(factors.stations.streetAc)} public
+          AC, {fmt(factors.stations.dc)} fast (DC), {fmt(factors.stations.points - factors.stations.streetAc - factors.stations.dc)} in car
+          parks or customer parking.
+        </p>
+      )}
       {factors ? (
         <>
           <dl className="factor-split" aria-label="Required points by group">
@@ -76,9 +99,10 @@ export function DistrictPanel({ district, factors, scenario = null, fetchedAt, o
         </p>
       )}
       <p className="hint">
-        * Existing stock assumes one charging point per recorded location. Connector counts
-        and live availability are not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')};
-        source observations may be older.
+        * {factors
+          ? 'Charging points from the Bundesnetzagentur charging register (status 1 September 2026); by default only public AC points count against street-space demand.'
+          : 'Existing stock assumes one charging point per recorded location.'}{' '}
+        Live availability is not verified. Data retrieved: {new Date(fetchedAt).toLocaleDateString('en-GB')}.
       </p>
     </aside>
   );

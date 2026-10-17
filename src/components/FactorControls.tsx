@@ -38,7 +38,7 @@ const SYMBOL: Partial<Record<keyof FactorParams, string>> = {
   bevShareToday: 'e',
   bevShareScenario: 'e',
   evsPerStreetPoint: 'k',
-  pointsPerSite: 'p',
+  existingSupply: 'n_u',
   homeShareCity: '\\bar A',
   drivewayPerDwelling: 's_{\\mathrm{EZ}}',
   mfhPerDwelling: 's_{\\mathrm{MFH}}',
@@ -75,17 +75,17 @@ const SECTIONS: Section[] = [
     key: 'general',
     title: 'General',
     factors: ['global', 'existing'],
-    tex: ['\\text{missing}_u = \\max\\!\\big(0,\\ \\lceil R_u + W_u + T_u \\rceil - n_u\\,p\\big)'],
+    tex: ['\\text{missing}_u = \\max\\!\\big(0,\\ \\lceil R_u + W_u + T_u \\rceil - n_u\\big)'],
     legend: [
       ['R_u, W_u, T_u', 'points for residence, work, travel'],
-      ['n_u', 'existing charging locations'],
+      ['n_u', 'existing charging points: public AC by default (register)'],
       ['e', 'EV share: today 4.2 % or the scenario'],
       ['k', 'EVs per street charging point'],
     ],
-    data: 'Today: registered EVs per subdistrict (city statistics 2026). Scenario: private cars × EV share. Existing: city charger file, 912 locations.',
+    data: 'Today: registered EVs per subdistrict (city statistics 2026). Scenario: private cars × EV share. Existing: 912 stations with 1,370 charging points in the Bundesnetzagentur register; street-space demand is set against public AC points.',
     sources: [
       'Stadt Dortmund (2026): Auswertung der Statistik – Pkw- und E-Pkw-Bestand je Unterbezirk. Datenpaket Verwaltungschallenge, DO-DATA-Hackathon.',
-      'Stadt Dortmund (2026): Aktueller Bestand an Ladesäulen. Datenpaket Verwaltungschallenge, DO-DATA-Hackathon.',
+      'Bundesnetzagentur (2026): Ladesäulenregister, Stand 01.09.2026. www.bundesnetzagentur.de/ladesaeulenregister, CC BY 4.0.',
       'ISME (2023): Ladeinfrastrukturkonzept Dortmund Teil ISME. Gutachten im Auftrag der Stadt Dortmund, Dezember 2023, Tab. 4–5.',
     ],
   },
@@ -261,17 +261,17 @@ export function FactorControls({ specs, params, defaults, totals, onChange }: Pr
     const isDefault = JSON.stringify(value) === JSON.stringify(defaults[spec.key]);
     const tip = <ParamTip spec={spec} value={value} defaults={defaults} />;
 
-    if (spec.key === 'bevMode') {
+    if (spec.options) {
       return (
         <div className="param" key={spec.key}>
           <span className="param-label">
             {label} {tip}
           </span>
           <div className="segmented" role="radiogroup" aria-label={label}>
-            {(['today', 'scenario'] as const).map((mode) => (
-              <label key={mode}>
-                <input type="radio" name="bevMode" checked={params.bevMode === mode} onChange={() => set('bevMode', mode)} />
-                {mode === 'today' ? 'Today' : 'Scenario'}
+            {spec.options.map((option) => (
+              <label key={option}>
+                <input type="radio" name={spec.key} checked={value === option} onChange={() => set(spec.key, option as never)} />
+                {spec.optionLabels?.[option] ?? option}
               </label>
             ))}
           </div>
