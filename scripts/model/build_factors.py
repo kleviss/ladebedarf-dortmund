@@ -2,11 +2,11 @@
 """Inputs and reference results for the street-space factor model (docs/factor-model.md).
 
 Reads   public/data/city/unterbezirke.geojson and ziele.geojson (from `npm run data`)
-        public/data/model/parameters.json (defaults for all factors)
+        src/data/model/parameters.json (defaults for all factors)
 Adds    Zensus 2022 100 m grid, ALKIS buildings (Open Data Dortmund), OpenStreetMap parking,
         Bundesnetzagentur charging register (charging points per station)
-Writes  public/data/model/factors.csv       one row per Unterbezirk: inputs + reference results
-        public/data/model/destinations.csv  tourist destinations with visitor numbers
+Writes  src/data/model/factors.csv          one row per Unterbezirk: inputs + reference results
+        src/data/model/destinations.csv     tourist destinations with visitor numbers
         public/data/model/chargers.json     charging stations with points, power, type and access
 
 Downloads are cached in data/raw/model/ (git-ignored). Run from the repo root:
@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "model"
 CITY = ROOT / "public" / "data" / "city"
 OUT = ROOT / "public" / "data" / "model"
+MODEL = ROOT / "src" / "data" / "model"  # bundled into the app, see src/lib/factorData.ts
 REFRESH = "--refresh" in sys.argv
 
 OPEN_DATA = "https://open-data.dortmund.de/api/explore/v2.1/catalog/datasets"
@@ -113,7 +114,7 @@ ub = gpd.read_file(CITY / "unterbezirke.geojson")[
 ]
 ub3035 = ub.to_crs(3035)
 x0, y0, x1, y1 = ub3035.total_bounds
-P = {p["key"]: p["default"] for p in json.loads((OUT / "parameters.json").read_text(encoding="utf-8"))["parameters"]}
+P = {p["key"]: p["default"] for p in json.loads((MODEL / "parameters.json").read_text(encoding="utf-8"))["parameters"]}
 
 
 def join_points(gdf):
@@ -263,7 +264,8 @@ stadium = dest.name.str.contains("IDUNA", case=False)
 dest.loc[stadium, ["visitors", "visitorsSource"]] = STADIUM_VISITORS
 dest["lon"], dest["lat"] = ziele.geometry.x.round(5), ziele.geometry.y.round(5)
 OUT.mkdir(parents=True, exist_ok=True)
-dest.sort_values(["ubz", "name"]).to_csv(OUT / "destinations.csv", index=False)
+MODEL.mkdir(parents=True, exist_ok=True)
+dest.sort_values(["ubz", "name"]).to_csv(MODEL / "destinations.csv", index=False)
 
 
 # --- model (scripts/model/factor_model.py, same formulas as src/lib/factors.ts) ----------------
@@ -297,7 +299,7 @@ f[counts] = f[counts].round(0).astype(int)
 f["ownerRate"] = f.ownerRate.round(3)
 f["rentPerM2"] = f.rentPerM2.round(2)
 f = f.rename(columns={c: "floor" + c[6:].capitalize() for c in f if c.startswith("floor_")})
-f.reset_index().to_csv(OUT / "factors.csv", index=False)
+f.reset_index().to_csv(MODEL / "factors.csv", index=False)
 
 print(f"\nmfhPerDwelling calibrated: {s_today:.3f}")
 for mode, r in (("today", today), ("scenario", scen)):
@@ -306,7 +308,7 @@ for mode, r in (("today", today), ("scenario", scen)):
 print(f"jobs estimate {f.jobsEstimate.sum():,} (employees at place of work 2024: 264,322)")
 print(f"charging register: {int(f.chargerSites.sum())} stations, {int(f.chargingPoints.sum())} points, "
       f"{int(f.streetAcPoints.sum())} public AC in street space, {int(f.dcPoints.sum())} DC")
-print("wrote", OUT / "factors.csv", "and", OUT / "destinations.csv")
+print("wrote", MODEL / "factors.csv", "and", MODEL / "destinations.csv")
 
 
 # --- validation (docs/factor-model.md) ---------------------------------------------------------
