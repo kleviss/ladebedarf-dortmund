@@ -12,6 +12,7 @@ import {
   type PlannedSite,
   type SiteLevel,
 } from '../lib/sitePlan';
+import { StreetView } from './StreetView';
 
 interface Props {
   sites: PlannedSite[];
@@ -118,6 +119,7 @@ export function PriorityPanel({ sites, level, radius, names, district, focusId, 
                       </span>{' '}
                       · {KIND_LABEL[s.kind]}
                     </p>
+                    <StreetView lat={s.lat} lon={s.lon} label={address(s)} />
                     <h3>Checked with data</h3>
                     <ul className="checklist">
                       {DATA_CHECKS.map((c) => (
