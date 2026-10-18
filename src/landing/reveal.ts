@@ -1,5 +1,5 @@
 // Sections switch on as they scroll into view: a spark runs along the top edge, the content
-// flickers on like a fluorescent tube, the wire in "how it works" charges from end to end and
+// fades in with a faint glow, the wire in "how it works" charges from end to end and
 // the figures count up. Without IntersectionObserver or with reduced motion, nothing is hidden.
 
 const ITEMS: Record<string, string> = {
