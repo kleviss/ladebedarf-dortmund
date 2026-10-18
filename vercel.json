@@ -9,10 +9,24 @@
     }
   },
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/berichte",
+      "destination": "/dortmund/berichte",
+      "permanent": true
+    },
+    {
+      "source": "/berichte.html",
+      "destination": "/dortmund/berichte",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": { "service": "app" }
+      "destination": {
+        "service": "app"
+      }
     }
   ]
 }

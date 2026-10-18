@@ -42,7 +42,7 @@ function ReportBody({ data }: { data: AppData }) {
   const { results, city, cityPoints } = useMemo(() => computeAll(districts, scenario), [districts, scenario]);
   const sites = useMemo(() => scoredSites(data), [data]);
   const [expert, setExpert] = useExpertMode();
-  const appLink = `/${window.location.search}`;
+  const appLink = `/dortmund/${window.location.search}`;
   const visible = REPORTS.filter((r) => expert || SIMPLE_REPORTS.has(r.id));
 
   return (
