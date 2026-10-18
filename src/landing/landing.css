@@ -170,20 +170,15 @@ a {
 /* hero */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-columns: minmax(0, 11fr) minmax(0, 10fr);
   align-items: center;
   gap: clamp(24px, 4vw, 64px);
   max-width: 1360px;
   margin: 0 auto;
   padding: clamp(24px, 5vw, 72px) var(--gutter) clamp(40px, 6vw, 88px);
 }
-.hero-place {
-  color: var(--muted);
-  font-weight: 500;
-  margin-bottom: 18px;
-}
 .hero h1 {
-  font-size: clamp(2.5rem, 5.6vw, 5.25rem);
+  font-size: clamp(2.5rem, 5vw, 4.75rem);
   line-height: 0.96;
   font-weight: 820;
   font-variation-settings: 'wdth' 118;
@@ -204,10 +199,14 @@ a {
   margin-top: 36px;
 }
 
+.map-stage {
+  position: relative;
+}
 .hero-map svg {
   display: block;
   width: 100%;
   height: auto;
+  max-height: 72vh;
   aspect-ratio: 600 / 520;
   overflow: visible;
 }
@@ -218,37 +217,82 @@ a {
   stroke-linejoin: round;
   cursor: pointer;
   outline: none;
-  transition: fill 0.15s ease;
+  transition: fill 0.15s ease, opacity 0.15s ease;
 }
 .hero-map path.is-active,
 .hero-map path:focus-visible {
   stroke: var(--ink);
   stroke-width: 2;
-  paint-order: stroke;
 }
-/* bring the hovered district's outline above its neighbours */
 .hero-map svg g:has(path.is-active) path:not(.is-active) {
-  opacity: 0.82;
+  opacity: 0.72;
 }
-/* the one moment of motion: districts light up from the centre outwards */
+/* the one moment of motion: each district's border is traced in blue, then it fills,
+   rippling out from the city centre */
 @media (prefers-reduced-motion: no-preference) {
-  .hero-map path {
-    opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-    transform: scale(0.92);
+  .hero-map svg:not(.is-drawn) path {
+    fill: transparent;
+    stroke: var(--blue);
+    stroke-width: 1.2;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
   }
   .hero-map svg.is-drawn path {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity 0.5s ease var(--delay),
-      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay),
-      fill 0.15s ease;
+    stroke-dasharray: 1;
+    animation:
+      map-trace 0.9s cubic-bezier(0.4, 0, 0.2, 1) var(--delay) both,
+      map-fill 0.6s ease calc(var(--delay) + 0.55s) both;
   }
-  .hero-map svg.is-drawn g:has(path.is-active) path:not(.is-active) {
-    opacity: 0.82;
+  .hero-map svg.is-drawn path.is-active,
+  .hero-map svg.is-drawn path:focus-visible {
+    stroke: var(--ink);
   }
+}
+@keyframes map-trace {
+  from {
+    stroke-dashoffset: 1;
+    stroke: var(--spark);
+    stroke-width: 1.4;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes map-fill {
+  from {
+    fill: transparent;
+  }
+}
+.map-tip {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, calc(-100% - 14px));
+  display: grid;
+  gap: 1px;
+  min-width: 11rem;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgb(16 34 63 / 0.22);
+  white-space: nowrap;
+}
+.map-tip.below {
+  transform: translate(-50%, 18px);
+}
+.map-tip strong {
+  font-weight: 700;
+  font-variation-settings: 'wdth' 108;
+}
+.map-tip-sub {
+  opacity: 0.72;
+  font-size: 0.8125rem;
+}
+.map-tip[hidden] {
+  display: none;
 }
 .hero-map figcaption {
   display: flex;
