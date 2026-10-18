@@ -1,5 +1,5 @@
 // Small static discharges behind the cursor: a short jagged arc now and then while the mouse moves.
-// Sparse on purpose (one every ~90 px of travel, at most one per 120 ms), drawn on one canvas,
+// Sparse on purpose (one every ~140 px of travel, at most one per 200 ms), drawn on one canvas,
 // and the animation loop only runs while a spark is fading. Off for touch and reduced motion.
 
 interface Spark {
@@ -7,9 +7,9 @@ interface Spark {
   born: number;
 }
 
-const LIFE = 280;
-const MIN_TRAVEL = 90;
-const MIN_GAP = 120;
+const LIFE = 320;
+const MIN_TRAVEL = 140;
+const MIN_GAP = 200;
 
 function bolt(x: number, y: number, dx: number, dy: number): [number, number][] {
   // shoot off sideways from the direction of travel, 12–20 px long, in 3–4 kinks
@@ -63,12 +63,12 @@ export function setupCursorSparks() {
         sparks.splice(i, 1);
         continue;
       }
-      ctx.globalAlpha = 1 - age;
+      ctx.globalAlpha = 0.6 * (1 - age);
       ctx.strokeStyle = colour;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       ctx.lineJoin = 'miter';
       ctx.shadowColor = colour;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 3;
       ctx.beginPath();
       s.points.forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
       ctx.stroke();

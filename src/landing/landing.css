@@ -648,7 +648,7 @@ a {
   left: 0;
   right: 0;
   top: 0;
-  height: 3px;
+  height: 2px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -659,21 +659,21 @@ a {
   bottom: 0;
   left: 0;
   width: 28%;
-  background: linear-gradient(90deg, transparent, var(--blue) 40%, var(--spark) 80%, #fff);
-  box-shadow: 0 0 12px 2px var(--spark);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--spark) 70%, transparent));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--spark) 40%, transparent);
   transform: translateX(-110%);
   opacity: 0;
 }
 .reveal.is-live .spark::after {
-  animation: spark-run 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+  animation: spark-run 1.4s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes spark-run {
   0% {
     transform: translateX(-110%);
-    opacity: 1;
+    opacity: 0.7;
   }
-  85% {
-    opacity: 1;
+  70% {
+    opacity: 0.7;
   }
   100% {
     transform: translateX(380%);
@@ -685,33 +685,20 @@ a {
   opacity: 0;
 }
 .reveal.is-live .reveal-item {
-  animation: flicker-on 0.7s linear calc(0.25s + var(--i) * 0.1s) both;
+  animation: switch-on 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.15s + var(--i) * 0.08s) both;
 }
-/* a fluorescent tube catching: two stutters, then steady light */
-@keyframes flicker-on {
-  0% {
+/* a soft switch-on: rise a few pixels and fade in with a faint blue glow that settles */
+@keyframes switch-on {
+  from {
     opacity: 0;
-    transform: translateY(6px);
-    filter: brightness(1.8) drop-shadow(0 0 6px var(--spark));
+    transform: translateY(10px);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--spark) 45%, transparent));
   }
-  12% {
-    opacity: 0.85;
-  }
-  18% {
-    opacity: 0.1;
-  }
-  30% {
-    opacity: 0.95;
-  }
-  36% {
-    opacity: 0.35;
-  }
-  55% {
+  60% {
     opacity: 1;
     transform: none;
-    filter: brightness(1.25) drop-shadow(0 0 4px var(--spark));
   }
-  100% {
+  to {
     opacity: 1;
     transform: none;
     filter: none;
@@ -722,7 +709,6 @@ a {
 .how.reveal .wire::before {
   transform: scaleX(0);
   transform-origin: left center;
-  box-shadow: 0 0 10px var(--spark);
 }
 .how.reveal.is-live .wire::before {
   animation: wire-charge 1.6s cubic-bezier(0.6, 0, 0.4, 1) 0.3s both;
@@ -731,19 +717,15 @@ a {
   from {
     transform: scaleX(0);
   }
-  90% {
-    box-shadow: 0 0 10px var(--spark);
-  }
   to {
     transform: none;
-    box-shadow: none;
   }
 }
 .how.reveal.is-live .wire li {
   animation-delay: calc(0.3s + (var(--i) - 1) * 0.36s);
 }
 .how.reveal.is-live .wire li::before {
-  animation: node-on 0.6s ease-out calc(0.3s + (var(--i) - 1) * 0.36s) both;
+  animation: node-on 0.9s ease-out calc(0.3s + (var(--i) - 1) * 0.36s) both;
 }
 @keyframes node-on {
   0% {
@@ -751,7 +733,7 @@ a {
   }
   30% {
     border-color: var(--spark);
-    box-shadow: 0 0 0 7px color-mix(in srgb, var(--spark) 35%, transparent), 0 0 18px var(--spark);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--spark) 22%, transparent);
   }
   100% {
     box-shadow: 0 0 0 0 transparent;
