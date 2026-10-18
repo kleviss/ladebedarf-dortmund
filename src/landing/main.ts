@@ -6,6 +6,7 @@ import { computeFactors, currentStreetDemand } from '../lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts } from '../lib/factorData';
 import { quantileClasses, RAMP } from '../lib/metrics';
 import { setupCursorSparks } from './cursorSparks';
+import { setupInterestForm } from './interestForm';
 import { setupReveal } from './reveal';
 import './landing.css';
 
@@ -163,4 +164,5 @@ async function main() {
 
 setupReveal();
 setupCursorSparks();
+setupInterestForm();
 main();

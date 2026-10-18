@@ -53,6 +53,7 @@
       <nav class="bar-links" aria-label="Main">
         <a href="#how">How it works</a>
         <a href="#data">Data and method</a>
+        <a class="bar-ask" href="#bring" data-interest>Bring it to your city</a>
         <a class="btn btn-small" href="/dortmund/">Open the map</a>
       </nav>
     </header>
@@ -162,6 +163,18 @@
         </p>
       </section>
 
+      <section id="bring" class="bring" aria-labelledby="bring-title">
+        <h2 id="bring-title">Bring ElectriCity to your city.</h2>
+        <div class="bring-copy">
+          <p>
+            Nothing in the method is specific to Dortmund. It needs a city's vehicle stock per district, its
+            charging locations and its parking and land use, which most German cities already keep. If you plan
+            public charging for a city or a utility, tell us where, and we will look at what it takes to set it up.
+          </p>
+          <a class="btn" href="mailto:klevissxh@gmail.com?subject=Bring%20ElectriCity%20to%20our%20city" data-interest>Register interest</a>
+        </div>
+      </section>
+
       <section class="cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Start with your own neighbourhood.</h2>
         <a class="btn btn-light" href="/dortmund/">Open the Dortmund map</a>
@@ -175,6 +188,64 @@
         <a href="/dortmund/berichte">Reports</a>
       </p>
     </footer>
+    <dialog id="interest" class="interest" aria-labelledby="interest-title">
+      <div class="interest-panel">
+        <header class="interest-head">
+          <h2 id="interest-title">Bring ElectriCity to your city</h2>
+          <button class="interest-x" type="button" data-close aria-label="Close">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg>
+          </button>
+        </header>
+        <form novalidate>
+          <p class="interest-intro">A few details are enough. Sending opens your email app with them filled in.</p>
+          <div class="field">
+            <label for="interest-name">Your name</label>
+            <input id="interest-name" name="name" autocomplete="name" required aria-describedby="interest-name-error" />
+            <p class="field-error" id="interest-name-error" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="interest-email">Email</label>
+            <input id="interest-email" name="email" type="email" autocomplete="email" required aria-describedby="interest-email-error" />
+            <p class="field-error" id="interest-email-error" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="interest-city">City or municipality</label>
+            <input id="interest-city" name="city" autocomplete="address-level2" required aria-describedby="interest-city-error" />
+            <p class="field-error" id="interest-city-error" aria-live="polite"></p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="interest-organisation">Organisation <span>optional</span></label>
+              <input id="interest-organisation" name="organisation" autocomplete="organization" />
+            </div>
+            <div class="field">
+              <label for="interest-role">You work in <span>optional</span></label>
+              <select id="interest-role" name="role">
+                <option value="">Choose one</option>
+                <option>City administration</option>
+                <option>Utility or energy provider</option>
+                <option>Planning office</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="interest-message">What are you planning? <span>optional</span></label>
+            <textarea id="interest-message" name="message" rows="4" maxlength="2000" aria-describedby="interest-message-error"></textarea>
+            <p class="field-error" id="interest-message-error" aria-live="polite"></p>
+          </div>
+          <p class="interest-error" role="alert"></p>
+          <div class="interest-actions">
+            <button class="btn" type="submit">Send by email</button>
+            <button class="link" type="button" data-close>Cancel</button>
+          </div>
+        </form>
+        <div class="interest-sent" hidden>
+          <p></p>
+          <button class="btn" type="button" data-close>Done</button>
+        </div>
+      </div>
+    </dialog>
     <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>
