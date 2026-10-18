@@ -1,0 +1,596 @@
+/* Landing page at /. The app lives at /dortmund/ with its own styles. */
+:root {
+  --paper: #eef2f3;
+  --paper-2: #e2e8eb;
+  --ink: #10223f;
+  --muted: #4f6078;
+  --blue: #1c5cab;
+  --spark: #2bb3ff;
+  --wire: #c3ced8;
+  --band: #10223f;
+  --band-ink: #e9f1f8;
+  --map-line: #ffffff;
+  /* ZERO_COLOR in src/lib/metrics.ts */
+  --covered: #e6e5df;
+  --on-blue: #ffffff;
+  --gutter: clamp(16px, 4vw, 56px);
+  --measure: 34rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0d1726;
+    --paper-2: #14223a;
+    --ink: #e6eef7;
+    --muted: #9fb0c6;
+    --blue: #6da7ec;
+    --spark: #2bb3ff;
+    --wire: #2a3b55;
+    --band: #16325c;
+    --band-ink: #eef5fc;
+    --map-line: #0d1726;
+    --covered: #2a3a52;
+    --on-blue: #0d1726;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  font-variation-settings: 'wdth' 100;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--spark);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.skip {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 14px;
+  border-radius: 6px;
+  z-index: 10;
+}
+.skip:focus {
+  top: 12px;
+}
+
+/* buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--on-blue);
+  font-weight: 650;
+  font-variation-settings: 'wdth' 108;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.btn::before {
+  /* the bolt from the favicon: this button charges you into the app */
+  content: '';
+  width: 12px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(64% 0, 0 58%, 42% 58%, 30% 100%, 100% 40%, 58% 40%);
+}
+.btn:hover {
+  background: color-mix(in srgb, var(--blue) 85%, var(--ink));
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-small {
+  padding: 9px 16px;
+  font-size: 0.9375rem;
+}
+.btn-light {
+  background: var(--band-ink);
+  color: var(--band);
+}
+.btn-light:hover {
+  background: #fff;
+}
+.link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+  text-decoration-color: var(--wire);
+}
+.link:hover {
+  text-decoration-color: var(--blue);
+}
+
+/* top bar */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px var(--gutter);
+  max-width: 1360px;
+  margin: 0 auto;
+}
+.bar-logo img {
+  display: block;
+  width: clamp(132px, 16vw, 176px);
+  height: auto;
+}
+.bar-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.4vw, 28px);
+  font-size: 0.9375rem;
+}
+.bar-links > a:not(.btn) {
+  text-decoration: none;
+  color: var(--muted);
+}
+.bar-links > a:not(.btn):hover {
+  color: var(--ink);
+}
+
+/* hero */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 72px) var(--gutter) clamp(40px, 6vw, 88px);
+}
+.hero-place {
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 5.6vw, 5.25rem);
+  line-height: 0.96;
+  font-weight: 820;
+  font-variation-settings: 'wdth' 118;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.hero-lede {
+  max-width: var(--measure);
+  margin-top: 28px;
+  font-size: 1.1875rem;
+  color: var(--muted);
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+  margin-top: 36px;
+}
+
+.hero-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 600 / 520;
+  overflow: visible;
+}
+.hero-map path {
+  fill: var(--fill);
+  stroke: var(--map-line);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  cursor: pointer;
+  outline: none;
+  transition: fill 0.15s ease;
+}
+.hero-map path.is-active,
+.hero-map path:focus-visible {
+  stroke: var(--ink);
+  stroke-width: 2;
+  paint-order: stroke;
+}
+/* bring the hovered district's outline above its neighbours */
+.hero-map svg g:has(path.is-active) path:not(.is-active) {
+  opacity: 0.82;
+}
+/* the one moment of motion: districts light up from the centre outwards */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-map path {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.92);
+  }
+  .hero-map svg.is-drawn path {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.5s ease var(--delay),
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay),
+      fill 0.15s ease;
+  }
+  .hero-map svg.is-drawn g:has(path.is-active) path:not(.is-active) {
+    opacity: 0.82;
+  }
+}
+.hero-map figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px 24px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px solid var(--ink);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+#map-readout {
+  min-height: 1.55em;
+  max-width: 30rem;
+}
+#map-readout strong {
+  color: var(--ink);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.hero-map.is-empty svg,
+.hero-map.is-empty .legend {
+  display: none;
+}
+
+/* recognition */
+.honours {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.honour {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 26px 0;
+  border-top: 1px solid var(--wire);
+  border-bottom: 1px solid var(--wire);
+}
+.honour + .honour {
+  padding-left: clamp(16px, 3vw, 40px);
+  border-left: 1px solid var(--wire);
+}
+.honour:first-child {
+  padding-right: clamp(16px, 3vw, 40px);
+}
+.honour-mark {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.honour p {
+  max-width: 30rem;
+  color: var(--muted);
+}
+.honour strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.1875rem;
+  font-weight: 750;
+  font-variation-settings: 'wdth' 110;
+  margin-bottom: 2px;
+}
+
+/* problem */
+.problem {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(64px, 9vw, 128px) var(--gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 28px clamp(24px, 5vw, 80px);
+}
+.problem h2 {
+  grid-column: 1 / -1;
+  max-width: 22ch;
+  font-size: clamp(2rem, 4.4vw, 3.75rem);
+  line-height: 1.02;
+  font-weight: 700;
+  font-variation-settings: 'wdth' 72;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.problem > p:not(.problem-figure) {
+  max-width: var(--measure);
+  color: var(--muted);
+  font-size: 1.1875rem;
+}
+.problem-figure {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  color: var(--muted);
+}
+.figure {
+  color: var(--blue);
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  line-height: 0.9;
+  font-weight: 900;
+  font-variation-settings: 'wdth' 125;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.problem-figure [data-stat='existing'] {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+/* how it works: the steps sit on a wire, like the boot screen */
+.how {
+  background: var(--paper-2);
+  padding: clamp(64px, 9vw, 120px) var(--gutter);
+}
+.how h2,
+.data h2 {
+  font-size: clamp(1.75rem, 3.2vw, 2.625rem);
+  line-height: 1.08;
+  font-weight: 780;
+  font-variation-settings: 'wdth' 112;
+  letter-spacing: -0.015em;
+}
+.how h2,
+.wire {
+  max-width: calc(1360px - 2 * var(--gutter));
+  margin-left: auto;
+  margin-right: auto;
+}
+.wire {
+  list-style: none;
+  padding: 0;
+  margin-top: clamp(36px, 5vw, 64px);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0 clamp(16px, 2.4vw, 32px);
+  position: relative;
+}
+.wire::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--spark));
+}
+.wire li {
+  position: relative;
+  padding-top: 40px;
+}
+.wire li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 3px solid var(--blue);
+}
+.wire li:last-child::before {
+  background: var(--spark);
+  border-color: var(--spark);
+}
+.wire h3 {
+  font-size: 1.1875rem;
+  font-weight: 720;
+  font-variation-settings: 'wdth' 108;
+  margin-bottom: 8px;
+}
+.wire p {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+/* data and method */
+.data {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(64px, 9vw, 120px) var(--gutter);
+}
+.data-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 32px clamp(24px, 5vw, 80px);
+  margin-top: 28px;
+}
+.data-lede {
+  max-width: var(--measure);
+  font-size: 1.1875rem;
+  color: var(--muted);
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px clamp(20px, 3vw, 44px);
+}
+.facts div {
+  border-top: 2px solid var(--ink);
+  padding-top: 12px;
+}
+.facts dt {
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1;
+  font-weight: 850;
+  font-variation-settings: 'wdth' 120;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.facts dd {
+  margin-top: 6px;
+  color: var(--muted);
+}
+.sources {
+  max-width: 48rem;
+  margin-top: 48px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* closing band */
+.cta {
+  background: var(--band);
+  color: var(--band-ink);
+  padding: clamp(56px, 8vw, 104px) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px 40px;
+}
+.cta h2 {
+  font-size: clamp(2rem, 4.6vw, 4rem);
+  line-height: 1;
+  font-weight: 820;
+  font-variation-settings: 'wdth' 118;
+  letter-spacing: -0.025em;
+  max-width: 16ch;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 28px var(--gutter);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.foot a {
+  margin-left: 20px;
+}
+.foot a:first-child {
+  margin-left: 0;
+}
+
+/* tablets: steps wrap, the hero stacks */
+@media (max-width: 1080px) {
+  .wire {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 32px;
+  }
+  .wire::before {
+    display: none;
+  }
+}
+@media (max-width: 880px) {
+  .hero,
+  .problem,
+  .data-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-map {
+    max-width: 640px;
+  }
+  .honours {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .honour:first-child {
+    padding-right: 0;
+    border-bottom: none;
+  }
+  .honour + .honour {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+@media (max-width: 620px) {
+  .bar-links > a:not(.btn) {
+    display: none;
+  }
+  .wire {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  /* on a phone the wire runs down the left */
+  .wire::before {
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 9px;
+    right: auto;
+    width: 3px;
+    height: auto;
+    background: linear-gradient(180deg, var(--blue), var(--spark));
+  }
+  .wire li {
+    padding: 0 0 32px 44px;
+  }
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

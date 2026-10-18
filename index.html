@@ -3,222 +3,176 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="See where Dortmund needs new public charging points: missing points per subdistrict, today's charging stations and a ranked list of sites for new ones." />
+    <meta name="description" content="ElectriCity shows where Dortmund needs new public charging points, subdistrict by subdistrict, using the city's own data and calculation method. Winner of the DO-DATA-Hackathon 2026." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#f6f6f3" />
+    <meta name="theme-color" content="#eef2f3" />
     <link rel="canonical" href="https://electricity-theta.vercel.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ElectriCity" />
-    <meta property="og:title" content="ElectriCity · EV charging demand in Dortmund" />
-    <meta property="og:description" content="See where Dortmund needs new public charging points: missing points per subdistrict, today's charging stations and a ranked list of sites for new ones." />
+    <meta property="og:title" content="ElectriCity · Planning EV charging for Dortmund" />
+    <meta property="og:description" content="Where Dortmund needs its next public charging points, subdistrict by subdistrict. Winner of the DO-DATA-Hackathon 2026." />
     <meta property="og:url" content="https://electricity-theta.vercel.app/" />
     <meta property="og:image" content="https://electricity-theta.vercel.app/og-electricity.jpg" />
     <meta property="og:image:secure_url" content="https://electricity-theta.vercel.app/og-electricity.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="ElectriCity logo over a map of Dortmund: where Dortmund needs new EV charging points" />
+    <meta property="og:image:alt" content="ElectriCity logo over a map of Dortmund" />
     <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ElectriCity · EV charging demand in Dortmund" />
-    <meta name="twitter:description" content="See where Dortmund needs new public charging points: missing points per subdistrict, today's charging stations and a ranked list of sites for new ones." />
+    <meta name="twitter:title" content="ElectriCity · Planning EV charging for Dortmund" />
+    <meta name="twitter:description" content="Where Dortmund needs its next public charging points, subdistrict by subdistrict. Winner of the DO-DATA-Hackathon 2026." />
     <meta name="twitter:image" content="https://electricity-theta.vercel.app/og-electricity.jpg" />
     <meta name="twitter:image:alt" content="ElectriCity logo over a map of Dortmund" />
-    <title>ElectriCity · EV charging demand in Dortmund</title>
-    <style>
-      /* Boot screen: shown from the first paint until the map has drawn, then faded out by the app. */
-      #boot {
-        position: fixed;
-        inset: 0;
-        z-index: 1000;
-        display: grid;
-        place-content: center;
-        justify-items: center;
-        gap: 14px;
-        background: #f6f6f3;
-        color: #0b0b0b;
-        font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        transition: opacity 0.45s ease, visibility 0.45s;
-        --boot-accent: #1c5cab;
-        --boot-spark: #2bb3ff;
-        --boot-wire: #d5d9df;
-      }
-      /* the city map, faded out, behind the animation */
-      #boot .boot-map {
-        position: absolute;
-        inset: -4%;
-        z-index: -1;
-        background: url('/boot-map.jpg') center / cover no-repeat;
-        opacity: 0.2;
-        filter: saturate(0.7);
-        animation: boot-map 6s ease-out both;
-      }
-      #boot .boot-map::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #f6f6f3 72%);
-      }
-      #boot.boot-done {
-        opacity: 0;
-        visibility: hidden;
-      }
-      #boot svg {
-        width: 168px;
-        height: 168px;
-        overflow: visible;
-      }
-      #boot .boot-wire {
-        fill: none;
-        stroke: var(--boot-wire);
-        stroke-width: 3;
-        stroke-linecap: round;
-      }
-      #boot .boot-flow {
-        fill: none;
-        stroke: var(--boot-spark);
-        stroke-width: 3;
-        stroke-linecap: round;
-        stroke-dasharray: 8 40;
-        filter: drop-shadow(0 0 3px var(--boot-spark));
-        animation: boot-flow 1.1s linear infinite;
-        animation-delay: calc(var(--i) * -0.14s);
-      }
-      #boot .boot-node {
-        fill: #fff;
-        stroke: var(--boot-accent);
-        stroke-width: 2;
-        animation: boot-node 1.1s ease-in-out infinite;
-        animation-delay: calc(var(--i) * -0.14s);
-      }
-      #boot .boot-ring {
-        fill: none;
-        stroke: var(--boot-wire);
-        stroke-width: 4;
-      }
-      #boot .boot-charge {
-        fill: none;
-        stroke: var(--boot-spark);
-        stroke-width: 4;
-        stroke-linecap: round;
-        stroke-dasharray: 60 229;
-        transform-origin: 100px 100px;
-        filter: drop-shadow(0 0 4px var(--boot-spark));
-        animation: boot-spin 1.4s cubic-bezier(0.6, 0.1, 0.4, 0.9) infinite;
-      }
-      #boot .boot-core {
-        fill: var(--boot-accent);
-        animation: boot-core 1.1s ease-in-out infinite;
-        transform-origin: 100px 100px;
-      }
-      #boot .boot-bolt {
-        fill: #fff;
-      }
-      #boot .boot-logo {
-        display: block;
-        width: min(320px, 72vw);
-        height: auto;
-        margin-top: 8px;
-      }
-      #boot .boot-sub {
-        margin: 0;
-        color: #74726c;
-      }
-      @keyframes boot-flow {
-        from { stroke-dashoffset: 48; }
-        to { stroke-dashoffset: 0; }
-      }
-      @keyframes boot-node {
-        0%, 100% { fill: #fff; }
-        50% { fill: var(--boot-spark); }
-      }
-      @keyframes boot-spin {
-        to { transform: rotate(360deg); }
-      }
-      @keyframes boot-core {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.06); }
-      }
-      @keyframes boot-map {
-        from { opacity: 0; transform: scale(1.04); }
-        to { opacity: 0.2; transform: scale(1); }
-      }
-      @keyframes boot-map-dark {
-        from { opacity: 0; transform: scale(1.04); }
-        to { opacity: 0.24; transform: scale(1); }
-      }
-      @media (prefers-color-scheme: dark) {
-        #boot {
-          background: #111110;
-          color: #f0efec;
-          --boot-accent: #3987e5;
-          --boot-wire: #2f3338;
-        }
-        #boot .boot-node {
-          fill: #1a1a19;
-        }
-        #boot .boot-map {
-          opacity: 0.24;
-          filter: saturate(0.7) brightness(0.75);
-          animation-name: boot-map-dark;
-        }
-        #boot .boot-map::after {
-          background: radial-gradient(circle at 50% 46%, transparent 0, transparent 18%, #111110 72%);
-        }
-        #boot .boot-sub {
-          color: #9a988f;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #boot * {
-          animation: none !important;
-        }
-        #boot .boot-flow {
-          stroke-dasharray: none;
-        }
-      }
-    </style>
+    <title>ElectriCity · Planning EV charging for Dortmund</title>
+    <script>
+      // Links shared before the app moved to /dortmund/ carried its state in the query string
+      // (?ubz=…&bev=…): send those on to the app instead of showing the landing page.
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var keys = [];
+        p.forEach(function (_, k) {
+          if (!/^(utm_|fbclid|gclid|ref$)/.test(k)) keys.push(k);
+        });
+        if (keys.length) location.replace('/dortmund/' + location.search + location.hash);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="boot" role="status" aria-live="polite">
-      <div class="boot-map" aria-hidden="true"></div>
-      <svg viewBox="0 0 200 200" aria-hidden="true">
-        <path class="boot-wire" d="M134.4 16.9L121.4 48.3" />
-        <path class="boot-wire" d="M183.1 65.6L151.7 78.6" />
-        <path class="boot-wire" d="M183.1 134.4L151.7 121.4" />
-        <path class="boot-wire" d="M134.4 183.1L121.4 151.7" />
-        <path class="boot-wire" d="M65.6 183.1L78.6 151.7" />
-        <path class="boot-wire" d="M16.9 134.4L48.3 121.4" />
-        <path class="boot-wire" d="M16.9 65.6L48.3 78.6" />
-        <path class="boot-wire" d="M65.6 16.9L78.6 48.3" />
-        <path class="boot-flow" style="--i: 0" d="M134.4 16.9L121.4 48.3" />
-        <path class="boot-flow" style="--i: 1" d="M183.1 65.6L151.7 78.6" />
-        <path class="boot-flow" style="--i: 2" d="M183.1 134.4L151.7 121.4" />
-        <path class="boot-flow" style="--i: 3" d="M134.4 183.1L121.4 151.7" />
-        <path class="boot-flow" style="--i: 4" d="M65.6 183.1L78.6 151.7" />
-        <path class="boot-flow" style="--i: 5" d="M16.9 134.4L48.3 121.4" />
-        <path class="boot-flow" style="--i: 6" d="M16.9 65.6L48.3 78.6" />
-        <path class="boot-flow" style="--i: 7" d="M65.6 16.9L78.6 48.3" />
-        <circle class="boot-node" style="--i: 0" cx="134.4" cy="16.9" r="4.5" />
-        <circle class="boot-node" style="--i: 1" cx="183.1" cy="65.6" r="4.5" />
-        <circle class="boot-node" style="--i: 2" cx="183.1" cy="134.4" r="4.5" />
-        <circle class="boot-node" style="--i: 3" cx="134.4" cy="183.1" r="4.5" />
-        <circle class="boot-node" style="--i: 4" cx="65.6" cy="183.1" r="4.5" />
-        <circle class="boot-node" style="--i: 5" cx="16.9" cy="134.4" r="4.5" />
-        <circle class="boot-node" style="--i: 6" cx="16.9" cy="65.6" r="4.5" />
-        <circle class="boot-node" style="--i: 7" cx="65.6" cy="16.9" r="4.5" />
-        <circle class="boot-ring" cx="100" cy="100" r="46" />
-        <circle class="boot-charge" cx="100" cy="100" r="46" />
-        <circle class="boot-core" cx="100" cy="100" r="34" />
-        <path class="boot-bolt" d="M105 76 86 103h12l-4 21 19-28h-12z" />
-      </svg>
-      <picture>
-        <source srcset="/electricity-logo-dark.png" media="(prefers-color-scheme: dark)" />
-        <img class="boot-logo" src="/electricity-logo.png" alt="ElectriCity" width="700" height="126" />
-      </picture>
-      <p class="boot-sub">Powering up the map</p>
-    </div>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="bar">
+      <a class="bar-logo" href="/" aria-label="ElectriCity home">
+        <picture>
+          <source srcset="/electricity-logo-dark.png" media="(prefers-color-scheme: dark)" />
+          <img src="/electricity-logo.png" alt="ElectriCity" width="699" height="125" />
+        </picture>
+      </a>
+      <nav class="bar-links" aria-label="Main">
+        <a href="#how">How it works</a>
+        <a href="#data">Data and method</a>
+        <a class="btn btn-small" href="/dortmund/">Open the map</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="hero-place">Dortmund, 145 subdistricts</p>
+          <h1 id="hero-title">Where Dortmund needs its next charging points.</h1>
+          <p class="hero-lede">
+            ElectriCity runs the city's own calculation on the city's own data and shows, for every
+            statistical subdistrict, how many public charging points exist, how many today's electric
+            cars need, and where the new ones could go.
+          </p>
+          <div class="hero-actions">
+            <a class="btn" href="/dortmund/">Open the Dortmund map</a>
+            <a class="link" href="/dortmund/berichte">Read the reports</a>
+          </div>
+        </div>
+
+        <figure class="hero-map">
+          <svg id="city-map" role="group" aria-label="Map of Dortmund's 145 subdistricts, shaded by missing charging points"></svg>
+          <figcaption>
+            <p id="map-readout" aria-live="polite">Loading the city's subdistricts…</p>
+            <ul id="map-legend" class="legend" aria-label="Missing charging points per subdistrict"></ul>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="honours" aria-label="Recognition">
+        <div class="honour">
+          <svg class="honour-mark" viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M12 6h16v8a8 8 0 0 1-16 0Z" />
+            <path d="M12 9H6v3a6 6 0 0 0 6 6M28 9h6v3a6 6 0 0 1-6 6M20 22v7M14 34h12M16 29h8v5h-8Z" />
+          </svg>
+          <p><strong>Winner of the DO-DATA-Hackathon 2026</strong>The City of Dortmund's challenge for demand-oriented charging infrastructure, 16 and 17 October 2026.</p>
+        </div>
+        <div class="honour">
+          <svg class="honour-mark" viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M20 4 34 10v10c0 8-6 13-14 16C12 33 6 28 6 20V10Z" />
+            <path d="m14 20 4 4 8-9" />
+          </svg>
+          <p><strong>Candidate for a Stadt Dortmund pilot project</strong>The next step is testing the tool with the city's planners on real decisions about where to build.</p>
+        </div>
+      </section>
+
+      <section class="problem" aria-labelledby="problem-title">
+        <h2 id="problem-title">Every charging point at the kerb takes street space that a cycle path, a wider pavement or a tree could have.</h2>
+        <p>
+          So Dortmund wants to build only where the need is real and can be shown. Today that answer is
+          spread over spreadsheets, a consultant's report and a dozen datasets. ElectriCity puts it on
+          one map, with every number traceable to its source.
+        </p>
+        <p class="problem-figure" aria-live="polite">
+          <span class="figure" data-stat="missing">…</span>
+          <span>public charging points are missing at Dortmund's kerbs today, by the default model in the app, on top of <span data-stat="existing">…</span> that already exist.</span>
+        </p>
+      </section>
+
+      <section id="how" class="how" aria-labelledby="how-title">
+        <h2 id="how-title">From a subdistrict to a site</h2>
+        <ol class="wire">
+          <li>
+            <h3>Pick a subdistrict</h3>
+            <p>Click it on the map or choose it from the list. The map zooms to its boundary and the details open beside it.</p>
+          </li>
+          <li>
+            <h3>See the gap</h3>
+            <p>Existing points, the points today's electric cars need, and what is missing, split into residents, people commuting in and visitors.</p>
+          </li>
+          <li>
+            <h3>Find the sites</h3>
+            <p>A ranked list of candidate sites in the priority area, each with a Street View link, so the kerb can be checked before anyone drives out.</p>
+          </li>
+          <li>
+            <h3>Move charging off the street</h3>
+            <p>Switch on supermarket car parks, buildings in the priority area and commercial car parks, and see how much kerb demand they take over. Each option only appears where the subdistrict has such sites.</p>
+          </li>
+          <li>
+            <h3>Take it to the meeting</h3>
+            <p>Printable reports cover before and after, priorities, parking, walking-distance coverage and data quality. Every setting lives in the link, so a colleague sees exactly the same view.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="data" class="data" aria-labelledby="data-title">
+        <h2 id="data-title">Built on the city's numbers, not ours</h2>
+        <div class="data-grid">
+          <p class="data-lede">
+            The calculation follows the city's ISME method from its December 2023 report, and the tests
+            reproduce the cells of the city's own spreadsheet. Where a city-wide average hides real
+            differences between neighbourhoods, the model uses that subdistrict's own data instead.
+          </p>
+          <dl class="facts">
+            <div><dt>145</dt><dd>statistical subdistricts, each with its own car and EV stock</dd></div>
+            <div><dt>912</dt><dd>charging locations recorded in the city's data</dd></div>
+            <div><dt>3,446</dt><dd>public parking areas, rated by distance to the nearest charger</dd></div>
+            <div><dt>225 m</dt><dd>priority grid from the city, the walking distance the method allows</dd></div>
+          </dl>
+        </div>
+        <p class="sources">
+          Sources: Stadt Dortmund (ISME method, vehicle stock, charging locations, priority grid, land use),
+          the Bundesnetzagentur charging register and OpenStreetMap. The figures describe the data included
+          in the tool, not live occupancy.
+        </p>
+      </section>
+
+      <section class="cta" aria-labelledby="cta-title">
+        <h2 id="cta-title">Start with your own neighbourhood.</h2>
+        <a class="btn btn-light" href="/dortmund/">Open the Dortmund map</a>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>Made in Dortmund by Philipp, Mehul and Klevis at the DO-DATA-Hackathon 2026.</p>
+      <p>
+        <a href="/dortmund/">Map</a>
+        <a href="/dortmund/berichte">Reports</a>
+      </p>
+    </footer>
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>

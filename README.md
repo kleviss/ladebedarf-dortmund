@@ -1,5 +1,7 @@
 # Ladebedarf Dortmund - Need for Speed Charge (Dortmund Edition)
 
+The site has a landing page at `/` (`index.html`, `src/landing/`) and the app under `/dortmund/` (`dortmund/index.html`, reports at `/dortmund/berichte`). Old links with app state in the query string (`/?ubz=…`) are forwarded to `/dortmund/`, and `/berichte` redirects to `/dortmund/berichte` (`vercel.json`).
+
 Prototype for the City of Dortmund challenge **"Bedarfsgerechte Ladeinfrastruktur für Dortmund"** (demand-oriented charging infrastructure). It applies the city's own **ISME calculation method** to the city's data for Dortmund's 145 statistical *Unterbezirke*: how many publicly accessible EV charging points each one needs, how many exist, and every factor behind the number.
 
 ![Map of the 145 Unterbezirke shaded by missing charging points](docs/screenshot-map.jpg)

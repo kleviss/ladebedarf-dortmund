@@ -1,8 +1,8 @@
 /** Switch between the map tool and the reports, next to the page title. Keeps the scenario. */
 export function PageTabs({ current }: { current: 'karte' | 'berichte' }) {
   const tabs = [
-    { id: 'karte', label: 'Karte', path: '/' },
-    { id: 'berichte', label: 'Berichte', path: '/berichte.html' },
+    { id: 'karte', label: 'Karte', path: '/dortmund/' },
+    { id: 'berichte', label: 'Berichte', path: '/dortmund/berichte' },
   ] as const;
   // read the query string when clicked: the app rewrites it after every change
   const go = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
