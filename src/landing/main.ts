@@ -58,8 +58,13 @@ function pathOf(geom: GeoJSON.MultiPolygon | GeoJSON.Polygon, project: ReturnTyp
 
 function drawMap(districts: Districts, demand: Map<string, DistrictResult>) {
   const svg = document.querySelector<SVGSVGElement>('#city-map');
-  const readout = document.querySelector<HTMLElement>('#map-readout');
-  if (!svg || !readout) return;
+  const tip = document.querySelector<HTMLElement>('#map-tip');
+  const stage = document.querySelector<HTMLElement>('.map-stage');
+  if (!svg || !tip || !stage) return;
+  const hide = () => {
+    tip.hidden = true;
+    paths.forEach((q) => q.classList.remove('is-active'));
+  };
   const W = 600, H = 520;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const project = projector(districts, W, H);
@@ -79,25 +84,43 @@ function drawMap(districts: Districts, demand: Map<string, DistrictResult>) {
     const [x0, y0] = project(f.geometry.type === 'Polygon' ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0][0][0]);
     p.style.setProperty('--delay', `${Math.round(Math.hypot(x0 - centre[0], y0 - centre[1]) * 2.2)}ms`);
     p.setAttribute('tabindex', '0');
+    p.setAttribute('pathLength', '1');
     p.setAttribute('aria-label', `${f.properties.name}: ${fmt.format(gap)} missing charging points`);
-    const show = () => {
+    const show = (e?: MouseEvent) => {
       paths.forEach((q) => q.classList.toggle('is-active', q === p));
-      readout.innerHTML = '';
+      tip.innerHTML = '';
       const name = document.createElement('strong');
       name.textContent = f.properties.name;
-      readout.append(name, ` ${gap > 0 ? `needs ${fmt.format(gap)} more charging ${gap === 1 ? 'point' : 'points'}` : 'has the charging points it needs today'}`);
+      const line = document.createElement('span');
+      line.textContent =
+        gap > 0 ? `${fmt.format(gap)} missing charging ${gap === 1 ? 'point' : 'points'}` : 'Covered: no missing points today';
+      const sub = document.createElement('span');
+      sub.className = 'map-tip-sub';
+      sub.textContent = `${fmt.format(r?.existing ?? 0)} existing, ${fmt.format(r?.needed ?? 0)} needed`;
+      tip.append(name, line, sub);
+      tip.hidden = false;
+      // follow the pointer; for keyboard focus sit on the district
+      const box = stage.getBoundingClientRect();
+      const at = e ? { x: e.clientX, y: e.clientY } : (() => {
+        const b = p.getBoundingClientRect();
+        return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+      })();
+      const x = at.x - box.left, y = at.y - box.top;
+      tip.style.left = `${Math.min(Math.max(x, tip.offsetWidth / 2), box.width - tip.offsetWidth / 2)}px`;
+      tip.style.top = `${y}px`;
+      tip.classList.toggle('below', y < tip.offsetHeight + 16);
     };
-    p.addEventListener('mouseenter', show);
-    p.addEventListener('focus', show);
+    p.addEventListener('mousemove', show);
+    p.addEventListener('focus', () => show());
+    p.addEventListener('blur', hide);
     paths.push(p);
     group.append(p);
   }
   svg.append(group);
-  svg.addEventListener('mouseleave', () => {
-    paths.forEach((q) => q.classList.remove('is-active'));
-    readout.textContent = readout.dataset.idle ?? '';
-  });
-  requestAnimationFrame(() => svg.classList.add('is-drawn'));
+  svg.addEventListener('mouseleave', hide);
+  // commit the hidden start state before switching to the drawn one, so the transition runs
+  svg.getBoundingClientRect();
+  requestAnimationFrame(() => requestAnimationFrame(() => svg.classList.add('is-drawn')));
 
   // legend: same classes as the app
   const legend = document.querySelector<HTMLElement>('#map-legend');
@@ -127,8 +150,7 @@ async function main() {
     document.documentElement.classList.add('has-stats');
     const readout = document.querySelector<HTMLElement>('#map-readout');
     if (readout) {
-      readout.dataset.idle = `${fmt.format(missing)} missing charging points across 145 subdistricts. Point at one to see its number.`;
-      readout.textContent = readout.dataset.idle;
+      readout.textContent = `${fmt.format(missing)} missing charging points across 145 subdistricts. Point at one for its numbers.`;
     }
     drawMap(districts, demand);
   } catch {

@@ -60,7 +60,6 @@
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="hero-place">Dortmund, 145 subdistricts</p>
           <h1 id="hero-title">Where Dortmund needs its next charging points.</h1>
           <p class="hero-lede">
             ElectriCity runs the city's own calculation on the city's own data and shows, for every
@@ -74,9 +73,12 @@
         </div>
 
         <figure class="hero-map">
-          <svg id="city-map" role="group" aria-label="Map of Dortmund's 145 subdistricts, shaded by missing charging points"></svg>
+          <div class="map-stage">
+            <svg id="city-map" role="group" aria-label="Map of Dortmund's 145 subdistricts, shaded by missing charging points"></svg>
+            <div id="map-tip" class="map-tip" role="tooltip" hidden></div>
+          </div>
           <figcaption>
-            <p id="map-readout" aria-live="polite">Loading the city's subdistricts…</p>
+            <p id="map-readout">Loading the city's subdistricts…</p>
             <ul id="map-legend" class="legend" aria-label="Missing charging points per subdistrict"></ul>
           </figcaption>
         </figure>
