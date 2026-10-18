@@ -114,6 +114,8 @@ function drawMap(districts: Districts, demand: Map<string, DistrictResult>) {
       tip.classList.toggle('below', y < tip.offsetHeight + 16);
     };
     p.addEventListener('mousemove', show);
+    // phones have no hover: a tap shows the same numbers
+    p.addEventListener('click', show);
     p.addEventListener('focus', () => show());
     p.addEventListener('blur', hide);
     paths.push(p);
@@ -121,6 +123,9 @@ function drawMap(districts: Districts, demand: Map<string, DistrictResult>) {
   }
   svg.append(group);
   svg.addEventListener('mouseleave', hide);
+  document.addEventListener('pointerdown', (e) => {
+    if (!svg.contains(e.target as Node)) hide();
+  });
   // commit the hidden start state before switching to the drawn one, so the transition runs
   svg.getBoundingClientRect();
   requestAnimationFrame(() => requestAnimationFrame(() => svg.classList.add('is-drawn')));
@@ -153,7 +158,7 @@ async function main() {
     document.documentElement.classList.add('has-stats');
     const readout = document.querySelector<HTMLElement>('#map-readout');
     if (readout) {
-      readout.textContent = `${fmt.format(missing)} missing charging points across 145 subdistricts. Point at one for its numbers.`;
+      readout.textContent = `${fmt.format(missing)} missing charging points across 145 subdistricts. ${matchMedia('(hover: hover)').matches ? 'Point at' : 'Tap'} one for its numbers.`;
     }
     drawMap(districts, demand);
   } catch {
