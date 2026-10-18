@@ -638,3 +638,148 @@ a {
     scroll-behavior: auto;
   }
 }
+
+/* sections switching on as they scroll in (src/landing/reveal.ts adds these classes) */
+.reveal {
+  position: relative;
+}
+.spark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.spark::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, var(--blue) 40%, var(--spark) 80%, #fff);
+  box-shadow: 0 0 12px 2px var(--spark);
+  transform: translateX(-110%);
+  opacity: 0;
+}
+.reveal.is-live .spark::after {
+  animation: spark-run 0.9s cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+@keyframes spark-run {
+  0% {
+    transform: translateX(-110%);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(380%);
+    opacity: 0;
+  }
+}
+
+.reveal .reveal-item {
+  opacity: 0;
+}
+.reveal.is-live .reveal-item {
+  animation: flicker-on 0.7s linear calc(0.25s + var(--i) * 0.1s) both;
+}
+/* a fluorescent tube catching: two stutters, then steady light */
+@keyframes flicker-on {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: brightness(1.8) drop-shadow(0 0 6px var(--spark));
+  }
+  12% {
+    opacity: 0.85;
+  }
+  18% {
+    opacity: 0.1;
+  }
+  30% {
+    opacity: 0.95;
+  }
+  36% {
+    opacity: 0.35;
+  }
+  55% {
+    opacity: 1;
+    transform: none;
+    filter: brightness(1.25) drop-shadow(0 0 4px var(--spark));
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* the wire charges from the first step to the last; each step lights when the current reaches it */
+.how.reveal .wire::before {
+  transform: scaleX(0);
+  transform-origin: left center;
+  box-shadow: 0 0 10px var(--spark);
+}
+.how.reveal.is-live .wire::before {
+  animation: wire-charge 1.6s cubic-bezier(0.6, 0, 0.4, 1) 0.3s both;
+}
+@keyframes wire-charge {
+  from {
+    transform: scaleX(0);
+  }
+  90% {
+    box-shadow: 0 0 10px var(--spark);
+  }
+  to {
+    transform: none;
+    box-shadow: none;
+  }
+}
+.how.reveal.is-live .wire li {
+  animation-delay: calc(0.3s + (var(--i) - 1) * 0.36s);
+}
+.how.reveal.is-live .wire li::before {
+  animation: node-on 0.6s ease-out calc(0.3s + (var(--i) - 1) * 0.36s) both;
+}
+@keyframes node-on {
+  0% {
+    box-shadow: 0 0 0 0 var(--spark);
+  }
+  30% {
+    border-color: var(--spark);
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--spark) 35%, transparent), 0 0 18px var(--spark);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (max-width: 620px) {
+  .how.reveal .wire::before {
+    transform: scaleY(0);
+    transform-origin: center top;
+  }
+}
+@media (max-width: 620px) {
+  @keyframes wire-charge {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+}
+
+/* cursor sparks (src/landing/cursorSparks.ts) */
+.cursor-sparks {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50;
+  pointer-events: none;
+}
