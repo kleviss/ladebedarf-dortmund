@@ -5,6 +5,8 @@ import { computeCurrentDemand, type DistrictResult } from '../lib/isme';
 import { computeFactors, currentStreetDemand } from '../lib/factors';
 import { factorDefaults, factorDestinations, factorDistricts } from '../lib/factorData';
 import { quantileClasses, RAMP } from '../lib/metrics';
+import { setupCursorSparks } from './cursorSparks';
+import { setupReveal } from './reveal';
 import './landing.css';
 
 type Districts = GeoJSON.FeatureCollection<GeoJSON.MultiPolygon | GeoJSON.Polygon, District>;
@@ -159,4 +161,6 @@ async function main() {
   }
 }
 
+setupReveal();
+setupCursorSparks();
 main();
