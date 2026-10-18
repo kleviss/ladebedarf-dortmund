@@ -569,11 +569,19 @@ a {
   font-size: 0.875rem;
   color: var(--muted);
 }
-.foot a {
+.foot p:last-child a {
   margin-left: 20px;
 }
-.foot a:first-child {
+.foot p:last-child a:first-child {
   margin-left: 0;
+}
+.foot .person {
+  color: inherit;
+  text-decoration-color: var(--wire);
+  text-underline-offset: 3px;
+}
+.foot .person:hover {
+  color: var(--ink);
 }
 
 /* "bring it to your city": the ask, and the dialog that takes the details */
