@@ -7,6 +7,7 @@ const ITEMS: Record<string, string> = {
   problem: 'h2, p',
   how: 'h2, .wire li',
   data: 'h2, .data-lede, .facts > div, .sources',
+  bring: 'h2, .bring-copy > *',
   cta: 'h2, .btn',
 };
 
